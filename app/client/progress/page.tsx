@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ClientLayout from '@/components/ClientLayout';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ import {
 import { Booking, ServiceProgress } from '@/lib/types';
 import { supabase } from '@/lib/supabaseClient';
 
-export default function ProgressPage() {
+function ProgressContent() {
   const searchParams = useSearchParams();
   const bookingId = searchParams?.get('booking_id');
 
@@ -334,5 +334,22 @@ export default function ProgressPage() {
         </div>
       </div>
     </ClientLayout>
+  );
+}
+
+export default function ProgressPage() {
+  return (
+    <Suspense fallback={
+      <ClientLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent"></div>
+            <p className="mt-4 text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </ClientLayout>
+    }>
+      <ProgressContent />
+    </Suspense>
   );
 }
