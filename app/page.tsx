@@ -1,65 +1,148 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import ClientLayout from '@/components/ClientLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Wrench, Target, ArrowRight, ShoppingCart } from 'lucide-react';
+import { Product } from '@/lib/types';
+
+export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products?limit=6');
+      const data = await response.json();
+      setProducts(data.products || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <ClientLayout>
+
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="text-center max-w-4xl mx-auto">
+          <h2 className="text-5xl font-bold mb-6">
+            Sparepart & Service HP<br />
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-500 to-amber-600">
+              Terpercaya & Berkualitas
+            </span>
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8">
+            Dapatkan sparepart original dan layanan service handphone professional dengan sistem reward pembelanjaan
           </p>
+          <div className="flex gap-4 justify-center">
+            <Link href="/client/produk">
+              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white">
+                Belanja Sekarang <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/client/booking">
+              <Button size="lg" variant="outline" className="border-amber-500 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10">
+                Booking Service
+              </Button>
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Features */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="grid md:grid-cols-3 gap-8">
+          <Card className="border-amber-500/20 hover:border-amber-500/50 hover:shadow-lg transition-all">
+            <CardHeader>
+              <ShoppingCart className="h-12 w-12 text-amber-500 mb-4" />
+              <CardTitle>E-Commerce</CardTitle>
+              <CardDescription>
+                Sparepart dan aksesoris HP original dengan harga terbaik
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-amber-500/20 hover:border-amber-500/50 hover:shadow-lg transition-all">
+            <CardHeader>
+              <Target className="h-12 w-12 text-amber-500 mb-4" />
+              <CardTitle>Sistem Reward</CardTitle>
+              <CardDescription>
+                Capai target pembelanjaan dan dapatkan reward menarik
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-amber-500/20 hover:border-amber-500/50 hover:shadow-lg transition-all">
+            <CardHeader>
+              <Wrench className="h-12 w-12 text-amber-500 mb-4" />
+              <CardTitle>Service HP</CardTitle>
+              <CardDescription>
+                Booking service dengan tracking progress realtime
+              </CardDescription>
+            </CardHeader>
+          </Card>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="text-3xl font-bold">Produk Terbaru</h3>
+          <Link href="/client/produk">
+            <Button variant="outline" className="border-amber-500 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10">
+              Lihat Semua <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="text-center text-muted-foreground py-12">Loading products...</div>
+        ) : (
+          <div className="grid md:grid-cols-3 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <Card key={product.id} className="border-amber-500/20 hover:border-amber-500/50 hover:shadow-lg transition-all overflow-hidden">
+                <div className="aspect-square bg-muted/30 flex items-center justify-center">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <ShoppingCart className="h-20 w-20 text-muted-foreground" />
+                  )}
+                </div>
+                <CardHeader>
+                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  <CardDescription>
+                    {product.category?.name || 'Uncategorized'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-500">
+                    Rp {product.price.toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Stok: {product.stock}
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Link href={`/client/produk/${product.id}`} className="w-full">
+                    <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">
+                      Lihat Detail
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+    </ClientLayout>
   );
 }
