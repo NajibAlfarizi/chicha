@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ClientLayout from '@/components/ClientLayout';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ interface UserProfile {
   role: string;
 }
 
-export default function AccountPage() {
+function AccountContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isAuthenticated, loading: authLoading, logout, user } = useAuth();
@@ -925,5 +925,22 @@ export default function AccountPage() {
         </DialogContent>
       </Dialog>
     </ClientLayout>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={
+      <ClientLayout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </ClientLayout>
+    }>
+      <AccountContent />
+    </Suspense>
   );
 }
