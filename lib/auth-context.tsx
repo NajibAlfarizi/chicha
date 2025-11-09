@@ -42,23 +42,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userStr = localStorage.getItem('user');
         if (userStr) {
-          // Verify token dengan API
-          const response = await fetch('/api/auth/me');
-          if (response.ok) {
-            const data = await response.json();
-            setUser(data.user);
-          } else {
-            // Token invalid/expired
-            localStorage.removeItem('user');
-            setUser(null);
-            
-            // Redirect ke login jika bukan di public route
-            if (!publicRoutes.includes(pathname || '') && !isProductDetail) {
-              toast.error('Sesi berakhir', {
-                description: 'Silakan login kembali',
-              });
-              router.push('/auth/login');
+          const localUser = JSON.parse(userStr);
+          
+          // Set user immediately from localStorage
+          setUser(localUser);
+          
+          // Then verify with server in background
+          try {
+            const response = await fetch('/api/auth/me');
+            if (response.ok) {
+              const data = await response.json();
+              // Update with fresh data from server
+              setUser(data.user);
+              // Sync localStorage
+              localStorage.setItem('user', JSON.stringify(data.user));
+            } else {
+              // Cookie expired but localStorage still has data
+              console.warn('Cookie expired, user needs to re-login');
+              // Keep localStorage user for now, but they'll need to login again for protected actions
             }
+          } catch (error) {
+            console.error('Auth verification error:', error);
+            // Network error, keep using localStorage data
           }
         }
       } catch (error) {

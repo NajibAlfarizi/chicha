@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseClient';
+import { cookies } from 'next/headers';
 
 // GET user profile
 export async function GET() {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Get user_id from cookie
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('user_id')?.value;
 
-    if (authError || !user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: profile, error } = await supabase
+    const { data: profile, error } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (error) {
@@ -30,9 +33,11 @@ export async function GET() {
 // PUT update user profile
 export async function PUT(request: Request) {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Get user_id from cookie
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('user_id')?.value;
 
-    if (authError || !user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
@@ -57,7 +62,7 @@ export async function PUT(request: Request) {
         address,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', user.id)
+      .eq('id', userId)
       .select()
       .single();
 
