@@ -1,22 +1,26 @@
 ﻿import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseClient';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Get user_id from cookie (set during login)
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('user_id')?.value;
 
-    if (authError || !user) {
+    if (!userId) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { data: userProfile, error: profileError } = await supabase
+    // Fetch user profile using admin client (bypass RLS)
+    const { data: userProfile, error: profileError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
-    if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 400 });
+    if (profileError || !userProfile) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json({ user: userProfile }, { status: 200 });
