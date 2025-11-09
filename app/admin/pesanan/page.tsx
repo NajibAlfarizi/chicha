@@ -99,6 +99,26 @@ export default function AdminOrdersPage() {
     );
   };
 
+  const getPaymentStatusBadge = (paymentStatus: string) => {
+    const colors: Record<string, string> = {
+      pending: 'bg-orange-500/20 text-orange-500 border-orange-500/50',
+      paid: 'bg-green-500/20 text-green-500 border-green-500/50',
+      failed: 'bg-red-500/20 text-red-500 border-red-500/50',
+    };
+    
+    const labels: Record<string, string> = {
+      pending: 'Belum Bayar',
+      paid: 'Lunas',
+      failed: 'Gagal',
+    };
+
+    return (
+      <Badge className={colors[paymentStatus] || 'bg-gray-500/20 text-gray-500 border-gray-500/50'}>
+        {labels[paymentStatus] || paymentStatus || 'N/A'}
+      </Badge>
+    );
+  };
+
   const filteredOrders = filterStatus === 'all' 
     ? orders 
     : orders.filter(order => order.status === filterStatus);
@@ -157,7 +177,8 @@ export default function AdminOrdersPage() {
                     <TableHead className="text-amber-500">Pelanggan</TableHead>
                     <TableHead className="text-amber-500">Total</TableHead>
                     <TableHead className="text-amber-500">Metode Bayar</TableHead>
-                    <TableHead className="text-amber-500">Status</TableHead>
+                    <TableHead className="text-amber-500">Status Pesanan</TableHead>
+                    <TableHead className="text-amber-500">Status Bayar</TableHead>
                     <TableHead className="text-amber-500">Tanggal</TableHead>
                     <TableHead className="text-amber-500 text-right">Aksi</TableHead>
                   </TableRow>
@@ -179,6 +200,7 @@ export default function AdminOrdersPage() {
                       </TableCell>
                       <TableCell>{order.payment_method}</TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>{getPaymentStatusBadge(order.payment_status || 'pending')}</TableCell>
                       <TableCell>
                         {new Date(order.created_at).toLocaleDateString('id-ID')}
                       </TableCell>
@@ -247,8 +269,12 @@ export default function AdminOrdersPage() {
                     <span className="font-semibold">{selectedOrder.payment_method}</span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
-                    <span>Status:</span>
+                    <span>Status Pesanan:</span>
                     {getStatusBadge(selectedOrder.status)}
+                  </div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span>Status Pembayaran:</span>
+                    {getPaymentStatusBadge(selectedOrder.payment_status || 'pending')}
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="font-bold">Total:</span>

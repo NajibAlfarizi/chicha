@@ -11,12 +11,15 @@ const snap = new midtransClient.Snap({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { order_id, gross_amount, customer_details, item_details } = body;
+    const { gross_amount, customer_details, item_details } = body;
+
+    // Generate unique order_id with timestamp
+    const order_id = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     console.log('Creating Midtrans transaction:', { order_id, gross_amount });
 
     // Validate required fields
-    if (!order_id || !gross_amount || !customer_details || !item_details) {
+    if (!gross_amount || !customer_details || !item_details) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -36,9 +39,9 @@ export async function POST(request: NextRequest) {
       },
       item_details: item_details,
       callbacks: {
-        finish: `${process.env.NEXT_PUBLIC_APP_URL}/client/akun?tab=orders&payment=success`,
-        error: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout?payment=error`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL}/client/akun?tab=orders&payment=pending`,
+        finish: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/success`,
+        error: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/error`,
+        pending: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/success`,
       },
     };
 
@@ -52,6 +55,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       token: transaction.token,
       redirect_url: transaction.redirect_url,
+      order_id: order_id, // Return order_id for reference
     }, { status: 200 });
 
   } catch (error) {

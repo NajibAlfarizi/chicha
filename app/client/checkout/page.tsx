@@ -114,32 +114,15 @@ export default function CheckoutPage() {
         })),
       };
 
-      console.log('🛒 Sending order data:', orderData);
+      console.log('🛒 Preparing checkout:', orderData);
 
-      // Step 1: Create order in database
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-
-      const data = await response.json();
-      console.log('📦 Order response:', data);
-
-      if (!response.ok) {
-        console.error('❌ Checkout failed:', data);
-        toast.error('Checkout gagal', {
-          description: data.error || 'Silakan periksa data dan coba lagi.',
-        });
-        setLoading(false);
-        return;
-      }
-
-      // Step 2: Handle payment based on method
+      // Handle payment based on method
       if (paymentMethod === 'midtrans') {
-        // Create Midtrans payment
+        // For Midtrans: Save order data to localStorage, create payment first
+        // Order will be created after successful payment via webhook
+        localStorage.setItem('pending_order', JSON.stringify(orderData));
+        
         const paymentData = {
-          order_id: data.order.id,
           gross_amount: getTotalPrice(),
           customer_details: {
             name: customerInfo.name,
@@ -169,11 +152,12 @@ export default function CheckoutPage() {
           toast.error('Gagal membuat pembayaran', {
             description: paymentResult.error || 'Silakan coba lagi.',
           });
+          localStorage.removeItem('pending_order');
           setLoading(false);
           return;
         }
 
-        // Clear cart before redirecting
+        // Clear cart before redirecting (but keep pending_order for webhook)
         localStorage.removeItem('cart');
         window.dispatchEvent(new Event('cartUpdated'));
 
@@ -182,10 +166,27 @@ export default function CheckoutPage() {
           window.location.href = paymentResult.redirect_url;
         } else {
           toast.error('Link pembayaran tidak ditemukan');
+          localStorage.removeItem('pending_order');
           setLoading(false);
         }
       } else {
-        // Manual payment methods (transfer_bank, cod)
+        // Manual payment methods (transfer_bank, cod) - Create order immediately
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          toast.error('Checkout gagal', {
+            description: data.error || 'Silakan periksa data dan coba lagi.',
+          });
+          setLoading(false);
+          return;
+        }
+
         localStorage.removeItem('cart');
         window.dispatchEvent(new Event('cartUpdated'));
         

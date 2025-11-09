@@ -29,6 +29,7 @@ export interface Product {
 
 // Order Types
 export type OrderStatus = 'pending' | 'dikirim' | 'selesai' | 'dibatalkan';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired';
 
 export interface CustomerInfo {
   name: string;
@@ -52,6 +53,7 @@ export interface Order {
   user_id: string;
   total_amount: number;
   payment_method: string;
+  payment_status?: PaymentStatus;
   status: OrderStatus;
   created_at: string;
   customer_info?: CustomerInfo;

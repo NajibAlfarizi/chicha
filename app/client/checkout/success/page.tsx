@@ -15,15 +15,48 @@ function SuccessContent() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchOrderDetails = async (orderId: string) => {
+  const createOrderFromPendingData = async (midtransOrderId: string) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}`);
+      // Get pending order data from localStorage
+      const pendingOrderStr = localStorage.getItem('pending_order');
+      if (!pendingOrderStr) {
+        console.error('No pending order found');
+        setLoading(false);
+        return;
+      }
+
+      const pendingOrder = JSON.parse(pendingOrderStr);
+      
+      // Add midtrans order ID to the order data
+      const orderData = {
+        ...pendingOrder,
+        midtrans_order_id: midtransOrderId,
+        payment_status: 'paid',
+      };
+
+      console.log('Creating order from pending data:', orderData);
+
+      // Create order in database
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
+      });
+
       if (response.ok) {
         const data = await response.json();
         setOrderDetails(data.order);
+        
+        // Clean up pending order
+        localStorage.removeItem('pending_order');
+        
+        console.log('✅ Order created successfully:', data.order);
+      } else {
+        const error = await response.json();
+        console.error('Failed to create order:', error);
       }
     } catch (error) {
-      console.error('Error fetching order details:', error);
+      console.error('Error creating order:', error);
     } finally {
       setLoading(false);
     }
@@ -31,14 +64,14 @@ function SuccessContent() {
 
   useEffect(() => {
     // Get order_id and transaction_status from URL params
-    const orderId = searchParams.get('order_id');
+    const midtransOrderId = searchParams.get('order_id');
     const transactionStatus = searchParams.get('transaction_status');
     
-    console.log('✅ Payment success:', { orderId, transactionStatus });
+    console.log('✅ Payment success:', { midtransOrderId, transactionStatus });
 
-    // Fetch order details if order_id exists
-    if (orderId) {
-      fetchOrderDetails(orderId);
+    // Create order from pending data
+    if (midtransOrderId && transactionStatus === 'settlement') {
+      createOrderFromPendingData(midtransOrderId);
     } else {
       setLoading(false);
     }
