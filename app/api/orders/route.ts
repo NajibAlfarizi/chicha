@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 
 // GET user's orders
 export async function GET(request: NextRequest) {
@@ -12,7 +12,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    let query = supabase
+    // Use supabaseAdmin to bypass RLS
+    let query = supabaseAdmin
       .from('orders')
       .select(`
         *,
@@ -34,9 +35,11 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
+      console.error('❌ Error fetching orders:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    console.log('✅ Orders fetched:', data?.length || 0);
     return NextResponse.json({ orders: data }, { status: 200 });
 
   } catch (_error) {

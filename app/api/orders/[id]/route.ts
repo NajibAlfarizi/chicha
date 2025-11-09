@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 import { notifyOrderStatusChange } from '@/lib/notification-helper';
 
 // GET single order by ID
@@ -10,7 +10,8 @@ export async function GET(
   try {
     const { id } = await params;
     
-    const { data, error } = await supabase
+    // Use supabaseAdmin to bypass RLS
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .select(`
         *,
@@ -26,6 +27,7 @@ export async function GET(
       .single();
 
     if (error) {
+      console.error('❌ Error fetching order:', error);
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
@@ -47,13 +49,13 @@ export async function PUT(
     const { status } = await request.json();
 
     // Get order with user info before update
-    const { data: orderBefore } = await supabase
+    const { data: orderBefore } = await supabaseAdmin
       .from('orders')
       .select('user_id, status')
       .eq('id', id)
       .single();
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .update({ status })
       .eq('id', id)
