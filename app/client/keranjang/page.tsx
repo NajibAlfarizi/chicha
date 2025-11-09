@@ -103,22 +103,22 @@ export default function CartPage() {
       <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <ShoppingCart className="h-8 w-8 text-amber-500" />
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2 md:gap-3">
+              <ShoppingCart className="h-6 w-6 md:h-8 md:w-8 text-amber-500" />
               Keranjang Belanja
             </h1>
-            <p className="text-slate-400 mt-2">
+            <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm md:text-base">
               {getTotalItems()} item dalam keranjang
             </p>
           </div>
 
           {cartItems.length === 0 ? (
-            <Card className="bg-slate-800/50 border-amber-500/20">
-              <CardContent className="py-20 text-center">
-                <ShoppingCart className="h-20 w-20 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-xl text-white mb-2">Keranjang Kosong</h3>
-                <p className="text-slate-400 mb-6">Belum ada produk di keranjang Anda</p>
+            <Card className="bg-white dark:bg-slate-800/50 border-slate-200 dark:border-amber-500/20">
+              <CardContent className="py-16 md:py-20 text-center">
+                <ShoppingCart className="h-16 w-16 md:h-20 md:w-20 text-slate-400 dark:text-slate-600 mx-auto mb-4" />
+                <h3 className="text-lg md:text-xl text-slate-900 dark:text-white mb-2">Keranjang Kosong</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-6 text-sm md:text-base">Belum ada produk di keranjang Anda</p>
                 <Link href="/client/produk">
                   <Button className="bg-amber-500 hover:bg-amber-600 text-slate-900">
                     <ShoppingCart className="mr-2 h-4 w-4" />
@@ -128,23 +128,25 @@ export default function CartPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-4">
-                <Card className="bg-slate-800/50 border-amber-500/20">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-white">Produk ({cartItems.length})</CardTitle>
+                <Card className="bg-white dark:bg-slate-800/50 border-slate-200 dark:border-amber-500/20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                    <CardTitle className="text-slate-900 dark:text-white text-lg md:text-xl">
+                      Produk ({cartItems.length})
+                    </CardTitle>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={clearCart}
-                      className="border-red-500 text-red-500 hover:bg-red-500/10"
+                      className="border-red-500 text-red-500 hover:bg-red-500/10 text-xs md:text-sm"
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Kosongkan
+                      <Trash2 className="h-3 w-3 md:h-4 md:w-4 md:mr-1" />
+                      <span className="hidden md:inline">Kosongkan</span>
                     </Button>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 md:space-y-4">
                     {cartItems.map((item) => {
                       // Safety check for product data
                       if (!item.product) {
@@ -155,10 +157,10 @@ export default function CartPage() {
                       return (
                         <div
                           key={item.product.id}
-                          className="flex gap-4 p-4 bg-slate-700/30 rounded-lg"
+                          className="flex flex-col sm:flex-row gap-3 md:gap-4 p-3 md:p-4 bg-slate-50 dark:bg-slate-700/30 rounded-lg border border-slate-200 dark:border-transparent"
                         >
                           {/* Product Image */}
-                          <div className="w-24 h-24 bg-slate-600 rounded flex items-center justify-center flex-shrink-0">
+                          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-slate-200 dark:bg-slate-600 rounded flex items-center justify-center shrink-0">
                             {item.product.image_url ? (
                               <img
                                 src={item.product.image_url}
@@ -167,73 +169,76 @@ export default function CartPage() {
                                 onError={(e) => {
                                   // Fallback jika gambar gagal load
                                   e.currentTarget.style.display = 'none';
-                                  e.currentTarget.parentElement!.innerHTML = '<svg class="h-10 w-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>';
+                                  e.currentTarget.parentElement!.innerHTML = '<svg class="h-10 w-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>';
                                 }}
                               />
                             ) : (
-                              <ShoppingCart className="h-10 w-10 text-slate-500" />
+                              <ShoppingCart className="h-8 w-8 md:h-10 md:w-10 text-slate-400 dark:text-slate-500" />
                             )}
                           </div>
 
-                          {/* Product Info */}
-                          <div className="flex-1">
-                            <h3 className="text-white font-semibold mb-1">
-                              {item.product.name}
-                            </h3>
-                            <p className="text-slate-400 text-sm mb-2">
-                              {item.product.category?.name || 'Tanpa kategori'}
-                            </p>
-                            <p className="text-amber-500 font-bold text-lg">
-                              Rp {item.product.price.toLocaleString('id-ID')}
-                            </p>
-                            <p className="text-slate-500 text-xs mt-1">
-                              Stok: {item.product.stock}
-                            </p>
+                          {/* Product Info & Controls */}
+                          <div className="flex-1 flex flex-col sm:flex-row gap-3">
+                            {/* Product Info */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-slate-900 dark:text-white font-semibold mb-1 text-sm md:text-base truncate">
+                                {item.product.name}
+                              </h3>
+                              <p className="text-slate-600 dark:text-slate-400 text-xs md:text-sm mb-2">
+                                {item.product.category?.name || 'Tanpa kategori'}
+                              </p>
+                              <p className="text-amber-500 font-bold text-base md:text-lg">
+                                Rp {item.product.price.toLocaleString('id-ID')}
+                              </p>
+                              <p className="text-slate-500 dark:text-slate-500 text-xs mt-1">
+                                Stok: {item.product.stock}
+                              </p>
+                            </div>
+
+                            {/* Quantity Controls */}
+                            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-between gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeItem(item.product.id)}
+                                className="border-red-500 text-red-500 hover:bg-red-500/10 h-8 w-8 p-0 sm:mb-auto"
+                              >
+                                <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                              </Button>
+
+                              <div className="flex items-center gap-1.5 md:gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                  className="border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 h-7 w-7 md:h-8 md:w-8 p-0"
+                                >
+                                  <Minus className="h-3 w-3 md:h-4 md:w-4" />
+                                </Button>
+                                <Input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) => updateQuantity(item.product.id, parseInt(e.target.value) || 1)}
+                                  className="w-12 md:w-16 h-7 md:h-8 text-center bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm"
+                                  min="1"
+                                  max={item.product.stock}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                  className="border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 h-7 w-7 md:h-8 md:w-8 p-0"
+                                  disabled={item.quantity >= item.product.stock}
+                                >
+                                  <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                                </Button>
+                              </div>
+
+                              <p className="text-slate-900 dark:text-white font-semibold text-sm md:text-base whitespace-nowrap">
+                                Rp {(item.product.price * item.quantity).toLocaleString('id-ID')}
+                              </p>
+                            </div>
                           </div>
-
-                        {/* Quantity Controls */}
-                        <div className="flex flex-col items-end justify-between">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeItem(item.product.id)}
-                            className="border-red-500 text-red-500 hover:bg-red-500/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                              className="border-slate-600 text-white h-8 w-8 p-0"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                              type="number"
-                              value={item.quantity}
-                              onChange={(e) => updateQuantity(item.product.id, parseInt(e.target.value) || 1)}
-                              className="w-16 h-8 text-center bg-slate-900 border-slate-600 text-white"
-                              min="1"
-                              max={item.product.stock}
-                            />
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              className="border-slate-600 text-white h-8 w-8 p-0"
-                              disabled={item.quantity >= item.product.stock}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          <p className="text-white font-semibold">
-                            Rp {(item.product.price * item.quantity).toLocaleString('id-ID')}
-                          </p>
-                        </div>
                       </div>
                       );
                     })}
@@ -243,22 +248,24 @@ export default function CartPage() {
 
               {/* Order Summary */}
               <div className="lg:col-span-1">
-                <Card className="bg-slate-800/50 border-amber-500/20 sticky top-24">
+                <Card className="bg-white dark:bg-slate-800/50 border-slate-200 dark:border-amber-500/20 lg:sticky lg:top-24">
                   <CardHeader>
-                    <CardTitle className="text-white">Ringkasan Pesanan</CardTitle>
+                    <CardTitle className="text-slate-900 dark:text-white text-lg md:text-xl">
+                      Ringkasan Pesanan
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <div className="flex justify-between text-slate-300">
+                      <div className="flex justify-between text-slate-700 dark:text-slate-300 text-sm md:text-base">
                         <span>Subtotal ({getTotalItems()} item)</span>
                         <span>Rp {getTotalPrice().toLocaleString('id-ID')}</span>
                       </div>
-                      <div className="flex justify-between text-slate-300">
+                      <div className="flex justify-between text-slate-700 dark:text-slate-300 text-sm md:text-base">
                         <span>Biaya Admin</span>
                         <span>Rp 0</span>
                       </div>
-                      <div className="border-t border-slate-700 pt-2 mt-2">
-                        <div className="flex justify-between text-white font-bold text-lg">
+                      <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
+                        <div className="flex justify-between text-slate-900 dark:text-white font-bold text-base md:text-lg">
                           <span>Total</span>
                           <span className="text-amber-500">
                             Rp {getTotalPrice().toLocaleString('id-ID')}
@@ -268,14 +275,17 @@ export default function CartPage() {
                     </div>
 
                     <Link href="/client/checkout" className="block">
-                      <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold">
+                      <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold h-10 md:h-11">
                         Lanjut ke Checkout
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
 
                     <Link href="/client/produk">
-                      <Button variant="outline" className="w-full border-slate-600 text-slate-300">
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 h-10 md:h-11"
+                      >
                         <ShoppingCart className="mr-2 h-4 w-4" />
                         Lanjut Belanja
                       </Button>
@@ -283,10 +293,10 @@ export default function CartPage() {
 
                     {/* Info */}
                     <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
-                      <p className="text-amber-500 text-sm font-semibold mb-1">
+                      <p className="text-amber-600 dark:text-amber-500 text-xs md:text-sm font-semibold mb-1">
                         💰 Informasi Target CRM
                       </p>
-                      <p className="text-slate-300 text-xs">
+                      <p className="text-slate-700 dark:text-slate-300 text-xs">
                         Setiap pembelian akan menambah progress target pembelanjaan Anda untuk mendapatkan reward!
                       </p>
                     </div>
