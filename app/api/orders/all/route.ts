@@ -1,10 +1,11 @@
 ﻿import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 
 // GET all orders (admin only)
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    // Use admin client to bypass RLS so admin can see all orders (including cancelled)
+    const { data, error } = await supabaseAdmin
       .from('orders')
       .select(`
         *,

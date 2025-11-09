@@ -57,6 +57,8 @@ export interface Order {
   status: OrderStatus;
   created_at: string;
   customer_info?: CustomerInfo;
+  cancel_reason?: string;
+  cancelled_at?: string;
   items?: OrderItemDetail[];
   user?: User;
 }

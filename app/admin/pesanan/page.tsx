@@ -30,6 +30,8 @@ export default function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order & { items?: OrderItem[] } | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   useEffect(() => {
     fetchOrders();
@@ -58,12 +60,15 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: string, reason?: string) => {
     try {
       const response = await fetch(`/api/orders/${orderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ 
+          status: newStatus,
+          cancel_reason: reason 
+        }),
       });
 
       if (response.ok) {
@@ -71,9 +76,18 @@ export default function AdminOrdersPage() {
         if (selectedOrder?.id === orderId) {
           fetchOrderDetail(orderId);
         }
+        // Close cancel dialog if open
+        setIsCancelDialogOpen(false);
+        setCancelReason('');
       }
     } catch (error) {
       console.error('Error updating order status:', error);
+    }
+  };
+
+  const handleCancelOrder = () => {
+    if (selectedOrder && cancelReason.trim()) {
+      updateOrderStatus(selectedOrder.id, 'dibatalkan', cancelReason);
     }
   };
 
@@ -284,6 +298,19 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
+                {/* Cancel Reason (if order is cancelled) */}
+                {selectedOrder.status === 'dibatalkan' && selectedOrder.cancel_reason && (
+                  <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+                    <h4 className="font-semibold mb-2 text-red-700 dark:text-red-400">Alasan Pembatalan</h4>
+                    <p className="text-sm text-red-600 dark:text-red-300">{selectedOrder.cancel_reason}</p>
+                    {selectedOrder.cancelled_at && (
+                      <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                        Dibatalkan pada: {new Date(selectedOrder.cancelled_at).toLocaleString('id-ID')}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Update Status */}
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <h4 className="font-semibold mb-3">Update Status</h4>
@@ -310,7 +337,7 @@ export default function AdminOrdersPage() {
                       Selesai
                     </Button>
                     <Button
-                      onClick={() => updateOrderStatus(selectedOrder.id, 'dibatalkan')}
+                      onClick={() => setIsCancelDialogOpen(true)}
                       className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                       disabled={selectedOrder.status === 'dibatalkan'}
                     >
@@ -320,6 +347,50 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Cancel Order Dialog */}
+        <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-red-600">Batalkan Pesanan</DialogTitle>
+              <DialogDescription>
+                Masukkan alasan pembatalan. Stok produk akan dikembalikan otomatis.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Alasan Pembatalan <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Contoh: Stok habis, Permintaan pelanggan, Pembayaran gagal..."
+                  className="w-full min-h-[100px] p-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-background"
+                  required
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsCancelDialogOpen(false);
+                    setCancelReason('');
+                  }}
+                >
+                  Batal
+                </Button>
+                <Button
+                  onClick={handleCancelOrder}
+                  disabled={!cancelReason.trim()}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Batalkan Pesanan
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
