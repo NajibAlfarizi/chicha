@@ -1,12 +1,12 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ClientLayout from '@/components/ClientLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { XCircle, AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense } from 'react';
 
 function ErrorContent() {
   const searchParams = useSearchParams();

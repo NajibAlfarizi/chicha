@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ClientLayout from '@/components/ClientLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Package, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense } from 'react';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -67,12 +66,16 @@ function SuccessContent() {
     const midtransOrderId = searchParams.get('order_id');
     const transactionStatus = searchParams.get('transaction_status');
     
-    console.log('✅ Payment success:', { midtransOrderId, transactionStatus });
+    console.log('✅ Payment success page:', { midtransOrderId, transactionStatus });
 
-    // Create order from pending data
-    if (midtransOrderId && transactionStatus === 'settlement') {
+    // Create order from pending data for successful payment statuses
+    // Midtrans success statuses: settlement, capture, pending (for some payment methods)
+    const successStatuses = ['settlement', 'capture', 'pending'];
+    
+    if (midtransOrderId && transactionStatus && successStatuses.includes(transactionStatus)) {
       createOrderFromPendingData(midtransOrderId);
     } else {
+      console.warn('⚠️ Invalid transaction status or missing order_id:', { midtransOrderId, transactionStatus });
       setLoading(false);
     }
   }, [searchParams]);

@@ -46,6 +46,15 @@ export async function POST(request: NextRequest) {
     };
 
     console.log('Midtrans parameter:', JSON.stringify(parameter, null, 2));
+    
+    // Log voucher discount if present
+    const voucherItem = item_details.find((item: { id: string; price: number }) => item.id === 'VOUCHER-DISCOUNT');
+    if (voucherItem) {
+      console.log('🎫 Voucher discount applied:', {
+        discount_amount: Math.abs(voucherItem.price),
+        final_amount: gross_amount,
+      });
+    }
 
     // Create transaction with Midtrans
     const transaction = await snap.createTransaction(parameter);

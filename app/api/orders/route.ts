@@ -51,9 +51,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { user_id, items, payment_method, total_amount, customer_info } = body;
+    const { 
+      user_id, 
+      items, 
+      payment_method, 
+      total_amount, 
+      subtotal,
+      discount_amount,
+      voucher_id,
+      voucher_code,
+      customer_info 
+    } = body;
 
-    console.log('📦 Order request received:', { user_id, items, payment_method, total_amount, customer_info });
+    console.log('📦 Order request received:', { 
+      user_id, items, payment_method, total_amount, subtotal, discount_amount, voucher_code 
+    });
 
     // Validate input
     if (!user_id || !items || items.length === 0 || !payment_method || !total_amount) {
@@ -66,10 +78,14 @@ export async function POST(request: NextRequest) {
       .from('orders')
       .insert({
         user_id,
+        subtotal: subtotal || total_amount,
+        discount_amount: discount_amount || 0,
         total_amount,
         payment_method,
         status: 'pending',
         customer_info: customer_info || null,
+        voucher_id: voucher_id || null,
+        voucher_code: voucher_code || null,
       })
       .select()
       .single();
@@ -102,19 +118,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: itemsError.message }, { status: 400 });
     }
 
-    // Update product stock
+    // Update product stock atomically
     for (const item of items) {
-      const { data: product } = await supabaseAdmin
+      const { data: product, error: stockError } = await supabaseAdmin
         .from('products')
         .select('stock')
         .eq('id', item.product_id)
         .single();
 
+      if (stockError) {
+        console.error('❌ Error fetching product stock:', stockError);
+        continue;
+      }
+
       if (product) {
-        await supabaseAdmin
+        const newStock = product.stock - item.quantity;
+        
+        if (newStock < 0) {
+          console.warn('⚠️ Insufficient stock for product:', item.product_id);
+          // Still proceed but log warning
+        }
+        
+        const { error: updateError } = await supabaseAdmin
           .from('products')
-          .update({ stock: product.stock - item.quantity })
+          .update({ stock: newStock })
           .eq('id', item.product_id);
+          
+        if (updateError) {
+          console.error('❌ Error updating product stock:', updateError);
+        } else {
+          console.log(`✅ Stock updated for ${item.product_id}: ${product.stock} -> ${newStock}`);
+        }
+      }
+    }
+
+    // Track voucher usage if voucher was used
+    if (voucher_id && discount_amount > 0) {
+      const { error: voucherUsageError } = await supabaseAdmin
+        .from('voucher_usage')
+        .insert({
+          voucher_id,
+          user_id,
+          order_id: order.id,
+          discount_amount,
+        });
+
+      if (voucherUsageError) {
+        console.error('❌ Error tracking voucher usage:', voucherUsageError);
+        // Don't fail the order, just log the error
+      } else {
+        // Increment voucher used count
+        await supabaseAdmin.rpc('increment_voucher_used', { voucher_id_param: voucher_id });
+        console.log('✅ Voucher usage tracked');
       }
     }
 

@@ -27,6 +27,37 @@ export interface Product {
   category?: Category;
 }
 
+// Voucher Types
+export type VoucherType = 'percentage' | 'fixed';
+
+export interface Voucher {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  type: VoucherType;
+  value: number;
+  min_purchase: number;
+  max_discount?: number;
+  quota: number;
+  used: number;
+  valid_from: string;
+  valid_until: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VoucherUsage {
+  id: string;
+  voucher_id: string;
+  user_id: string;
+  order_id: string;
+  discount_amount: number;
+  used_at: string;
+  voucher?: Voucher;
+}
+
 // Order Types
 export type OrderStatus = 'pending' | 'dikirim' | 'selesai' | 'dibatalkan';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired';
@@ -52,6 +83,10 @@ export interface Order {
   id: string;
   user_id: string;
   total_amount: number;
+  subtotal?: number;
+  discount_amount?: number;
+  voucher_id?: string;
+  voucher_code?: string;
   payment_method: string;
   payment_status?: PaymentStatus;
   status: OrderStatus;
@@ -61,6 +96,7 @@ export interface Order {
   cancelled_at?: string;
   items?: OrderItemDetail[];
   user?: User;
+  voucher?: Voucher;
 }
 
 export interface OrderItem {

@@ -19,6 +19,7 @@ import {
   Menu,
   X,
   UserCog,
+  Ticket,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,6 +32,7 @@ const menuItems = [
   { icon: Package, label: 'Produk', href: '/admin/produk' },
   { icon: FolderTree, label: 'Kategori', href: '/admin/kategori' },
   { icon: ShoppingBag, label: 'Pesanan', href: '/admin/pesanan' },
+  { icon: Ticket, label: 'Voucher', href: '/admin/voucher' },
   { icon: Wrench, label: 'Booking Service', href: '/admin/booking' },
   { icon: UserCog, label: 'Teknisi', href: '/admin/teknisi' },
   { icon: Target, label: 'Target CRM', href: '/admin/target' },
