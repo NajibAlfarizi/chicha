@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Package, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -67,6 +68,9 @@ function SuccessContent() {
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Order created successfully:', data.order);
+        console.log('✅ Order ID:', data.order?.id);
+        console.log('✅ Order user_id:', data.order?.user_id);
+        console.log('✅ Order total:', data.order?.total_amount);
         setOrderDetails(data.order);
         
         // Clean up pending order and cart
@@ -77,9 +81,14 @@ function SuccessContent() {
         console.log('🧹 Cleaned up localStorage');
       } else {
         const error = await response.json();
-        console.error('❌ Failed to create order:', error);
-        console.error('Response status:', response.status);
-        console.error('Error details:', error);
+        console.error('❌ Failed to create order - Full response:', error);
+        console.error('❌ Response status:', response.status);
+        console.error('❌ Error message:', error.error || error.message);
+        
+        // Show error to user
+        toast.error('Gagal membuat pesanan', {
+          description: error.error || 'Terjadi kesalahan'
+        });
       }
     } catch (error) {
       console.error('❌ Error creating order:', error);
