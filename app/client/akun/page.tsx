@@ -227,7 +227,8 @@ function AccountContent() {
       toast.dismiss('chat-loading');
       
       if (room) {
-        router.push('/client/chat');
+        // Redirect to chat page with room ID to auto-open the chat
+        router.push(`/client/chat?room=${room.id}`);
       } else {
         toast.error('Gagal membuka chat');
       }

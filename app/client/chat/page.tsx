@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import ClientLayout from '@/components/ClientLayout';
 import { ChatList } from '@/components/ChatList';
 import { ChatRoom } from '@/components/ChatRoom';
@@ -16,18 +17,37 @@ import { useChatRooms, type ChatRoom as ChatRoomType } from '@/lib/useChat';
 import { toast } from 'sonner';
 
 export default function ChatPage() {
+  const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { createRoom, fetchRooms } = useChatRooms(user?.id, 'customer');
+  const { rooms, createRoom, fetchRooms } = useChatRooms(user?.id, 'customer');
   const [selectedRoom, setSelectedRoom] = useState<ChatRoomType | null>(null);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newChatType, setNewChatType] = useState<string>('support');
   const [newChatName, setNewChatName] = useState('');
+  const hasAutoSelected = useRef(false);
 
-  const handleSelectRoom = (room: ChatRoomType) => {
+  const handleSelectRoom = useCallback((room: ChatRoomType) => {
     setSelectedRoom(room);
     setShowMobileChat(true);
-  };
+  }, []);
+
+  // Auto-select room from URL parameter
+  useEffect(() => {
+    const roomId = searchParams?.get('room');
+    if (roomId && rooms.length > 0 && !hasAutoSelected.current) {
+      const room = rooms.find(r => r.id === roomId);
+      if (room) {
+        console.log('🎯 Auto-selecting room from URL:', room.id);
+        hasAutoSelected.current = true;
+        // Use setTimeout to avoid setState in effect body
+        setTimeout(() => {
+          setSelectedRoom(room);
+          setShowMobileChat(true);
+        }, 0);
+      }
+    }
+  }, [searchParams, rooms]);
 
   const handleBack = () => {
     setShowMobileChat(false);

@@ -23,6 +23,7 @@ export function ChatRoom({ room, onBack }: ChatRoomProps) {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Get current user info
   const currentUser = user || teknisi;
@@ -30,16 +31,7 @@ export function ChatRoom({ room, onBack }: ChatRoomProps) {
   const currentUserName = user?.name || teknisi?.name;
   const currentUserType = teknisi ? 'teknisi' : user?.role === 'admin' ? 'admin' : 'customer';
 
-  // Auto-scroll to bottom only if container is visible
-  useEffect(() => {
-    if (messages.length > 0 && containerRef.current && messagesEndRef.current) {
-      // Check if container is actually visible
-      const isVisible = containerRef.current.offsetParent !== null;
-      if (isVisible) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  }, [messages]);
+  // No auto-scroll - user controls scrolling manually
 
   // Mark messages as read when opening room
   useEffect(() => {
@@ -122,7 +114,15 @@ export function ChatRoom({ room, onBack }: ChatRoomProps) {
       return customerName;
     }
     
-    // Customer sees teknisi or admin name
+    // Customer sees order/booking info or teknisi/admin name
+    if (room.type === 'order' && room.order_id) {
+      return `Order #${room.order_id.slice(0, 8)}`;
+    }
+    
+    if (room.type === 'booking' && room.booking_id) {
+      return `Servis ${room.name || 'Booking'}`;
+    }
+    
     if (room.name) return room.name;
     
     if (room.teknisi) {
@@ -179,7 +179,10 @@ export function ChatRoom({ room, onBack }: ChatRoomProps) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 min-h-0">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 min-h-0"
+      >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm sm:text-base text-muted-foreground text-center px-4">
