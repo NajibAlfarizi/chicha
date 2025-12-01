@@ -38,11 +38,7 @@ export async function POST(request: NextRequest) {
         phone: customer_details.phone || '',
       },
       item_details: item_details,
-      callbacks: {
-        finish: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/success?order_id=${order_id}`,
-        error: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/error`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/success?order_id=${order_id}`,
-      },
+      // Don't set callbacks - we handle redirect via Snap.js onSuccess callback in frontend
     };
 
     console.log('Midtrans parameter:', JSON.stringify(parameter, null, 2));
