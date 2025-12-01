@@ -96,18 +96,28 @@ export default function CheckoutPage() {
 
   const fetchAvailableVouchers = async () => {
     try {
-      console.log('🎫 Fetching vouchers from API...');
-      const response = await fetch('/api/vouchers');
+      // Get user_id from localStorage
+      const userStr = localStorage.getItem('user');
+      if (!userStr) {
+        console.warn('⚠️ No user found, cannot fetch personalized vouchers');
+        return;
+      }
+      
+      const localUser = JSON.parse(userStr);
+      const userId = localUser.id;
+
+      console.log('🎫 Fetching vouchers for user:', userId);
+      const response = await fetch(`/api/vouchers?user_id=${userId}`);
       const data = await response.json();
       console.log('🎫 API Response:', data);
-      console.log('🎫 Vouchers count:', data.vouchers?.length || 0);
+      console.log('🎫 Available vouchers (unused by user):', data.vouchers?.length || 0);
       setAvailableVouchers(data.vouchers || []);
       
       if (!data.vouchers || data.vouchers.length === 0) {
-        console.warn('⚠️ No vouchers available. Please check:');
-        console.warn('1. Run create-vouchers-table.sql in Supabase');
-        console.warn('2. Run insert-sample-vouchers.sql in Supabase');
-        console.warn('3. Check voucher valid_from and valid_until dates');
+        console.warn('⚠️ No vouchers available. Possible reasons:');
+        console.warn('1. All vouchers already used by this user');
+        console.warn('2. No active vouchers in database');
+        console.warn('3. Voucher dates not valid (check valid_from and valid_until)');
       }
     } catch (error) {
       console.error('❌ Error fetching vouchers:', error);

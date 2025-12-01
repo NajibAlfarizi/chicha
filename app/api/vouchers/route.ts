@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const isAdmin = searchParams.get('admin') === 'true';
+    const userId = searchParams.get('user_id');
 
     let query = supabaseAdmin
       .from('vouchers')
@@ -28,7 +29,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ vouchers: data || [] }, { status: 200 });
+    let vouchers = data || [];
+
+    // If userId provided, filter out vouchers already used by this user
+    if (userId && !isAdmin) {
+      const { data: usedVouchers } = await supabaseAdmin
+        .from('voucher_usage')
+        .select('voucher_id')
+        .eq('user_id', userId);
+
+      const usedVoucherIds = new Set(usedVouchers?.map(v => v.voucher_id) || []);
+      
+      vouchers = vouchers.filter(v => !usedVoucherIds.has(v.id));
+      
+      console.log(`✅ Filtered vouchers for user ${userId}: ${vouchers.length} available (${usedVoucherIds.size} already used)`);
+    }
+
+    return NextResponse.json({ vouchers }, { status: 200 });
 
   } catch (error) {
     console.error('❌ Server error:', error);
