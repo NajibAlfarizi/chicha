@@ -60,11 +60,13 @@ export async function POST(request: NextRequest) {
       discount_amount,
       voucher_id,
       voucher_code,
-      customer_info 
+      customer_info,
+      midtrans_order_id,
+      payment_status
     } = body;
 
     console.log('📦 Order request received:', { 
-      user_id, items, payment_method, total_amount, subtotal, discount_amount, voucher_code 
+      user_id, items, payment_method, total_amount, subtotal, discount_amount, voucher_code, midtrans_order_id 
     });
 
     // Validate input
@@ -83,9 +85,11 @@ export async function POST(request: NextRequest) {
         total_amount,
         payment_method,
         status: 'pending',
+        payment_status: payment_status || 'pending',
         customer_info: customer_info || null,
         voucher_id: voucher_id || null,
         voucher_code: voucher_code || null,
+        midtrans_order_id: midtrans_order_id || null,
       })
       .select()
       .single();

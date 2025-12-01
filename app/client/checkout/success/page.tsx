@@ -16,15 +16,35 @@ function SuccessContent() {
 
   const createOrderFromPendingData = async (midtransOrderId: string) => {
     try {
+      console.log('🔍 Checking localStorage for pending_order...');
+      
       // Get pending order data from localStorage
       const pendingOrderStr = localStorage.getItem('pending_order');
+      
       if (!pendingOrderStr) {
-        console.error('No pending order found');
+        console.error('❌ No pending order found in localStorage');
+        console.log('Available localStorage keys:', Object.keys(localStorage));
         setLoading(false);
         return;
       }
 
+      console.log('✅ Pending order found:', pendingOrderStr.substring(0, 100) + '...');
+      
       const pendingOrder = JSON.parse(pendingOrderStr);
+      console.log('📦 Parsed pending order:', pendingOrder);
+      
+      // Validate required fields
+      if (!pendingOrder.user_id) {
+        console.error('❌ Missing user_id in pending order');
+        setLoading(false);
+        return;
+      }
+      
+      if (!pendingOrder.items || pendingOrder.items.length === 0) {
+        console.error('❌ No items in pending order');
+        setLoading(false);
+        return;
+      }
       
       // Add midtrans order ID to the order data
       const orderData = {
@@ -33,7 +53,7 @@ function SuccessContent() {
         payment_status: 'paid',
       };
 
-      console.log('Creating order from pending data:', orderData);
+      console.log('📤 Creating order with data:', orderData);
 
       // Create order in database
       const response = await fetch('/api/orders', {
@@ -42,43 +62,87 @@ function SuccessContent() {
         body: JSON.stringify(orderData),
       });
 
+      console.log('📨 API Response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Order created successfully:', data.order);
         setOrderDetails(data.order);
         
-        // Clean up pending order
+        // Clean up pending order and cart
         localStorage.removeItem('pending_order');
+        localStorage.removeItem('cart');
+        window.dispatchEvent(new Event('cartUpdated'));
         
-        console.log('✅ Order created successfully:', data.order);
+        console.log('🧹 Cleaned up localStorage');
       } else {
         const error = await response.json();
-        console.error('Failed to create order:', error);
+        console.error('❌ Failed to create order:', error);
+        console.error('Response status:', response.status);
+        console.error('Error details:', error);
       }
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('❌ Error creating order:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Get order_id and transaction_status from URL params
-    const midtransOrderId = searchParams.get('order_id');
-    const transactionStatus = searchParams.get('transaction_status');
+    console.log('🔄 Success page useEffect triggered');
     
-    console.log('✅ Payment success page:', { midtransOrderId, transactionStatus });
+    // Check if there's pending order data
+    const pendingOrderStr = localStorage.getItem('pending_order');
+    
+    console.log('🔍 Checking localStorage...');
+    console.log('📦 pending_order exists:', !!pendingOrderStr);
+    console.log('📦 All localStorage keys:', Object.keys(localStorage));
+    
+    if (!pendingOrderStr) {
+      console.warn('⚠️ No pending order found in localStorage');
+      console.log('⚠️ This usually means order was already processed or user navigated directly');
+      setLoading(false);
+      return;
+    }
 
-    // Create order from pending data for successful payment statuses
-    // Midtrans success statuses: settlement, capture, pending (for some payment methods)
-    const successStatuses = ['settlement', 'capture', 'pending'];
-    
-    if (midtransOrderId && transactionStatus && successStatuses.includes(transactionStatus)) {
-      createOrderFromPendingData(midtransOrderId);
-    } else {
-      console.warn('⚠️ Invalid transaction status or missing order_id:', { midtransOrderId, transactionStatus });
+    console.log('✅ Payment success page loaded');
+    console.log('📦 Found pending_order in localStorage');
+    console.log('📦 Raw pending_order (first 200 chars):', pendingOrderStr.substring(0, 200));
+
+    try {
+      const pendingOrder = JSON.parse(pendingOrderStr);
+      const midtransOrderId = pendingOrder.midtrans_order_id;
+      
+      console.log('📋 Full pending order data:', pendingOrder);
+      console.log('📋 Pending order summary:', {
+        has_user_id: !!pendingOrder.user_id,
+        user_id_value: pendingOrder.user_id,
+        has_items: !!pendingOrder.items?.length,
+        items_count: pendingOrder.items?.length,
+        items_preview: pendingOrder.items?.map((i: any) => ({ product_id: i.product_id, qty: i.quantity })),
+        total_amount: pendingOrder.total_amount,
+        payment_method: pendingOrder.payment_method,
+        midtrans_order_id: midtransOrderId,
+      });
+
+      if (midtransOrderId) {
+        console.log('🚀 Calling createOrderFromPendingData with:', midtransOrderId);
+        createOrderFromPendingData(midtransOrderId);
+      } else {
+        console.error('❌ No midtrans_order_id in pending_order');
+        console.error('❌ Pending order structure:', Object.keys(pendingOrder));
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('❌ Error parsing pending_order:', error);
+      console.error('❌ Raw data:', pendingOrderStr);
       setLoading(false);
     }
-  }, [searchParams]);
+  }, []);
 
   return (
     <ClientLayout>
@@ -117,7 +181,7 @@ function SuccessContent() {
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <p className="text-sm text-gray-600 dark:text-gray-400">Total Pembayaran</p>
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      Rp {orderDetails.total_amount?.toLocaleString('id-ID')}
+                      Rp {(orderDetails.total_amount || 0).toLocaleString('id-ID')}
                     </p>
                   </div>
 

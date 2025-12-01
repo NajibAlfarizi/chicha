@@ -249,8 +249,10 @@ export default function CheckoutPage() {
       // Handle payment based on method
       if (paymentMethod === 'midtrans') {
         // For Midtrans: Save order data to localStorage, create payment first
-        // Order will be created after successful payment via webhook
+        // Order will be created after successful payment via success page
+        console.log('💾 Saving order data to pending_order...');
         localStorage.setItem('pending_order', JSON.stringify(orderData));
+        console.log('✅ Order data saved to localStorage');
         
         // Prepare item details with original prices
         const itemDetails = cartItems.map(item => ({
@@ -300,14 +302,38 @@ export default function CheckoutPage() {
           return;
         }
 
-        // Clear cart before redirecting (but keep pending_order for webhook)
+        // Save midtrans_order_id to pending_order
+        const updatedOrderData = {
+          ...orderData,
+          midtrans_order_id: paymentResult.order_id,
+        };
+        localStorage.setItem('pending_order', JSON.stringify(updatedOrderData));
+        console.log('💾 Updated pending_order with midtrans_order_id:', paymentResult.order_id);
+
+        // Verify pending_order is saved
+        const savedPendingOrder = localStorage.getItem('pending_order');
+        console.log('✅ Pending order saved:', savedPendingOrder ? 'Yes' : 'No');
+        if (savedPendingOrder) {
+          const parsed = JSON.parse(savedPendingOrder);
+          console.log('📦 Pending order data:', {
+            user_id: parsed.user_id,
+            total_amount: parsed.total_amount,
+            items_count: parsed.items?.length,
+            midtrans_order_id: parsed.midtrans_order_id,
+          });
+        }
+
+        // Clear cart before redirecting (but keep pending_order for success page)
         localStorage.removeItem('cart');
         window.dispatchEvent(new Event('cartUpdated'));
+        console.log('🗑️ Cart cleared');
 
         // Redirect to Midtrans payment page
         if (paymentResult.redirect_url) {
+          console.log('🚀 Redirecting to Midtrans:', paymentResult.redirect_url);
           window.location.href = paymentResult.redirect_url;
         } else {
+          console.error('❌ No redirect URL in payment result');
           toast.error('Link pembayaran tidak ditemukan');
           localStorage.removeItem('pending_order');
           setLoading(false);
