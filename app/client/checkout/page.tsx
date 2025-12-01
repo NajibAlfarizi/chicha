@@ -16,7 +16,7 @@ import { useAuth } from '@/lib/auth-context';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
@@ -228,6 +228,21 @@ export default function CheckoutPage() {
 
       const user = JSON.parse(userStr);
 
+      // Validate user is authenticated
+      if (!user?.id) {
+        console.error('❌ User ID not found');
+        toast.error('Session expired', {
+          description: 'Silakan login kembali',
+        });
+        router.push('/auth/login?redirect=/client/checkout');
+        setLoading(false);
+        return;
+      }
+
+      console.log('👤 User ID:', user.id);
+      console.log('📋 Customer Info:', customerInfo);
+      console.log('🎫 Applied Voucher:', appliedVoucher);
+
       const orderData = {
         user_id: user.id,
         subtotal: getSubtotal(),
@@ -244,7 +259,13 @@ export default function CheckoutPage() {
         })),
       };
 
-      console.log('🛒 Preparing checkout:', orderData);
+      console.log('🛒 Preparing checkout with complete data:', {
+        user_id: orderData.user_id,
+        customer_name: orderData.customer_info?.name,
+        voucher_code: orderData.voucher_code,
+        items_count: orderData.items.length,
+        total_amount: orderData.total_amount,
+      });
 
       // Handle payment based on method
       if (paymentMethod === 'midtrans') {
