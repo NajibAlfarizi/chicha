@@ -41,8 +41,12 @@ export default function CheckoutPage() {
   const [showVoucherDropdown, setShowVoucherDropdown] = useState(false);
 
   useEffect(() => {
-    // Check authentication first
-    if (!authLoading && !isAuthenticated) {
+    // Wait for auth to load
+    if (authLoading) return;
+
+    // Check authentication
+    if (!isAuthenticated || !user) {
+      console.error('❌ Not authenticated or user not loaded');
       toast.error('Login diperlukan', {
         description: 'Silakan login untuk melakukan checkout',
       });
@@ -50,7 +54,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!isAuthenticated) return;
+    console.log('✅ User authenticated:', user.id);
 
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
@@ -88,7 +92,7 @@ export default function CheckoutPage() {
     };
 
     fetchProfile();
-  }, [router, isAuthenticated, authLoading]);
+  }, [router, isAuthenticated, authLoading, user]);
 
   const fetchAvailableVouchers = async () => {
     try {
@@ -272,8 +276,17 @@ export default function CheckoutPage() {
         // For Midtrans: Save order data to localStorage, create payment first
         // Order will be created after successful payment via success page
         console.log('💾 Saving order data to pending_order...');
+        console.log('💾 Order data to save:', JSON.stringify(orderData, null, 2));
         localStorage.setItem('pending_order', JSON.stringify(orderData));
+        
+        // Verify what was actually saved
+        const savedData = localStorage.getItem('pending_order');
         console.log('✅ Order data saved to localStorage');
+        console.log('✅ Verification - saved data:', savedData?.substring(0, 200));
+        const parsed = JSON.parse(savedData || '{}');
+        console.log('✅ Verification - parsed user_id:', parsed.user_id);
+        console.log('✅ Verification - parsed customer_info:', parsed.customer_info);
+        console.log('✅ Verification - parsed voucher:', parsed.voucher_id, parsed.voucher_code);
         
         // Prepare item details with original prices
         const itemDetails = cartItems.map(item => ({

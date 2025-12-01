@@ -95,6 +95,7 @@ export interface Order {
   cancel_reason?: string;
   cancelled_at?: string;
   items?: OrderItemDetail[];
+  order_items?: OrderItem[];
   user?: User;
   voucher?: Voucher;
 }

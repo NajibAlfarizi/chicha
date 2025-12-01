@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
@@ -777,28 +778,50 @@ function AccountContent() {
               <div className="space-y-2">
                 <h3 className="font-semibold text-amber-500">Item Pesanan</h3>
                 <div className="space-y-3">
-                  {selectedOrder.items && selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between items-start bg-slate-700/30 p-3 rounded">
-                      <div className="flex-1">
-                        <p className="font-medium">{item.product_name || item.name}</p>
-                        <p className="text-sm text-slate-400">
-                          Rp {(item.price || 0).toLocaleString('id-ID')} x {item.quantity}
+                  {selectedOrder.order_items && selectedOrder.order_items.length > 0 ? (
+                    selectedOrder.order_items.map((item: any) => (
+                      <div key={item.id} className="flex justify-between items-start bg-slate-700/30 p-3 rounded">
+                        <div className="flex-1">
+                          <p className="font-medium">{item.product?.name || 'Produk tidak ditemukan'}</p>
+                          <p className="text-sm text-slate-400">
+                            Rp {(item.price || 0).toLocaleString('id-ID')} x {item.quantity}
+                          </p>
+                        </div>
+                        <p className="font-semibold text-amber-500">
+                          Rp {((item.price || 0) * item.quantity).toLocaleString('id-ID')}
                         </p>
                       </div>
-                      <p className="font-semibold text-amber-500">
-                        Rp {((item.price || 0) * item.quantity).toLocaleString('id-ID')}
-                      </p>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-400 text-center py-4">Tidak ada item</p>
+                  )}
                 </div>
               </div>
 
-              {/* Total */}
-              <div className="flex justify-between items-center pt-4 border-t border-slate-700">
-                <p className="text-lg font-semibold">Total Pembayaran</p>
-                <p className="text-2xl font-bold text-amber-500">
-                  Rp {selectedOrder.total_amount.toLocaleString('id-ID')}
-                </p>
+              {/* Price Breakdown */}
+              <div className="space-y-3 pt-4 border-t border-slate-700">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Subtotal</span>
+                  <span>Rp {(selectedOrder.subtotal || selectedOrder.total_amount).toLocaleString('id-ID')}</span>
+                </div>
+                
+                {(selectedOrder.discount_amount ?? 0) > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-400">
+                      Diskon {selectedOrder.voucher_code ? `(${selectedOrder.voucher_code})` : ''}
+                    </span>
+                    <span className="text-green-400">
+                      - Rp {(selectedOrder.discount_amount ?? 0).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center pt-3 border-t border-slate-700">
+                  <p className="text-lg font-semibold">Total Pembayaran</p>
+                  <p className="text-2xl font-bold text-amber-500">
+                    Rp {selectedOrder.total_amount.toLocaleString('id-ID')}
+                  </p>
+                </div>
               </div>
             </div>
           )}
