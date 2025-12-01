@@ -71,11 +71,12 @@ export default function ChatPage() {
 
   return (
     <ClientLayout>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="h-[calc(100vh-12rem)] rounded-lg border bg-card shadow-lg overflow-hidden">
+      <div className="fixed inset-0 top-16 bottom-20 lg:relative lg:inset-auto lg:top-auto lg:bottom-auto lg:container lg:mx-auto lg:px-4 lg:py-8 lg:max-w-7xl">
+        {/* Chat container - Fixed height to avoid overlap with dockbar */}
+        <div className="h-full lg:h-[calc(100vh-12rem)] lg:rounded-lg border-t lg:border bg-card lg:shadow-lg overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
             {/* Chat List - Hide on mobile when chat is open */}
-            <div className={`lg:col-span-1 border-r ${showMobileChat ? 'hidden lg:block' : 'block'}`}>
+            <div className={`lg:col-span-1 lg:border-r h-full overflow-hidden ${showMobileChat ? 'hidden lg:block' : 'block'}`}>
               <ChatList
                 onSelectRoom={handleSelectRoom}
                 userType="customer"
@@ -84,16 +85,16 @@ export default function ChatPage() {
               />
             </div>
 
-            {/* Chat Room - Show on mobile when room is selected */}
-            <div className={`lg:col-span-2 ${showMobileChat || selectedRoom ? 'block' : 'hidden lg:block'}`}>
+            {/* Chat Room - Full width on mobile when room is selected */}
+            <div className={`lg:col-span-2 h-full overflow-hidden ${showMobileChat || selectedRoom ? 'block' : 'hidden lg:block'}`}>
               {selectedRoom ? (
                 <ChatRoom room={selectedRoom} onBack={handleBack} />
               ) : (
                 <div className="h-full flex items-center justify-center bg-muted/20">
-                  <div className="text-center p-8">
-                    <MessageSquare className="h-24 w-24 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Select a chat</h3>
-                    <p className="text-muted-foreground">
+                  <div className="text-center p-4 sm:p-8">
+                    <MessageSquare className="h-16 w-16 sm:h-24 sm:w-24 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2">Select a chat</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground px-4">
                       Choose a chat from the list or start a new conversation
                     </p>
                   </div>
