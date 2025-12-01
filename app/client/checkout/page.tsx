@@ -218,6 +218,35 @@ export default function CheckoutPage() {
     }
   };
 
+  const openSnapPayment = (token: string, orderId: string) => {
+    const snap = (window as any).snap;
+    
+    snap.pay(token, {
+      onSuccess: function(result: any) {
+        console.log('✅ Payment success:', result);
+        router.push(`/client/checkout/success?order_id=${orderId}&transaction_status=settlement`);
+      },
+      onPending: function(result: any) {
+        console.log('⏳ Payment pending:', result);
+        router.push(`/client/checkout/success?order_id=${orderId}&transaction_status=pending`);
+      },
+      onError: function(result: any) {
+        console.error('❌ Payment error:', result);
+        toast.error('Pembayaran gagal', {
+          description: 'Silakan coba lagi',
+        });
+        setLoading(false);
+      },
+      onClose: function() {
+        console.log('❌ Payment popup closed');
+        toast.warning('Pembayaran dibatalkan', {
+          description: 'Anda menutup halaman pembayaran',
+        });
+        setLoading(false);
+      }
+    });
+  };
+
   const handleCheckout = async () => {
     // Validation
     if (!customerInfo.name || !customerInfo.email || !customerInfo.phone || !customerInfo.address) {
@@ -388,14 +417,25 @@ export default function CheckoutPage() {
         window.dispatchEvent(new Event('cartUpdated'));
         console.log('🗑️ Cart cleared');
 
-        // Redirect to Midtrans payment page
-        if (paymentResult.redirect_url) {
-          console.log('🚀 Redirecting to Midtrans:', paymentResult.redirect_url);
-          window.location.href = paymentResult.redirect_url;
+        // Open Midtrans Snap payment popup
+        if (paymentResult.token) {
+          console.log('🚀 Opening Midtrans Snap with token:', paymentResult.token);
+          
+          // Load Snap.js if not already loaded
+          if (!(window as any).snap) {
+            const script = document.createElement('script');
+            script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+            script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
+            script.onload = () => {
+              openSnapPayment(paymentResult.token, order.id);
+            };
+            document.body.appendChild(script);
+          } else {
+            openSnapPayment(paymentResult.token, order.id);
+          }
         } else {
-          console.error('❌ No redirect URL in payment result');
+          console.error('❌ No token in payment result');
           toast.error('Link pembayaran tidak ditemukan');
-          localStorage.removeItem('pending_order');
           setLoading(false);
         }
       } else {
