@@ -80,16 +80,10 @@ function SuccessContent() {
       return;
     }
 
-    // Check if payment was successful
-    const successStatuses = ['capture', 'settlement'];
-    if (transactionStatus && successStatuses.includes(transactionStatus)) {
-      console.log('✅ Payment status is successful:', transactionStatus);
-      updateOrderPaymentStatus(orderId);
-    } else {
-      console.warn('⚠️ Payment status:', transactionStatus);
-      // Still fetch order details even if status is not success
-      fetchOrderDetails(orderId);
-    }
+    // Always update payment status when reaching success page
+    // If user reached this page, payment was successful
+    console.log('✅ User reached success page - updating payment status to paid');
+    updateOrderPaymentStatus(orderId);
   }, [searchParams]);
 
   const fetchOrderDetails = async (orderId: string) => {

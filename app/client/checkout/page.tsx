@@ -224,11 +224,15 @@ export default function CheckoutPage() {
     snap.pay(token, {
       onSuccess: function(result: any) {
         console.log('✅ Payment success:', result);
-        router.push(`/client/checkout/success?order_id=${orderId}&transaction_status=settlement`);
+        // Redirect to success page - payment status will be updated there
+        router.push(`/client/checkout/success?order_id=${orderId}`);
       },
       onPending: function(result: any) {
         console.log('⏳ Payment pending:', result);
-        router.push(`/client/checkout/success?order_id=${orderId}&transaction_status=pending`);
+        toast.warning('Pembayaran tertunda', {
+          description: 'Pembayaran Anda masih dalam proses. Silakan cek status di halaman pesanan.',
+        });
+        router.push(`/client/akun?tab=orders`);
       },
       onError: function(result: any) {
         console.error('❌ Payment error:', result);
@@ -240,9 +244,10 @@ export default function CheckoutPage() {
       onClose: function() {
         console.log('❌ Payment popup closed');
         toast.warning('Pembayaran dibatalkan', {
-          description: 'Anda menutup halaman pembayaran',
+          description: 'Anda menutup halaman pembayaran. Pesanan masih tersimpan.',
         });
-        setLoading(false);
+        // Redirect to orders page instead of staying on checkout
+        router.push(`/client/akun?tab=orders`);
       }
     });
   };
