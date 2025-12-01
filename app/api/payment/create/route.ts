@@ -11,12 +11,12 @@ const snap = new midtransClient.Snap({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { gross_amount, customer_details, item_details } = body;
+    const { gross_amount, customer_details, item_details, order_id: dbOrderId } = body;
 
-    // Generate unique order_id with timestamp
-    const order_id = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Use database order_id if provided, otherwise generate new one
+    const order_id = dbOrderId || `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    console.log('Creating Midtrans transaction:', { order_id, gross_amount });
+    console.log('Creating Midtrans transaction:', { order_id, gross_amount, using_db_order: !!dbOrderId });
 
     // Validate required fields
     if (!gross_amount || !customer_details || !item_details) {
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       },
       item_details: item_details,
       callbacks: {
-        finish: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/success`,
+        finish: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/success?order_id=${order_id}`,
         error: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/error`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/success`,
+        pending: `${process.env.NEXT_PUBLIC_APP_URL}/client/checkout/success?order_id=${order_id}`,
       },
     };
 

@@ -283,22 +283,34 @@ export default function CheckoutPage() {
 
       // Handle payment based on method
       if (paymentMethod === 'midtrans') {
-        // For Midtrans: Save order data to localStorage, create payment first
-        // Order will be created after successful payment via success page
-        console.log('💾 Saving order data to pending_order...');
-        console.log('💾 Order data to save:', JSON.stringify(orderData, null, 2));
-        localStorage.setItem('pending_order', JSON.stringify(orderData));
+        console.log('💳 Step 1: Creating order in database first...');
         
-        // Verify what was actually saved
-        const savedData = localStorage.getItem('pending_order');
-        console.log('✅ Order data saved to localStorage');
-        console.log('✅ Verification - saved data:', savedData?.substring(0, 200));
-        const parsed = JSON.parse(savedData || '{}');
-        console.log('✅ Verification - parsed user_id:', parsed.user_id);
-        console.log('✅ Verification - parsed customer_info:', parsed.customer_info);
-        console.log('✅ Verification - parsed voucher:', parsed.voucher_id, parsed.voucher_code);
-        
-        // Prepare item details with original prices
+        // Create order first with pending payment status
+        const orderResponse = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...orderData,
+            payment_status: 'pending',
+          }),
+        });
+
+        if (!orderResponse.ok) {
+          const orderError = await orderResponse.json();
+          console.error('❌ Failed to create order:', orderError);
+          toast.error('Gagal membuat pesanan', {
+            description: orderError.error || 'Silakan coba lagi.',
+          });
+          setLoading(false);
+          return;
+        }
+
+        const { order } = await orderResponse.json();
+        console.log('✅ Order created:', order.id);
+        console.log('✅ Order user_id:', order.user_id);
+        console.log('✅ Order total:', order.total_amount);
+
+        // Prepare item details for Midtrans
         const itemDetails = cartItems.map(item => ({
           id: item.product.id,
           name: item.product.name,
@@ -311,13 +323,14 @@ export default function CheckoutPage() {
           itemDetails.push({
             id: 'VOUCHER-DISCOUNT',
             name: `Diskon Voucher ${appliedVoucher.code}`,
-            price: -getDiscount(), // Negative value for discount
+            price: -getDiscount(),
             quantity: 1,
           });
         }
 
         const paymentData = {
-          gross_amount: getTotalPrice(), // Final price after discount
+          gross_amount: getTotalPrice(),
+          order_id: order.id, // Use database order ID
           customer_details: {
             name: customerInfo.name,
             email: customerInfo.email,
@@ -326,7 +339,7 @@ export default function CheckoutPage() {
           item_details: itemDetails,
         };
 
-        console.log('💳 Creating Midtrans payment:', paymentData);
+        console.log('💳 Step 2: Creating Midtrans payment for order:', order.id);
 
         const paymentResponse = await fetch('/api/payment/create', {
           method: 'POST',
@@ -341,18 +354,21 @@ export default function CheckoutPage() {
           toast.error('Gagal membuat pembayaran', {
             description: paymentResult.error || 'Silakan coba lagi.',
           });
-          localStorage.removeItem('pending_order');
           setLoading(false);
           return;
         }
 
-        // Save midtrans_order_id to pending_order
-        const updatedOrderData = {
-          ...orderData,
-          midtrans_order_id: paymentResult.order_id,
-        };
-        localStorage.setItem('pending_order', JSON.stringify(updatedOrderData));
-        console.log('💾 Updated pending_order with midtrans_order_id:', paymentResult.order_id);
+        // Update order with midtrans_order_id
+        console.log('💾 Step 3: Updating order with midtrans_order_id...');
+        await fetch(`/api/orders/${order.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            midtrans_order_id: paymentResult.order_id,
+          }),
+        });
+
+        console.log('✅ Order updated with midtrans_order_id:', paymentResult.order_id);
 
         // Verify pending_order is saved
         const savedPendingOrder = localStorage.getItem('pending_order');

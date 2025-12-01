@@ -39,6 +39,38 @@ export async function GET(
   }
 }
 
+// PATCH update order fields
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    console.log('📝 Updating order:', id, body);
+
+    const { data: order, error } = await supabaseAdmin
+      .from('orders')
+      .update(body)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error updating order:', error);
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    console.log('✅ Order updated:', order.id);
+    return NextResponse.json({ order }, { status: 200 });
+
+  } catch (error) {
+    console.error('❌ Server error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 // PUT update order status (admin only)
 export async function PUT(
   request: NextRequest,

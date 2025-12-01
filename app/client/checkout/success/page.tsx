@@ -15,86 +15,47 @@ function SuccessContent() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const createOrderFromPendingData = async (midtransOrderId: string) => {
+  const updateOrderPaymentStatus = async (orderId: string) => {
     try {
-      console.log('🔍 Checking localStorage for pending_order...');
+      console.log('✅ Payment success! Updating order payment status...');
+      console.log('📦 Order ID from URL:', orderId);
       
-      // Get pending order data from localStorage
-      const pendingOrderStr = localStorage.getItem('pending_order');
-      
-      if (!pendingOrderStr) {
-        console.error('❌ No pending order found in localStorage');
-        console.log('Available localStorage keys:', Object.keys(localStorage));
-        setLoading(false);
-        return;
-      }
-
-      console.log('✅ Pending order found:', pendingOrderStr.substring(0, 100) + '...');
-      
-      const pendingOrder = JSON.parse(pendingOrderStr);
-      console.log('📦 Parsed pending order:', pendingOrder);
-      
-      // Validate required fields
-      if (!pendingOrder.user_id) {
-        console.error('❌ Missing user_id in pending order');
-        setLoading(false);
-        return;
-      }
-      
-      if (!pendingOrder.items || pendingOrder.items.length === 0) {
-        console.error('❌ No items in pending order');
-        setLoading(false);
-        return;
-      }
-      
-      // Add midtrans order ID to the order data
-      const orderData = {
-        ...pendingOrder,
-        midtrans_order_id: midtransOrderId,
-        payment_status: 'paid',
-      };
-
-      console.log('📤 Creating order with data:', orderData);
-
-      // Create order in database
-      const response = await fetch('/api/orders', {
-        method: 'POST',
+      // Update order payment status to 'paid'
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
+        body: JSON.stringify({
+          payment_status: 'paid',
+        }),
       });
 
       console.log('📨 API Response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Order created successfully:', data.order);
-        console.log('✅ Order ID:', data.order?.id);
-        console.log('✅ Order user_id:', data.order?.user_id);
-        console.log('✅ Order total:', data.order?.total_amount);
+        console.log('✅ Order payment updated:', data.order);
         setOrderDetails(data.order);
         
-        // Clean up pending order and cart
-        localStorage.removeItem('pending_order');
+        // Clean up cart
         localStorage.removeItem('cart');
         window.dispatchEvent(new Event('cartUpdated'));
         
-        console.log('🧹 Cleaned up localStorage');
+        console.log('🧹 Cart cleaned up');
       } else {
         const error = await response.json();
-        console.error('❌ Failed to create order - Full response:', error);
-        console.error('❌ Response status:', response.status);
-        console.error('❌ Error message:', error.error || error.message);
+        console.error('❌ Failed to update order:', error);
         
-        // Show error to user
-        toast.error('Gagal membuat pesanan', {
-          description: error.error || 'Terjadi kesalahan'
-        });
+        // Still try to fetch order details
+        const fetchResponse = await fetch(`/api/orders/${orderId}`);
+        if (fetchResponse.ok) {
+          const fetchData = await fetchResponse.json();
+          setOrderDetails(fetchData.order);
+        }
       }
     } catch (error) {
-      console.error('❌ Error creating order:', error);
+      console.error('❌ Error updating order:', error);
       if (error instanceof Error) {
         console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
       }
     } finally {
       setLoading(false);
@@ -102,56 +63,48 @@ function SuccessContent() {
   };
 
   useEffect(() => {
-    console.log('🔄 Success page useEffect triggered');
+    console.log('🔄 Success page loaded');
     
-    // Check if there's pending order data
-    const pendingOrderStr = localStorage.getItem('pending_order');
+    // Get order_id from URL parameters
+    const orderId = searchParams?.get('order_id');
+    const transactionStatus = searchParams?.get('transaction_status');
     
-    console.log('🔍 Checking localStorage...');
-    console.log('📦 pending_order exists:', !!pendingOrderStr);
-    console.log('📦 All localStorage keys:', Object.keys(localStorage));
-    
-    if (!pendingOrderStr) {
-      console.warn('⚠️ No pending order found in localStorage');
-      console.log('⚠️ This usually means order was already processed or user navigated directly');
+    console.log('📋 URL Parameters:', {
+      order_id: orderId,
+      transaction_status: transactionStatus,
+    });
+
+    if (!orderId) {
+      console.warn('⚠️ No order_id in URL');
       setLoading(false);
       return;
     }
 
-    console.log('✅ Payment success page loaded');
-    console.log('📦 Found pending_order in localStorage');
-    console.log('📦 Raw pending_order (first 200 chars):', pendingOrderStr.substring(0, 200));
+    // Check if payment was successful
+    const successStatuses = ['capture', 'settlement'];
+    if (transactionStatus && successStatuses.includes(transactionStatus)) {
+      console.log('✅ Payment status is successful:', transactionStatus);
+      updateOrderPaymentStatus(orderId);
+    } else {
+      console.warn('⚠️ Payment status:', transactionStatus);
+      // Still fetch order details even if status is not success
+      fetchOrderDetails(orderId);
+    }
+  }, [searchParams]);
 
+  const fetchOrderDetails = async (orderId: string) => {
     try {
-      const pendingOrder = JSON.parse(pendingOrderStr);
-      const midtransOrderId = pendingOrder.midtrans_order_id;
-      
-      console.log('📋 Full pending order data:', pendingOrder);
-      console.log('📋 Pending order summary:', {
-        has_user_id: !!pendingOrder.user_id,
-        user_id_value: pendingOrder.user_id,
-        has_items: !!pendingOrder.items?.length,
-        items_count: pendingOrder.items?.length,
-        items_preview: pendingOrder.items?.map((i: any) => ({ product_id: i.product_id, qty: i.quantity })),
-        total_amount: pendingOrder.total_amount,
-        payment_method: pendingOrder.payment_method,
-        midtrans_order_id: midtransOrderId,
-      });
-
-      if (midtransOrderId) {
-        console.log('🚀 Calling createOrderFromPendingData with:', midtransOrderId);
-        createOrderFromPendingData(midtransOrderId);
-      } else {
-        console.error('❌ No midtrans_order_id in pending_order');
-        console.error('❌ Pending order structure:', Object.keys(pendingOrder));
-        setLoading(false);
+      const response = await fetch(`/api/orders/${orderId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setOrderDetails(data.order);
       }
     } catch (error) {
-      console.error('❌ Error parsing pending_order:', error);
-      console.error('❌ Raw data:', pendingOrderStr);
+      console.error('❌ Error fetching order:', error);
+    } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   return (
     <ClientLayout>
