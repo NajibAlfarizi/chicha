@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ClientLayout from '@/components/ClientLayout';
 import { ChatList } from '@/components/ChatList';
 import { ChatRoom } from '@/components/ChatRoom';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useChatRooms, type ChatRoom as ChatRoomType } from '@/lib/useChat';
 import { toast } from 'sonner';
 
-export default function ChatPage() {
+function ChatPageContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { rooms, createRoom, fetchRooms } = useChatRooms(user?.id, 'customer');
@@ -177,5 +176,24 @@ export default function ChatPage() {
         </Dialog>
       </div>
     </ClientLayout>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+      <ClientLayout>
+        <div className="fixed inset-0 top-16 bottom-20 lg:relative lg:inset-auto lg:top-auto lg:bottom-auto lg:container lg:mx-auto lg:px-4 lg:py-8 lg:max-w-7xl">
+          <div className="h-full lg:h-[calc(100vh-12rem)] lg:rounded-lg border-t lg:border bg-card lg:shadow-lg overflow-hidden flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mb-4"></div>
+              <p>Loading chat...</p>
+            </div>
+          </div>
+        </div>
+      </ClientLayout>
+    }>
+      <ChatPageContent />
+    </Suspense>
   );
 }
