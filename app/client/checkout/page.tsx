@@ -298,6 +298,10 @@ export default function CheckoutPage() {
         total_amount: getTotalPrice(),
         payment_method: paymentMethod,
         customer_info: customerInfo,
+        customer_name: customerInfo.name,
+        customer_email: customerInfo.email,
+        customer_phone: customerInfo.phone,
+        customer_address: customerInfo.address,
         voucher_id: appliedVoucher?.id || null,
         voucher_code: appliedVoucher?.code || null,
         items: cartItems.map(item => ({

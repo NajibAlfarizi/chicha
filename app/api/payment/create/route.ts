@@ -38,7 +38,9 @@ export async function POST(request: NextRequest) {
         phone: customer_details.phone || '',
       },
       item_details: item_details,
-      // Don't set callbacks - we handle redirect via Snap.js onSuccess callback in frontend
+      callbacks: {
+        finish: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://chicha-mobile.me'}/client/checkout/success?order_id=${order_id}`,
+      },
     };
 
     console.log('Midtrans parameter:', JSON.stringify(parameter, null, 2));

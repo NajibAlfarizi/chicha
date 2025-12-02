@@ -82,6 +82,7 @@ export interface OrderItemDetail {
 export interface Order {
   id: string;
   user_id: string;
+  midtrans_order_id?: string;
   total_amount: number;
   subtotal?: number;
   discount_amount?: number;
@@ -92,6 +93,10 @@ export interface Order {
   status: OrderStatus;
   created_at: string;
   customer_info?: CustomerInfo;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  customer_address?: string;
   cancel_reason?: string;
   cancelled_at?: string;
   items?: OrderItemDetail[];

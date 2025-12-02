@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,129 +9,135 @@ export async function POST(request: NextRequest) {
     console.log('📨 Midtrans notification received:', notification);
 
     // Get transaction details
-    const midtransOrderId = notification.order_id; // This is the temp order_id from payment/create
+    const orderId = notification.order_id; // This is our database order ID
     const transactionStatus = notification.transaction_status;
     const fraudStatus = notification.fraud_status;
     const grossAmount = notification.gross_amount;
+    const signatureKey = notification.signature_key;
 
+    // Verify signature key for security
+    const serverKey = process.env.MIDTRANS_SERVER_KEY || '';
+    const hashString = `${orderId}${notification.status_code}${grossAmount}${serverKey}`;
+    const calculatedSignature = crypto
+      .createHash('sha512')
+      .update(hashString)
+      .digest('hex');
+
+    if (signatureKey !== calculatedSignature) {
+      console.error('❌ Invalid signature key');
+      return NextResponse.json(
+        { error: 'Invalid signature' },
+        { status: 403 }
+      );
+    }
+
+    console.log('✅ Signature verified');
     console.log('Transaction notification:', {
-      midtransOrderId,
+      orderId,
       transactionStatus,
       fraudStatus,
       grossAmount,
     });
 
     let paymentStatus = 'pending';
-    let shouldCreateOrder = false;
 
     // Determine payment status
     if (transactionStatus === 'capture') {
       if (fraudStatus === 'accept') {
         paymentStatus = 'paid';
-        shouldCreateOrder = true;
       }
     } else if (transactionStatus === 'settlement') {
       paymentStatus = 'paid';
-      shouldCreateOrder = true;
     } else if (
       transactionStatus === 'cancel' ||
       transactionStatus === 'deny' ||
       transactionStatus === 'expire'
     ) {
       paymentStatus = 'failed';
-      shouldCreateOrder = false; // Don't create order if payment failed
     } else if (transactionStatus === 'pending') {
       paymentStatus = 'pending';
-      shouldCreateOrder = false; // Wait for settlement
     }
 
-    console.log(`💳 Payment status: ${paymentStatus}, Create order: ${shouldCreateOrder}`);
+    console.log(`💳 Payment status: ${paymentStatus}`);
 
-    // Check if order already exists with this midtrans_order_id
-    const { data: existingOrder } = await supabaseAdmin
+    // Find order by ID (orderId from notification is our database order ID)
+    const { data: order, error: findError } = await supabaseAdmin
       .from('orders')
-      .select('id')
-      .eq('midtrans_order_id', midtransOrderId)
+      .select('*, order_items(product_id, quantity)')
+      .eq('id', orderId)
       .single();
 
-    if (existingOrder) {
-      // Order already created, just update payment status
-      console.log('📦 Order already exists, updating status...');
-      
-      const { error } = await supabaseAdmin
+    if (findError || !order) {
+      console.error('❌ Order not found:', orderId);
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log('📦 Order found:', order.id);
+
+    // Update order payment status
+    const { error: updateError } = await supabaseAdmin
+      .from('orders')
+      .update({
+        payment_status: paymentStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', order.id);
+
+    if (updateError) {
+      console.error('❌ Error updating order:', updateError);
+      return NextResponse.json(
+        { error: 'Failed to update order' },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Order ${order.id} payment status updated to: ${paymentStatus}`);
+
+    // If payment failed/expired, rollback stock and cancel order
+    if (paymentStatus === 'failed' && order.status !== 'dibatalkan') {
+      console.log('🔄 Rolling back stock for failed payment');
+
+      if (order.order_items) {
+        for (const item of order.order_items) {
+          const { data: product } = await supabaseAdmin
+            .from('products')
+            .select('stock')
+            .eq('id', item.product_id)
+            .single();
+
+          if (product) {
+            const newStock = product.stock + item.quantity;
+            await supabaseAdmin
+              .from('products')
+              .update({ stock: newStock })
+              .eq('id', item.product_id);
+
+            console.log(`✅ Stock rolled back for product ${item.product_id}: +${item.quantity}`);
+          }
+        }
+      }
+
+      // Update order status to cancelled
+      await supabaseAdmin
         .from('orders')
         .update({
-          payment_status: paymentStatus,
-          updated_at: new Date().toISOString(),
+          status: 'dibatalkan',
+          cancel_reason: `Pembayaran ${transactionStatus === 'expire' ? 'expired' : 'gagal'}`,
+          cancelled_at: new Date().toISOString(),
         })
-        .eq('id', existingOrder.id);
+        .eq('id', order.id);
 
-      if (error) {
-        console.error('❌ Error updating order:', error);
-        return NextResponse.json(
-          { error: 'Failed to update order' },
-          { status: 500 }
-        );
-      }
-
-      console.log(`✅ Order ${existingOrder.id} updated to ${paymentStatus}`);
-
-      return NextResponse.json({
-        success: true,
-        message: 'Order updated',
-        order_id: existingOrder.id,
-      }, { status: 200 });
+      console.log('✅ Order cancelled due to failed payment');
     }
-
-    // If payment successful and no order exists, create order from session/notification data
-    if (shouldCreateOrder) {
-      console.log('📦 Creating new order from successful payment...');
-
-      // In real implementation, you would store order data in a temporary table or session
-      // For now, we'll create a minimal order - you should enhance this
-      
-      // Note: This is a simplified version. In production, you should:
-      // 1. Store pending order data in database or cache when payment is initiated
-      // 2. Retrieve that data here using midtransOrderId as key
-      // 3. Create full order with all items and customer info
-      
-      const { data: newOrder, error: createError } = await supabaseAdmin
-        .from('orders')
-        .insert({
-          midtrans_order_id: midtransOrderId,
-          total_amount: parseInt(grossAmount),
-          payment_method: 'midtrans',
-          payment_status: paymentStatus,
-          status: 'pending',
-          // Note: You need to store user_id, items, customer_info somewhere
-          // This is incomplete - see comment above
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('❌ Error creating order:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create order' },
-          { status: 500 }
-        );
-      }
-
-      console.log(`✅ Order ${newOrder.id} created with payment ${paymentStatus}`);
-
-      return NextResponse.json({
-        success: true,
-        message: 'Order created',
-        order_id: newOrder.id,
-      }, { status: 200 });
-    }
-
-    // Payment is pending or failed - do nothing
-    console.log(`⏳ Payment ${paymentStatus} - no action taken`);
 
     return NextResponse.json({
       success: true,
-      message: 'Notification received',
+      message: 'Payment notification processed successfully',
+      order_id: order.id,
+      payment_status: paymentStatus,
     }, { status: 200 });
 
   } catch (error) {

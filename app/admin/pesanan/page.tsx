@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -27,7 +28,7 @@ import { Order, OrderItem } from '@/lib/types';
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<Order & { items?: OrderItem[] } | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Order & { order_items?: OrderItem[]; voucher?: any } | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
@@ -239,42 +240,78 @@ export default function AdminOrdersPage() {
 
         {/* Detail Dialog */}
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-amber-500">Detail Pesanan</DialogTitle>
               <DialogDescription>
-                ID: {selectedOrder?.id}
+                ID: {selectedOrder?.id || 'Loading...'}
               </DialogDescription>
             </DialogHeader>
-            {selectedOrder && (
+            {!selectedOrder ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mb-4"></div>
+                <p className="text-muted-foreground">Memuat detail pesanan...</p>
+              </div>
+            ) : (
               <div className="space-y-4">
                 {/* Customer Info */}
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <h4 className="font-semibold mb-2">Informasi Pelanggan</h4>
                   <div className="space-y-1 text-sm">
-                    <p>Nama: {selectedOrder.user?.name}</p>
-                    <p>Email: {selectedOrder.user?.email}</p>
-                    <p>Phone: {selectedOrder.user?.phone || '-'}</p>
+                    <p><span className="text-muted-foreground">Nama:</span> {selectedOrder.customer_name || selectedOrder.user?.name}</p>
+                    <p><span className="text-muted-foreground">Email:</span> {selectedOrder.customer_email || selectedOrder.user?.email}</p>
+                    <p><span className="text-muted-foreground">Phone:</span> {selectedOrder.customer_phone || selectedOrder.user?.phone || '-'}</p>
+                    {selectedOrder.customer_address && (
+                      <p><span className="text-muted-foreground">Alamat:</span> {selectedOrder.customer_address}</p>
+                    )}
                   </div>
                 </div>
 
                 {/* Order Items */}
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <h4 className="font-semibold mb-3">Item Pesanan</h4>
-                  <div className="space-y-2">
-                    {selectedOrder.items?.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                        <div>
-                          <p>{item.product?.name}</p>
-                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                  {selectedOrder.order_items && selectedOrder.order_items.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedOrder.order_items.map((item) => (
+                        <div key={item.id} className="flex justify-between items-center p-2 bg-muted/30 rounded">
+                          <div className="flex items-center gap-3">
+                            {item.product?.image_url && (
+                              <img 
+                                src={item.product.image_url} 
+                                alt={item.product.name}
+                                className="w-12 h-12 object-cover rounded"
+                              />
+                            )}
+                            <div>
+                              <p className="font-medium">{item.product?.name}</p>
+                              <p className="text-sm text-muted-foreground">Qty: {item.quantity} × Rp {item.price.toLocaleString('id-ID')}</p>
+                            </div>
+                          </div>
+                          <p className="text-amber-500 font-semibold">
+                            Rp {(item.price * item.quantity).toLocaleString('id-ID')}
+                          </p>
                         </div>
-                        <p className="text-amber-500 font-semibold">
-                          Rp {(item.price * item.quantity).toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Tidak ada item pesanan</p>
+                  )}
                 </div>
+
+                {/* Voucher Info */}
+                {selectedOrder.voucher_id && (
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                    <h4 className="font-semibold mb-2 text-green-700 dark:text-green-400">Voucher Digunakan</h4>
+                    <div className="text-sm space-y-1">
+                      <p>Kode Voucher: <span className="font-mono font-semibold">{selectedOrder.voucher_code || '-'}</span></p>
+                      {selectedOrder.discount_amount && (
+                        <p className="text-green-600 dark:text-green-400 font-semibold">
+                          Diskon: -Rp {selectedOrder.discount_amount.toLocaleString('id-ID')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Order Summary */}
                 <div className="bg-muted/50 p-4 rounded-lg">

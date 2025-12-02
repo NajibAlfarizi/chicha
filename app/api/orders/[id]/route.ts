@@ -21,7 +21,8 @@ export async function GET(
           quantity,
           price,
           product:products(id, name, image_url, description)
-        )
+        ),
+        voucher:vouchers(id, code, name, type, value, min_purchase, max_discount)
       `)
       .eq('id', id)
       .single();
