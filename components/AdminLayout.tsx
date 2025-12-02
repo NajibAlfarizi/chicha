@@ -23,7 +23,6 @@ import {
   UserCog,
   Ticket,
   Search,
-  Settings,
   ChevronLeft,
   Zap,
 } from 'lucide-react';
@@ -157,7 +156,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       <div className="flex relative">
         {/* Sidebar - Desktop */}
-        <aside className={`hidden lg:block ${sidebarCollapsed ? 'w-20' : 'w-72'} min-h-[calc(100vh-4rem)] border-r border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl transition-all duration-300`}>
+        <aside className={`hidden lg:block ${sidebarCollapsed ? 'w-20' : 'w-72'} h-[calc(100vh-4rem)] sticky top-[4rem] border-r border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl transition-all duration-300 overflow-y-auto`}>
           <div className="p-4 space-y-1">
             {/* Collapse Toggle */}
             <Button
@@ -211,19 +210,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 );
               })}
             </nav>
-
-            {/* Settings at Bottom */}
-            {!sidebarCollapsed && (
-              <div className="pt-4 mt-4 border-t border-amber-200/50 dark:border-amber-900/30">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-slate-600 dark:text-slate-400 hover:bg-amber-100 dark:hover:bg-amber-900/30"
-                >
-                  <Settings className="mr-3 h-5 w-5" />
-                  Settings
-                </Button>
-              </div>
-            )}
           </div>
         </aside>
 
@@ -237,7 +223,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               className="w-72 h-full bg-white dark:bg-slate-900 border-r border-amber-200/50 dark:border-amber-900/30 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-4">
                 {/* Mobile Header */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
@@ -301,19 +286,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       </Link>
                     );
                   })}
+  
                 </nav>
-
-                {/* Mobile Settings */}
-                <div className="pt-4 mt-4 border-t border-amber-200/50 dark:border-amber-900/30">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-slate-600 dark:text-slate-400"
-                  >
-                    <Settings className="mr-3 h-5 w-5" />
-                    Settings
-                  </Button>
-                </div>
-              </div>
             </aside>
           </div>
         )}

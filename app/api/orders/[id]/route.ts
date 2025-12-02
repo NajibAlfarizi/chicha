@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
-import { notifyOrderStatusChange } from '@/lib/notification-helper';
+import { notifyOrderStatusChange, createNotification } from '@/lib/notification-helper';
 
 // GET single order by ID
 export async function GET(
@@ -143,6 +143,77 @@ export async function PUT(
     // Create notification if status changed
     if (orderBefore.status !== status) {
       await notifyOrderStatusChange(orderBefore.user_id, id, status);
+    }
+
+    // Update target spending if order completed
+    if (status === 'selesai' && orderBefore.status !== 'selesai') {
+      console.log('🎯 Updating target spending for user:', orderBefore.user_id);
+      
+      try {
+        // Calculate total spending from completed orders
+        const { data: completedOrders } = await supabaseAdmin
+          .from('orders')
+          .select('total_amount')
+          .eq('user_id', orderBefore.user_id)
+          .eq('status', 'selesai');
+
+        const totalSpending = completedOrders?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0;
+
+        // Get or create target
+        const { data: existingTarget } = await supabaseAdmin
+          .from('targets')
+          .select('*')
+          .eq('user_id', orderBefore.user_id)
+          .single();
+
+        if (existingTarget) {
+          // Update existing target
+          const targetAmount = Number(existingTarget.target_amount);
+          const wasActive = existingTarget.status === 'active';
+          const newStatus = totalSpending >= targetAmount ? 'achieved' : 'active';
+
+          await supabaseAdmin
+            .from('targets')
+            .update({
+              current_amount: totalSpending,
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', orderBefore.user_id);
+
+          console.log('✅ Target spending updated:', totalSpending);
+
+          // Send notification if target just achieved
+          if (wasActive && newStatus === 'achieved') {
+            await createNotification({
+              user_id: orderBefore.user_id,
+              title: '🎉 Target Tercapai!',
+              message: `Selamat! Anda telah mencapai target belanja sebesar Rp ${targetAmount.toLocaleString('id-ID')}. Cek halaman akun untuk melihat reward Anda!`,
+              type: 'target',
+              related_id: existingTarget.id
+            });
+            console.log('✅ Target achievement notification sent');
+          }
+        } else {
+          // Create new target
+          const defaultTarget = 10000000; // 10 juta
+          const newStatus = totalSpending >= defaultTarget ? 'achieved' : 'active';
+
+          await supabaseAdmin
+            .from('targets')
+            .insert({
+              user_id: orderBefore.user_id,
+              target_amount: defaultTarget,
+              current_amount: totalSpending,
+              status: newStatus
+            });
+
+          console.log('✅ New target created with spending:', totalSpending);
+        }
+      } catch (targetError) {
+        console.error('⚠️ Failed to update target spending:', targetError);
+        // Don't fail the order update if target update fails
+      }
     }
 
     return NextResponse.json({ 

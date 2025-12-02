@@ -53,11 +53,13 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
+      console.log('🔄 Fetching dashboard data...');
       const response = await fetch('/api/dashboard/stats');
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
       }
       const data = await response.json();
+      console.log('📊 Dashboard data received:', data);
       
       // Set stats with fallback to default values
       setStats(data.stats || {
@@ -69,13 +71,17 @@ export default function AdminDashboard() {
         activeBookings: 0,
       });
       
+      console.log('✅ Stats set:', data.stats);
+      
       // Set charts with fallback to empty objects
       setCharts(data.charts || {
         ordersByStatus: {},
         bookingsByStatus: {},
       });
+      
+      console.log('✅ Charts set:', data.charts);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('❌ Error fetching dashboard data:', error);
       // Set default empty data on error
       setStats({
         totalSales: 0,

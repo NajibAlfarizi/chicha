@@ -317,9 +317,12 @@ function AccountContent() {
                 <Wrench className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
                 <span className="hidden md:inline">Booking</span>
               </TabsTrigger>
-              <TabsTrigger value="target" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white text-xs md:text-sm">
+              <TabsTrigger value="target" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white text-xs md:text-sm relative">
                 <Target className="h-3 w-3 md:h-4 md:w-4 md:mr-2" />
                 <span className="hidden md:inline">Target</span>
+                {target?.status === 'achieved' && target?.reward && !target?.reward_claimed && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></span>
+                )}
               </TabsTrigger>
             </TabsList>
 
@@ -594,62 +597,75 @@ function AccountContent() {
                 {target ? (
                   <>
                     {/* Progress Card */}
-                    <Card className="bg-slate-800/50 border-amber-500/20">
-                      <CardHeader>
-                        <CardTitle className="text-white flex items-center gap-2 text-base md:text-lg">
-                          <Target className="h-5 w-5 md:h-6 md:w-6 text-amber-500" />
-                          Progress Target
+                    <Card className="border-amber-500/20 shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+                        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                          <Target className="h-5 w-5 md:h-6 md:w-6" />
+                          Target Belanja Anda
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="p-3 md:p-6">
-                        <div className="space-y-3 md:space-y-4">
+                      <CardContent className="p-4 md:p-6">
+                        <div className="space-y-4 md:space-y-6">
+                          {/* Progress Bar */}
                           <div>
-                            <div className="flex justify-between text-xs md:text-sm mb-2">
-                              <span className="text-slate-400">Current Progress</span>
-                              <span className="text-amber-500 font-semibold">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-muted-foreground text-sm md:text-base font-medium">Current Progress</span>
+                              <span className="text-amber-600 dark:text-amber-500 font-bold text-base md:text-lg">
                                 {getProgressPercentage(Number(target.current_amount), Number(target.target_amount)).toFixed(1)}%
                               </span>
                             </div>
-                            <div className="w-full bg-slate-700 rounded-full h-3 md:h-4">
+                            <div className="w-full bg-muted rounded-full h-4 md:h-5 overflow-hidden">
                               <div
-                                className="bg-linear-to-r from-amber-500 to-amber-600 h-3 md:h-4 rounded-full transition-all"
+                                className="bg-gradient-to-r from-amber-500 to-amber-600 h-full rounded-full transition-all duration-500 ease-out relative"
                                 style={{
                                   width: `${getProgressPercentage(Number(target.current_amount), Number(target.target_amount))}%`
                                 }}
-                              />
+                              >
+                                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                              </div>
                             </div>
                           </div>
 
+                          {/* Stats Grid */}
                           <div className="grid grid-cols-2 gap-3 md:gap-4">
-                            <div className="bg-slate-700/30 p-3 md:p-4 rounded-lg">
-                              <p className="text-slate-400 text-xs md:text-sm mb-1">Pencapaian</p>
-                              <p className="text-base md:text-xl lg:text-2xl font-bold text-white wrap-break-word">
+                            <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+                              <p className="text-blue-600 dark:text-blue-400 text-xs md:text-sm mb-1 font-medium">Pencapaian</p>
+                              <p className="text-lg md:text-xl lg:text-2xl font-bold text-blue-700 dark:text-blue-300 break-words">
                                 Rp {Number(target.current_amount).toLocaleString('id-ID')}
                               </p>
                             </div>
-                            <div className="bg-slate-700/30 p-3 md:p-4 rounded-lg">
-                              <p className="text-slate-400 text-xs md:text-sm mb-1">Target</p>
-                              <p className="text-base md:text-xl lg:text-2xl font-bold text-amber-500 wrap-break-word">
+                            <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800">
+                              <p className="text-amber-600 dark:text-amber-400 text-xs md:text-sm mb-1 font-medium">Target</p>
+                              <p className="text-lg md:text-xl lg:text-2xl font-bold text-amber-700 dark:text-amber-300 break-words">
                                 Rp {Number(target.target_amount).toLocaleString('id-ID')}
                               </p>
                             </div>
                           </div>
 
-                          <div className="bg-slate-700/30 p-3 md:p-4 rounded-lg">
-                            <p className="text-slate-400 text-xs md:text-sm mb-1">Sisa Target</p>
-                            <p className="text-base md:text-lg lg:text-xl font-bold text-white wrap-break-word">
-                              Rp {(Number(target.target_amount) - Number(target.current_amount)).toLocaleString('id-ID')}
-                            </p>
+                          {/* Remaining Amount */}
+                          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-4 rounded-xl border-2 border-purple-200 dark:border-purple-800">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-purple-600 dark:text-purple-400 text-xs md:text-sm mb-1 font-medium">Sisa Target</p>
+                                <p className="text-xl md:text-2xl font-bold text-purple-700 dark:text-purple-300 break-words">
+                                  Rp {Math.max(0, Number(target.target_amount) - Number(target.current_amount)).toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                              <div className="text-4xl">🎯</div>
+                            </div>
                           </div>
 
+                          {/* Achievement Badge */}
                           {target.status === 'achieved' && (
-                            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 md:p-4 flex items-center gap-2 md:gap-3">
-                              <Trophy className="h-6 w-6 md:h-8 md:w-8 text-green-500 shrink-0" />
-                              <div>
-                                <h4 className="text-green-500 font-semibold text-sm md:text-base">Selamat! Target Tercapai!</h4>
-                                <p className="text-slate-300 text-xs md:text-sm">
-                                  Anda telah mencapai target pembelanjaan
-                                </p>
+                            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 md:p-5 rounded-xl shadow-lg">
+                              <div className="flex items-center gap-3">
+                                <Trophy className="h-8 w-8 md:h-10 md:w-10 shrink-0 animate-bounce" />
+                                <div>
+                                  <h4 className="font-bold text-base md:text-lg">🎉 Selamat! Target Tercapai!</h4>
+                                  <p className="text-green-50 text-xs md:text-sm mt-1">
+                                    Anda telah mencapai target pembelanjaan
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -657,51 +673,98 @@ function AccountContent() {
                       </CardContent>
                     </Card>
 
-                    {/* Reward Card */}
-                    {target.status === 'achieved' && (
-                      <Card className="bg-linear-to-br from-amber-500/20 to-amber-600/20 border-amber-500/30">
-                        <CardHeader className="p-4 md:p-6">
-                          <CardTitle className="text-white flex items-center gap-2 text-base md:text-lg">
-                            <Gift className="h-5 w-5 md:h-6 md:w-6 text-amber-500" />
-                            Reward Anda
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 md:p-6 pt-0">
-                          {target.reward ? (
-                            <div className="space-y-3 md:space-y-4">
-                              <div className="bg-slate-800/50 p-3 md:p-4 rounded-lg">
-                                <p className="text-amber-500 font-semibold text-base md:text-lg mb-2">🎁 {target.reward}</p>
-                                <p className="text-slate-300 text-xs md:text-sm">
-                                  Hubungi customer service kami untuk klaim reward Anda!
+                    {/* Reward Card - Always show if target exists */}
+                    <Card className="border-amber-500/30 shadow-lg overflow-hidden">
+                      <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 p-4 md:p-6">
+                        <CardTitle className="text-white flex items-center gap-2 text-base md:text-lg">
+                          <Gift className="h-5 w-5 md:h-6 md:w-6" />
+                          Reward Program
+                        </CardTitle>
+                      </div>
+                      <CardContent className="p-4 md:p-6">
+                        {target.reward ? (
+                          <div className="space-y-4">
+                            {/* Reward Box */}
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 p-4 md:p-6 rounded-2xl border-2 border-amber-300 dark:border-amber-700 relative overflow-hidden">
+                              <div className="absolute top-0 right-0 text-6xl opacity-10">🎁</div>
+                              <div className="relative z-10">
+                                <div className="flex items-start gap-3 mb-3">
+                                  <div className="bg-amber-500 text-white p-2 rounded-lg">
+                                    <Gift className="h-5 w-5 md:h-6 md:w-6" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-xs md:text-sm text-amber-600 dark:text-amber-400 font-semibold mb-1">
+                                      Hadiah Anda
+                                    </p>
+                                    <p className="text-base md:text-lg font-bold text-amber-900 dark:text-amber-100">
+                                      {target.reward}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {target.status === 'achieved' ? (
+                                  <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg mb-3">
+                                    <p className="text-xs md:text-sm text-muted-foreground">
+                                      ✨ Target Anda sudah tercapai! Segera hubungi customer service untuk klaim reward Anda.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg mb-3 border border-blue-200 dark:border-blue-800">
+                                    <p className="text-xs md:text-sm text-blue-700 dark:text-blue-300">
+                                      💪 Terus belanja untuk mencapai target dan dapatkan reward ini!
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Action Button */}
+                            {target.reward_claimed ? (
+                              <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-xl flex items-center justify-center gap-2">
+                                <Trophy className="h-5 w-5" />
+                                <span className="font-semibold text-sm md:text-base">✓ Reward Sudah Diklaim</span>
+                              </div>
+                            ) : target.status === 'achieved' ? (
+                              <Link href="/client/chat" className="block">
+                                <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 md:py-4 text-sm md:text-base shadow-lg hover:shadow-xl transition-all">
+                                  <MessageSquare className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                                  💬 Hubungi CS untuk Klaim Reward
+                                </Button>
+                              </Link>
+                            ) : (
+                              <div className="bg-muted p-4 rounded-xl text-center">
+                                <p className="text-sm md:text-base text-muted-foreground">
+                                  Reward akan tersedia setelah target tercapai
                                 </p>
                               </div>
-                              {target.reward_claimed ? (
-                                <Badge className="bg-green-500/20 text-green-500 w-full justify-center py-2 text-xs md:text-sm">
-                                  ✓ Reward Sudah Diklaim
-                                </Badge>
-                              ) : (
-                                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold text-xs md:text-sm">
-                                  <MessageSquare className="mr-2 h-4 w-4" />
-                                  Klaim Reward
-                                </Button>
-                              )}
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 md:py-8">
+                            <div className="bg-muted rounded-full h-16 w-16 md:h-20 md:w-20 flex items-center justify-center mx-auto mb-4">
+                              <Gift className="h-8 w-8 md:h-10 md:w-10 text-muted-foreground" />
                             </div>
-                          ) : (
-                            <div className="text-center py-4 md:py-6">
-                              <p className="text-slate-400 text-xs md:text-sm">
-                                Reward sedang diproses oleh admin kami
-                              </p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    )}
+                            <p className="text-sm md:text-base text-muted-foreground mb-2">
+                              Reward belum ditentukan
+                            </p>
+                            <p className="text-xs md:text-sm text-muted-foreground">
+                              Admin akan mengatur reward Anda segera
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </>
                 ) : (
-                  <Card className="bg-slate-800/50 border-amber-500/20">
-                    <CardContent className="py-8 md:py-12 text-center">
-                      <Target className="h-12 w-12 md:h-16 md:w-16 text-slate-600 mx-auto mb-3 md:mb-4" />
-                      <p className="text-slate-400 text-sm md:text-base">Target belum tersedia</p>
+                  <Card className="border-amber-500/20 shadow-lg">
+                    <CardContent className="py-12 md:py-16 text-center">
+                      <div className="bg-muted rounded-full h-20 w-20 md:h-24 md:w-24 flex items-center justify-center mx-auto mb-4">
+                        <Target className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-lg md:text-xl font-semibold mb-2">Target Belum Tersedia</h3>
+                      <p className="text-sm md:text-base text-muted-foreground">
+                        Mulai berbelanja untuk mendapatkan target dan reward
+                      </p>
                     </CardContent>
                   </Card>
                 )}
