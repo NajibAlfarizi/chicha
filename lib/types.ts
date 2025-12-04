@@ -156,6 +156,9 @@ export interface Booking {
   issue: string;
   booking_date: string;
   status: BookingStatus;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
   notes?: string;
   service_code?: string;
   progress_status?: ProgressStatus;

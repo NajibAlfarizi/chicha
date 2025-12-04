@@ -23,7 +23,8 @@ import {
   Gift,
   Save,
   LogOut,
-  Lock
+  Lock,
+  TrendingUp
 } from 'lucide-react';
 import { Order, Booking, Target as TargetType } from '@/lib/types';
 import { toast } from 'sonner';
@@ -68,19 +69,13 @@ function AccountContent() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated || authLoading) return;
+    if (!isAuthenticated || authLoading || !user) return;
 
     const fetchUserData = async () => {
       try {
         setLoading(true);
         
-        // Get user from localStorage first
-        const userStr = localStorage.getItem('user');
-        if (!userStr) {
-          return;
-        }
-
-        const user = JSON.parse(userStr);
+        console.log('Fetching data for user:', user.id);
         
         // Fetch profile from API
         const profileRes = await fetch('/api/users/profile');
@@ -110,16 +105,39 @@ function AccountContent() {
         }
 
         // Fetch target
+        console.log('========================================');
+        console.log('🎯 DEBUG TARGET FETCH');
+        console.log('User ID:', user.id);
+        console.log('User Email:', user.email);
+        console.log('User Name:', user.name);
+        console.log('API URL:', `/api/targets?user_id=${user.id}`);
+        console.log('========================================');
+        
         const targetRes = await fetch(`/api/targets?user_id=${user.id}`);
+        console.log('Target API Response Status:', targetRes.status);
+        
         if (targetRes.ok) {
           const targetData = await targetRes.json();
-          if (targetData.target) {
+          console.log('Target API Response Body:', JSON.stringify(targetData, null, 2));
+          
+          if (targetData && targetData.target) {
+            console.log('✅ Target found and set!');
+            console.log('Target ID:', targetData.target.id);
+            console.log('Target Amount:', targetData.target.target_amount);
+            console.log('Current Amount:', targetData.target.current_amount);
             setTarget(targetData.target);
+          } else {
+            console.log('⚠️ Target is null - user has no target yet');
+            setTarget(null);
           }
         } else {
-          // No target yet, that's OK
-          console.log('No target found for user');
+          const errorText = await targetRes.text();
+          console.error('❌ Failed to fetch target');
+          console.error('Status:', targetRes.status);
+          console.error('Error:', errorText);
+          setTarget(null);
         }
+        console.log('========================================');
       } catch (error) {
         console.error('Error fetching user data:', error);
         toast.error('Gagal memuat data', {
@@ -131,7 +149,7 @@ function AccountContent() {
     };
 
     fetchUserData();
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show unauthenticated message if not logged in
   if (!authLoading && !isAuthenticated) {
@@ -526,26 +544,26 @@ function AccountContent() {
 
             {/* Bookings Tab */}
             <TabsContent value="bookings">
-              <Card className="bg-slate-800/50 border-amber-500/20">
-                <CardHeader>
-                  <CardTitle className="text-white text-lg md:text-xl">Riwayat Booking Service</CardTitle>
+              <Card className="bg-white dark:bg-slate-800/50 border-amber-200 dark:border-amber-500/20">
+                <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20">
+                  <CardTitle className="text-amber-900 dark:text-white text-lg md:text-xl">Riwayat Booking Service</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 md:p-6">
                   {bookings.length === 0 ? (
                     <div className="text-center py-8 md:py-12">
-                      <Wrench className="h-12 w-12 md:h-16 md:w-16 text-slate-600 mx-auto mb-3 md:mb-4" />
-                      <p className="text-slate-400 text-sm md:text-base">Belum ada booking service</p>
+                      <Wrench className="h-12 w-12 md:h-16 md:w-16 text-amber-300 dark:text-slate-600 mx-auto mb-3 md:mb-4" />
+                      <p className="text-gray-500 dark:text-slate-400 text-sm md:text-base">Belum ada booking service</p>
                     </div>
                   ) : (
                     <div className="space-y-3 md:space-y-4">
                       {bookings.map((booking) => (
-                        <div key={booking.id} className="bg-slate-700/30 rounded-lg p-3 md:p-4">
+                        <div key={booking.id} className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-700/30 dark:to-slate-700/30 rounded-lg p-3 md:p-4 border border-amber-200 dark:border-transparent">
                           <div className="flex justify-between items-start mb-2 md:mb-3">
                             <div className="flex-1 min-w-0 pr-2">
-                              <p className="text-white font-semibold text-sm md:text-base">{booking.device_name}</p>
-                              <p className="text-slate-400 text-xs md:text-sm mt-1 line-clamp-2">{booking.issue}</p>
+                              <p className="text-gray-900 dark:text-white font-semibold text-sm md:text-base">{booking.device_name}</p>
+                              <p className="text-gray-600 dark:text-slate-400 text-xs md:text-sm mt-1 line-clamp-2">{booking.issue}</p>
                               {booking.teknisi && (
-                                <p className="text-slate-500 text-[10px] md:text-xs mt-1 md:mt-2">
+                                <p className="text-amber-600 dark:text-slate-500 text-[10px] md:text-xs mt-1 md:mt-2">
                                   Teknisi: {booking.teknisi.name}
                                 </p>
                               )}
@@ -553,7 +571,7 @@ function AccountContent() {
                             {getBookingStatusBadge(booking.status)}
                           </div>
                           <div className="flex justify-between items-center text-xs md:text-sm gap-2">
-                            <span className="text-slate-400">
+                            <span className="text-gray-600 dark:text-slate-400">
                               {new Date(booking.booking_date).toLocaleDateString('id-ID', {
                                 day: 'numeric',
                                 month: 'short',
@@ -594,10 +612,17 @@ function AccountContent() {
             {/* Target Tab */}
             <TabsContent value="target">
               <div className="space-y-4 md:space-y-6">
-                {target ? (
+                {loading ? (
+                  <Card className="border-amber-500/20 shadow-lg">
+                    <CardContent className="py-12 md:py-16 text-center">
+                      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent mb-4"></div>
+                      <p className="text-gray-600 dark:text-gray-400">Memuat data target...</p>
+                    </CardContent>
+                  </Card>
+                ) : target ? (
                   <>
-                    {/* Progress Card */}
-                    <Card className="border-amber-500/20 shadow-lg">
+                    {/* Target Info Card */}
+                    <Card className="border-amber-500/30 shadow-lg">
                       <CardHeader className="bg-gradient-to-r from-amber-500 to-amber-600 text-white">
                         <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                           <Target className="h-5 w-5 md:h-6 md:w-6" />
@@ -605,57 +630,69 @@ function AccountContent() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="p-4 md:p-6">
-                        <div className="space-y-4 md:space-y-6">
-                          {/* Progress Bar */}
-                          <div>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-muted-foreground text-sm md:text-base font-medium">Current Progress</span>
-                              <span className="text-amber-600 dark:text-amber-500 font-bold text-base md:text-lg">
-                                {getProgressPercentage(Number(target.current_amount), Number(target.target_amount)).toFixed(1)}%
-                              </span>
-                            </div>
-                            <div className="w-full bg-muted rounded-full h-4 md:h-5 overflow-hidden">
-                              <div
-                                className="bg-gradient-to-r from-amber-500 to-amber-600 h-full rounded-full transition-all duration-500 ease-out relative"
-                                style={{
-                                  width: `${getProgressPercentage(Number(target.current_amount), Number(target.target_amount))}%`
-                                }}
-                              >
-                                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Stats Grid */}
-                          <div className="grid grid-cols-2 gap-3 md:gap-4">
-                            <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-xl border-2 border-blue-200 dark:border-blue-800">
-                              <p className="text-blue-600 dark:text-blue-400 text-xs md:text-sm mb-1 font-medium">Pencapaian</p>
-                              <p className="text-lg md:text-xl lg:text-2xl font-bold text-blue-700 dark:text-blue-300 break-words">
-                                Rp {Number(target.current_amount).toLocaleString('id-ID')}
-                              </p>
-                            </div>
-                            <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800">
-                              <p className="text-amber-600 dark:text-amber-400 text-xs md:text-sm mb-1 font-medium">Target</p>
-                              <p className="text-lg md:text-xl lg:text-2xl font-bold text-amber-700 dark:text-amber-300 break-words">
-                                Rp {Number(target.target_amount).toLocaleString('id-ID')}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Remaining Amount */}
-                          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 p-4 rounded-xl border-2 border-purple-200 dark:border-purple-800">
-                            <div className="flex items-center justify-between">
+                        <div className="space-y-6">
+                          {/* Target Details */}
+                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4 md:p-6 rounded-xl border-2 border-amber-200 dark:border-amber-800">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <p className="text-purple-600 dark:text-purple-400 text-xs md:text-sm mb-1 font-medium">Sisa Target</p>
-                                <p className="text-xl md:text-2xl font-bold text-purple-700 dark:text-purple-300 break-words">
-                                  Rp {Math.max(0, Number(target.target_amount) - Number(target.current_amount)).toLocaleString('id-ID')}
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Target Belanja</p>
+                                <p className="text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-300">
+                                  Rp {Number(target.target_amount).toLocaleString('id-ID')}
                                 </p>
                               </div>
-                              <div className="text-4xl">🎯</div>
+                              <div>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total Belanja Anda</p>
+                                <p className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                  Rp {Number(target.current_amount).toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {/* Progress Bar */}
+                            <div className="mt-4">
+                              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                <span className="font-medium">Progress Pencapaian</span>
+                                <span className="font-bold text-amber-600 dark:text-amber-400">
+                                  {getProgressPercentage(Number(target.current_amount), Number(target.target_amount)).toFixed(1)}%
+                                </span>
+                              </div>
+                              <div className="bg-white dark:bg-slate-800 rounded-full h-3 md:h-4 overflow-hidden shadow-inner">
+                                <div
+                                  className="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500 ease-out relative"
+                                  style={{
+                                    width: `${Math.min(getProgressPercentage(Number(target.current_amount), Number(target.target_amount)), 100)}%`
+                                  }}
+                                >
+                                  <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Remaining Amount */}
+                            <div className="mt-4 pt-4 border-t border-amber-200 dark:border-amber-800">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Sisa Target</p>
+                                  <p className="text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400">
+                                    Rp {Math.max(0, Number(target.target_amount) - Number(target.current_amount)).toLocaleString('id-ID')}
+                                  </p>
+                                </div>
+                                {target.status === 'achieved' ? (
+                                  <Badge className="bg-green-500/20 text-green-500 border-green-500/50 text-sm px-3 py-1">
+                                    <Trophy className="h-4 w-4 mr-1" />
+                                    Tercapai
+                                  </Badge>
+                                ) : (
+                                  <Badge className="bg-blue-500/20 text-blue-500 border-blue-500/50 text-sm px-3 py-1">
+                                    <TrendingUp className="h-4 w-4 mr-1" />
+                                    Aktif
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
 
-                          {/* Achievement Badge */}
+                          {/* Achievement Banner */}
                           {target.status === 'achieved' && (
                             <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 md:p-5 rounded-xl shadow-lg">
                               <div className="flex items-center gap-3">
@@ -663,7 +700,7 @@ function AccountContent() {
                                 <div>
                                   <h4 className="font-bold text-base md:text-lg">🎉 Selamat! Target Tercapai!</h4>
                                   <p className="text-green-50 text-xs md:text-sm mt-1">
-                                    Anda telah mencapai target pembelanjaan
+                                    Anda telah mencapai target pembelanjaan. Segera klaim reward Anda!
                                   </p>
                                 </div>
                               </div>
@@ -682,36 +719,35 @@ function AccountContent() {
                         </CardTitle>
                       </div>
                       <CardContent className="p-4 md:p-6">
-                        {target.reward ? (
-                          <div className="space-y-4">
-                            {/* Reward Box */}
-                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 p-4 md:p-6 rounded-2xl border-2 border-amber-300 dark:border-amber-700 relative overflow-hidden">
-                              <div className="absolute top-0 right-0 text-6xl opacity-10">🎁</div>
-                              <div className="relative z-10">
-                                <div className="flex items-start gap-3 mb-3">
-                                  <div className="bg-amber-500 text-white p-2 rounded-lg">
-                                    <Gift className="h-5 w-5 md:h-6 md:w-6" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="text-xs md:text-sm text-amber-600 dark:text-amber-400 font-semibold mb-1">
-                                      Hadiah Anda
-                                    </p>
-                                    <p className="text-base md:text-lg font-bold text-amber-900 dark:text-amber-100">
-                                      {target.reward}
-                                    </p>
-                                  </div>
+                        <div className="space-y-4">
+                          {/* Reward Box */}
+                          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 p-4 md:p-6 rounded-2xl border-2 border-amber-300 dark:border-amber-700 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 text-6xl opacity-10">🎁</div>
+                            <div className="relative z-10">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="bg-amber-500 text-white p-2 rounded-lg">
+                                  <Gift className="h-5 w-5 md:h-6 md:w-6" />
                                 </div>
+                                <div className="flex-1">
+                                  <p className="text-xs md:text-sm text-amber-600 dark:text-amber-400 font-semibold mb-1">
+                                    Hadiah Anda
+                                  </p>
+                                  <p className="text-base md:text-lg font-bold text-amber-900 dark:text-amber-100">
+                                    {target.reward || 'Reward akan diumumkan segera'}
+                                  </p>
+                                </div>
+                              </div>
                                 
                                 {target.status === 'achieved' ? (
                                   <div className="bg-white/50 dark:bg-black/20 p-3 rounded-lg mb-3">
                                     <p className="text-xs md:text-sm text-muted-foreground">
-                                      ✨ Target Anda sudah tercapai! Segera hubungi customer service untuk klaim reward Anda.
+                                      ✨ Target Anda sudah tercapai! {target.reward ? 'Segera hubungi customer service untuk klaim reward Anda.' : 'Reward akan segera diumumkan.'}
                                     </p>
                                   </div>
                                 ) : (
                                   <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg mb-3 border border-blue-200 dark:border-blue-800">
                                     <p className="text-xs md:text-sm text-blue-700 dark:text-blue-300">
-                                      💪 Terus belanja untuk mencapai target dan dapatkan reward ini!
+                                      💪 Terus belanja untuk mencapai target dan dapatkan reward {target.reward ? 'ini' : 'yang akan diumumkan'}!
                                     </p>
                                   </div>
                                 )}
@@ -724,7 +760,7 @@ function AccountContent() {
                                 <Trophy className="h-5 w-5" />
                                 <span className="font-semibold text-sm md:text-base">✓ Reward Sudah Diklaim</span>
                               </div>
-                            ) : target.status === 'achieved' ? (
+                            ) : target.status === 'achieved' && target.reward ? (
                               <Link href="/client/chat" className="block">
                                 <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 md:py-4 text-sm md:text-base shadow-lg hover:shadow-xl transition-all">
                                   <MessageSquare className="mr-2 h-4 w-4 md:h-5 md:w-5" />
@@ -732,38 +768,33 @@ function AccountContent() {
                                 </Button>
                               </Link>
                             ) : (
-                              <div className="bg-muted p-4 rounded-xl text-center">
-                                <p className="text-sm md:text-base text-muted-foreground">
-                                  Reward akan tersedia setelah target tercapai
+                              <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 p-4 rounded-xl text-center border border-amber-300 dark:border-amber-700">
+                                <p className="text-sm md:text-base text-amber-800 dark:text-amber-200 font-medium">
+                                  {target.status === 'achieved' 
+                                    ? '🎊 Reward akan diumumkan segera!' 
+                                    : target.reward 
+                                    ? 'Reward akan tersedia setelah target tercapai' 
+                                    : '⏳ Reward sedang disiapkan untuk Anda'
+                                  }
                                 </p>
                               </div>
                             )}
                           </div>
-                        ) : (
-                          <div className="text-center py-6 md:py-8">
-                            <div className="bg-muted rounded-full h-16 w-16 md:h-20 md:w-20 flex items-center justify-center mx-auto mb-4">
-                              <Gift className="h-8 w-8 md:h-10 md:w-10 text-muted-foreground" />
-                            </div>
-                            <p className="text-sm md:text-base text-muted-foreground mb-2">
-                              Reward belum ditentukan
-                            </p>
-                            <p className="text-xs md:text-sm text-muted-foreground">
-                              Admin akan mengatur reward Anda segera
-                            </p>
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   </>
                 ) : (
                   <Card className="border-amber-500/20 shadow-lg">
                     <CardContent className="py-12 md:py-16 text-center">
-                      <div className="bg-muted rounded-full h-20 w-20 md:h-24 md:w-24 flex items-center justify-center mx-auto mb-4">
-                        <Target className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground" />
+                      <div className="bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-full h-20 w-20 md:h-24 md:w-24 flex items-center justify-center mx-auto mb-4">
+                        <Target className="h-10 w-10 md:h-12 md:w-12 text-amber-600 dark:text-amber-400" />
                       </div>
-                      <h3 className="text-lg md:text-xl font-semibold mb-2">Target Belum Tersedia</h3>
-                      <p className="text-sm md:text-base text-muted-foreground">
-                        Mulai berbelanja untuk mendapatkan target dan reward
+                      <h3 className="text-lg md:text-xl font-semibold mb-2 text-gray-900 dark:text-white">Target Belum Tersedia</h3>
+                      <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-2">
+                        Target Anda akan otomatis dibuat setelah melakukan transaksi pertama yang dibayar.
+                      </p>
+                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-500">
+                        Silakan lakukan pembelian dan target akan muncul setelah pembayaran berhasil.
                       </p>
                     </CardContent>
                   </Card>
@@ -894,9 +925,9 @@ function AccountContent() {
 
       {/* Modal Track Booking */}
       <Dialog open={showBookingTrack} onOpenChange={setShowBookingTrack}>
-        <DialogContent className="bg-slate-800 border-amber-500/20 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-amber-500">
+        <DialogContent className="bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-500/20 text-gray-900 dark:text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="border-b border-amber-200 dark:border-amber-500/20 pb-4">
+            <DialogTitle className="text-xl font-bold text-amber-600 dark:text-amber-500">
               Track Service - {selectedBooking?.service_code || 'N/A'}
             </DialogTitle>
           </DialogHeader>
@@ -904,17 +935,17 @@ function AccountContent() {
           {selectedBooking && (
             <div className="space-y-6">
               {/* Service Info */}
-              <div className="bg-slate-900/50 p-4 rounded-lg space-y-3">
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg space-y-3 border border-amber-200 dark:border-transparent">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Device:</span>
-                  <span className="font-semibold">{selectedBooking.device_name}</span>
+                  <span className="text-gray-600 dark:text-slate-400">Device:</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.device_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Issue:</span>
-                  <span className="font-semibold">{selectedBooking.issue}</span>
+                  <span className="text-gray-600 dark:text-slate-400">Issue:</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.issue}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Status:</span>
+                  <span className="text-gray-600 dark:text-slate-400">Status:</span>
                   <Badge className="capitalize">
                     {selectedBooking.status}
                   </Badge>
@@ -929,16 +960,16 @@ function AccountContent() {
 
               {/* Teknisi Info */}
               {selectedBooking.teknisi && (
-                <div className="bg-slate-900/50 p-4 rounded-lg space-y-3">
-                  <h3 className="font-semibold text-amber-500 mb-2">Teknisi Assigned</h3>
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg space-y-3 border border-amber-200 dark:border-transparent">
+                  <h3 className="font-semibold text-amber-600 dark:text-amber-500 mb-2">Teknisi Assigned</h3>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Name:</span>
-                    <span className="font-semibold">{selectedBooking.teknisi.name}</span>
+                    <span className="text-gray-600 dark:text-slate-400">Name:</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.teknisi.name}</span>
                   </div>
                   {selectedBooking.teknisi.phone && (
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Phone:</span>
-                      <span className="font-semibold">{selectedBooking.teknisi.phone}</span>
+                      <span className="text-gray-600 dark:text-slate-400">Phone:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.teknisi.phone}</span>
                     </div>
                   )}
                 </div>
@@ -946,18 +977,18 @@ function AccountContent() {
 
               {/* Progress Notes */}
               {selectedBooking.progress_notes && (
-                <div className="bg-slate-900/50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-amber-500 mb-2">Progress Notes</h3>
-                  <p className="text-slate-300">{selectedBooking.progress_notes}</p>
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg border border-amber-200 dark:border-transparent">
+                  <h3 className="font-semibold text-amber-600 dark:text-amber-500 mb-2">Progress Notes</h3>
+                  <p className="text-gray-800 dark:text-slate-300">{selectedBooking.progress_notes}</p>
                 </div>
               )}
 
               {/* Estimated Completion */}
               {selectedBooking.estimated_completion && (
-                <div className="bg-slate-900/50 p-4 rounded-lg">
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg border border-amber-200 dark:border-transparent">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Estimated Completion:</span>
-                    <span className="font-semibold">
+                    <span className="text-gray-600 dark:text-slate-400">Estimated Completion:</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">
                       {new Date(selectedBooking.estimated_completion).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'long',
@@ -971,24 +1002,24 @@ function AccountContent() {
               )}
 
               {/* Timeline */}
-              <div className="bg-slate-900/50 p-4 rounded-lg">
-                <h3 className="font-semibold text-amber-500 mb-3">Timeline</h3>
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg border border-amber-200 dark:border-transparent">
+                <h3 className="font-semibold text-amber-600 dark:text-amber-500 mb-3">Timeline</h3>
                 <div className="space-y-3">
                   <div className="flex gap-3">
                     <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
                     <div>
-                      <p className="font-semibold">Booking Created</p>
-                      <p className="text-sm text-slate-400">
+                      <p className="font-semibold text-gray-900 dark:text-white">Booking Created</p>
+                      <p className="text-sm text-gray-600 dark:text-slate-400">
                         {new Date(selectedBooking.created_at).toLocaleString('id-ID')}
                       </p>
                     </div>
                   </div>
                   {selectedBooking.updated_at && selectedBooking.updated_at !== selectedBooking.created_at && (
                     <div className="flex gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
                       <div>
-                        <p className="font-semibold">Last Updated</p>
-                        <p className="text-sm text-slate-400">
+                        <p className="font-semibold text-gray-900 dark:text-white">Last Updated</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
                           {new Date(selectedBooking.updated_at).toLocaleString('id-ID')}
                         </p>
                       </div>

@@ -224,8 +224,12 @@ export default function AdminBookingsPage() {
                     <TableRow key={booking.id} className=" hover:bg-muted/30">
                       <TableCell >
                         <div>
-                          <div className="font-medium">{booking.user?.name}</div>
-                          <div className="text-sm text-muted-foreground">{booking.user?.phone}</div>
+                          <div className="font-medium">
+                            {booking.customer_name || booking.user?.name || 'N/A'}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {booking.customer_phone || booking.user?.phone || '-'}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className=" font-medium">{booking.device_name}</TableCell>
@@ -274,9 +278,9 @@ export default function AdminBookingsPage() {
                   <div className="shadow-sm p-4 rounded-lg">
                     <h4 className="font-semibold  mb-2">Informasi Pelanggan</h4>
                     <div className="space-y-1 text-sm">
-                      <p >Nama: {selectedBooking.user?.name}</p>
-                      <p >Email: {selectedBooking.user?.email}</p>
-                      <p >Phone: {selectedBooking.user?.phone || '-'}</p>
+                      <p >Nama: {selectedBooking.customer_name || selectedBooking.user?.name || 'N/A'}</p>
+                      <p >Email: {selectedBooking.customer_email || selectedBooking.user?.email || '-'}</p>
+                      <p >Phone: {selectedBooking.customer_phone || selectedBooking.user?.phone || '-'}</p>
                     </div>
                   </div>
                   <div className="shadow-sm p-4 rounded-lg">

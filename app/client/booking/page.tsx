@@ -96,6 +96,8 @@ export default function BookingPage() {
         device_name: string;
         issue: string;
         booking_date: string;
+        customer_name: string;
+        customer_phone: string;
         teknisi_id?: string;
       }
 
@@ -104,6 +106,8 @@ export default function BookingPage() {
         device_name: bookingData.device_name,
         issue: bookingData.issue,
         booking_date: new Date(bookingData.booking_date).toISOString(),
+        customer_name: bookingData.customer_name,
+        customer_phone: bookingData.customer_phone,
       };
 
       // Include teknisi_id only if explicitly selected (not empty or 'auto')

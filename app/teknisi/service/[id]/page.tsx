@@ -158,28 +158,27 @@ export default function TeknisiServiceDetailPage() {
     <TeknisiLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <Link href="/teknisi/service">
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-slate-600 text-slate-300"
+                  className="border-amber-200/50 dark:border-amber-900/30 hover:bg-amber-500/10"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
-              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                Detail Service
+              <h1 className="text-3xl font-bold flex items-center gap-3">
+                <span className="text-amber-700 dark:text-amber-400">Detail Service</span>
               </h1>
             </div>
-            <p className="text-slate-400 ml-14">Update progress dan kelola service</p>
+            <p className="text-muted-foreground ml-14">Update progress dan kelola service</p>
           </div>
           {booking.service_code && (
             <Badge
-              variant="outline"
-              className="border-amber-500 text-amber-500 font-mono"
+              className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-mono shadow-lg"
             >
               {booking.service_code}
             </Badge>
@@ -190,32 +189,32 @@ export default function TeknisiServiceDetailPage() {
           {/* Left Column - Service Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Device & Issue */}
-            <Card className="bg-slate-800/50 border-amber-500/20">
+            <Card className="shadow-lg border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2">
                   <Wrench className="h-5 w-5 text-amber-500" />
                   Informasi Service
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-slate-400 text-xs">Device</Label>
-                  <p className="text-white text-lg font-semibold">{booking.device_name}</p>
+                  <Label className="text-gray-600 dark:text-gray-400 text-xs">Device</Label>
+                  <p className="text-gray-900 dark:text-gray-100 text-lg font-semibold">{booking.device_name}</p>
                 </div>
                 <div>
-                  <Label className="text-slate-400 text-xs">Keluhan/Masalah</Label>
-                  <p className="text-white">{booking.issue}</p>
+                  <Label className="text-gray-600 dark:text-gray-400 text-xs">Keluhan/Masalah</Label>
+                  <p className="text-gray-900 dark:text-gray-100">{booking.issue}</p>
                 </div>
                 {booking.notes && (
                   <div>
-                    <Label className="text-slate-400 text-xs">Catatan Tambahan</Label>
-                    <p className="text-slate-300 text-sm">{booking.notes}</p>
+                    <Label className="text-gray-600 dark:text-gray-400 text-xs">Catatan Tambahan</Label>
+                    <p className="text-gray-800 dark:text-gray-200 text-sm">{booking.notes}</p>
                   </div>
                 )}
-                <div className="flex items-center gap-4 pt-2 border-t border-slate-700">
+                <div className="flex items-center gap-4 pt-2 border-t border-gray-200 dark:border-slate-700">
                   <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-slate-400" />
-                    <span className="text-slate-300">
+                    <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    <span className="text-gray-800 dark:text-gray-200">
                       {new Date(booking.booking_date).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'long',
@@ -229,13 +228,13 @@ export default function TeknisiServiceDetailPage() {
             </Card>
 
             {/* Update Progress Form */}
-            <Card className="bg-slate-800/50 border-amber-500/20">
+            <Card className="shadow-lg border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur">
               <CardHeader>
-                <CardTitle className="text-white">Update Progress</CardTitle>
+                <CardTitle>Update Progress</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="progress_status" className="text-slate-300">
+                  <Label htmlFor="progress_status" className="text-gray-700 dark:text-gray-300">
                     Status Progress
                   </Label>
                   <Select
@@ -244,7 +243,7 @@ export default function TeknisiServiceDetailPage() {
                       setUpdateData({ ...updateData, progress_status: value })
                     }
                   >
-                    <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-white dark:bg-slate-900/50 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -259,7 +258,7 @@ export default function TeknisiServiceDetailPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="progress_notes" className="text-slate-300">
+                  <Label htmlFor="progress_notes" className="text-gray-700 dark:text-gray-300">
                     Progress Notes
                   </Label>
                   <Textarea
@@ -268,13 +267,13 @@ export default function TeknisiServiceDetailPage() {
                     onChange={(e) =>
                       setUpdateData({ ...updateData, progress_notes: e.target.value })
                     }
-                    className="bg-slate-900/50 border-slate-700 text-white min-h-[120px]"
+                    className="bg-white dark:bg-slate-900/50 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white min-h-[120px]"
                     placeholder="Jelaskan progress terbaru atau temuan saat pengerjaan..."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="estimated_completion" className="text-slate-300">
+                  <Label htmlFor="estimated_completion" className="text-gray-700 dark:text-gray-300">
                     Estimasi Selesai
                   </Label>
                   <Input
@@ -284,18 +283,18 @@ export default function TeknisiServiceDetailPage() {
                     onChange={(e) =>
                       setUpdateData({ ...updateData, estimated_completion: e.target.value })
                     }
-                    className="bg-slate-900/50 border-slate-700 text-white"
+                    className="bg-white dark:bg-slate-900/50 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white"
                   />
                 </div>
 
                 <Button
                   onClick={handleSave}
                   disabled={saving}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold"
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-lg shadow-amber-500/30"
                 >
                   {saving ? (
                     <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-slate-900 border-r-transparent"></div>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent"></div>
                       Menyimpan...
                     </>
                   ) : (
@@ -312,42 +311,44 @@ export default function TeknisiServiceDetailPage() {
           {/* Right Column - Customer Info */}
           <div className="space-y-6">
             {/* Customer Info */}
-            <Card className="bg-slate-800/50 border-amber-500/20">
+            <Card className="shadow-lg border-amber-200/50 dark:border-amber-900/30 bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/20">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5 text-amber-500" />
                   Informasi Customer
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-slate-400 text-xs">Nama</Label>
-                  <p className="text-white font-semibold">{booking.user?.name || '-'}</p>
+                  <Label className="text-gray-600 dark:text-gray-400 text-xs">Nama</Label>
+                  <p className="text-gray-900 dark:text-gray-100 font-semibold">
+                    {booking.customer_name || booking.user?.name || 'N/A'}
+                  </p>
                 </div>
-                {booking.user?.phone && (
+                {(booking.customer_phone || booking.user?.phone) && (
                   <div>
-                    <Label className="text-slate-400 text-xs">Telepon</Label>
+                    <Label className="text-gray-600 dark:text-gray-400 text-xs">Telepon</Label>
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-amber-500" />
                       <a
-                        href={`tel:${booking.user.phone}`}
-                        className="text-white hover:text-amber-500"
+                        href={`tel:${booking.customer_phone || booking.user?.phone}`}
+                        className="text-gray-900 dark:text-gray-100 hover:text-amber-500"
                       >
-                        {booking.user.phone}
+                        {booking.customer_phone || booking.user?.phone}
                       </a>
                     </div>
                   </div>
                 )}
-                {booking.user?.email && (
+                {(booking.customer_email || booking.user?.email) && (
                   <div>
-                    <Label className="text-slate-400 text-xs">Email</Label>
+                    <Label className="text-gray-600 dark:text-gray-400 text-xs">Email</Label>
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-amber-500" />
                       <a
-                        href={`mailto:${booking.user.email}`}
-                        className="text-white hover:text-amber-500 text-sm"
+                        href={`mailto:${booking.customer_email || booking.user?.email}`}
+                        className="text-gray-900 dark:text-gray-100 hover:text-amber-500 text-sm break-all"
                       >
-                        {booking.user.email}
+                        {booking.customer_email || booking.user?.email}
                       </a>
                     </div>
                   </div>
@@ -356,17 +357,17 @@ export default function TeknisiServiceDetailPage() {
             </Card>
 
             {/* Timeline Info */}
-            <Card className="bg-slate-800/50 border-amber-500/20">
+            <Card className="shadow-lg border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-amber-500" />
                   Timeline
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <Label className="text-slate-400 text-xs">Tanggal Booking</Label>
-                  <p className="text-white text-sm">
+                  <Label className="text-gray-600 dark:text-gray-400 text-xs">Tanggal Booking</Label>
+                  <p className="text-gray-900 dark:text-gray-100 text-sm">
                     {new Date(booking.booking_date).toLocaleDateString('id-ID', {
                       day: 'numeric',
                       month: 'long',
@@ -376,7 +377,7 @@ export default function TeknisiServiceDetailPage() {
                 </div>
                 {booking.estimated_completion && (
                   <div>
-                    <Label className="text-slate-400 text-xs">Estimasi Selesai</Label>
+                    <Label className="text-gray-600 dark:text-gray-400 text-xs">Estimasi Selesai</Label>
                     <p className="text-amber-500 text-sm font-semibold">
                       {new Date(booking.estimated_completion).toLocaleDateString('id-ID', {
                         day: 'numeric',
@@ -388,7 +389,7 @@ export default function TeknisiServiceDetailPage() {
                 )}
                 {booking.completed_at && (
                   <div>
-                    <Label className="text-slate-400 text-xs">Selesai Pada</Label>
+                    <Label className="text-gray-600 dark:text-gray-400 text-xs">Selesai Pada</Label>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
                       <p className="text-green-500 text-sm font-semibold">

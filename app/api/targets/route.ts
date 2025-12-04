@@ -1,5 +1,5 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 
 // GET user's target
 export async function GET(request: NextRequest) {
@@ -7,31 +7,40 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('user_id');
 
+    console.log('[API Targets] GET request for user_id:', userId);
+
     if (!userId) {
+      console.log('[API Targets] Error: User ID is required');
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    // Use supabaseAdmin to bypass RLS
+    const { data, error } = await supabaseAdmin
       .from('targets')
       .select(`
         *,
         user:users(id, name, email)
       `)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
-    // If no target found, return null instead of error
+    // If error (not just no rows), return error
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No rows found - this is OK, user just doesn't have target yet
-        return NextResponse.json({ target: null }, { status: 200 });
-      }
+      console.log('[API Targets] Supabase error:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    // If no data, user doesn't have target yet (will auto-create on first paid order)
+    if (!data) {
+      console.log('[API Targets] No target found for user - will auto-create on first paid order');
+      return NextResponse.json({ target: null }, { status: 200 });
+    }
+
+    console.log('[API Targets] Target found:', data?.id);
     return NextResponse.json({ target: data }, { status: 200 });
 
-  } catch (_error) {
+  } catch (error) {
+    console.error('[API Targets] Internal error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -46,8 +55,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // Check if target exists
-    const { data: existing } = await supabase
+    // Check if target exists (use supabaseAdmin to bypass RLS)
+    const { data: existing } = await supabaseAdmin
       .from('targets')
       .select('*')
       .eq('user_id', user_id)
@@ -55,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       // Update existing target
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('targets')
         .update({ target_amount: target_amount || existing.target_amount })
         .eq('user_id', user_id)
@@ -69,7 +78,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ target: data }, { status: 200 });
     } else {
       // Create new target
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('targets')
         .insert({
           user_id,

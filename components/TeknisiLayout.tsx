@@ -39,19 +39,19 @@ export default function TeknisiLayout({ children }: TeknisiLayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Top Navigation */}
-      <nav className="bg-card/50 border-b backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+      <nav className="bg-white/80 dark:bg-slate-900/80 border-b border-amber-200/50 dark:border-amber-900/30 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                <Wrench className="h-6 w-6 text-amber-600 dark:text-amber-500" />
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <Wrench className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Teknisi Panel</h1>
-                <p className="text-xs text-amber-600 dark:text-amber-500">Chicha Mobile</p>
+                <h1 className="text-xl font-bold text-amber-600 dark:text-amber-400">Teknisi Panel</h1>
+                <p className="text-xs text-muted-foreground">Chicha Mobile</p>
               </div>
             </div>
 
@@ -65,8 +65,8 @@ export default function TeknisiLayout({ children }: TeknisiLayoutProps) {
                       variant="ghost"
                       className={
                         isActive(item.href)
-                          ? 'text-amber-600 dark:text-amber-500 bg-amber-500/10'
-                          : 'hover:text-amber-600 dark:hover:text-amber-500 hover:bg-amber-500/10'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30 hover:from-amber-600 hover:to-orange-600'
+                          : 'hover:bg-gradient-to-r hover:from-amber-100 hover:to-orange-100 dark:hover:from-amber-900/30 dark:hover:to-orange-900/30 hover:text-amber-700 dark:hover:text-amber-400'
                       }
                     >
                       <Icon className="mr-2 h-4 w-4" />
@@ -83,10 +83,9 @@ export default function TeknisiLayout({ children }: TeknisiLayoutProps) {
               <ThemeToggle />
               <NotificationBell />
               <Button
-                variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="border-red-500 text-red-500 hover:bg-red-500/10"
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-sm"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout

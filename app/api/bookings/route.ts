@@ -47,8 +47,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    console.log('Received booking request:', body);
-    const { user_id, device_name, issue, booking_date, teknisi_id } = body;
+    const { user_id, device_name, issue, booking_date, teknisi_id, customer_name, customer_phone, customer_email } = body;
 
     if (!user_id || !device_name || !issue || !booking_date) {
       console.log('Missing fields validation failed:', { user_id, device_name, issue, booking_date });
@@ -64,6 +63,9 @@ export async function POST(request: NextRequest) {
       issue: string;
       booking_date: string;
       status: string;
+      customer_name?: string;
+      customer_phone?: string;
+      customer_email?: string;
       teknisi_id?: string;
     } = {
       user_id,
@@ -72,6 +74,11 @@ export async function POST(request: NextRequest) {
       booking_date,
       status: 'baru',
     };
+
+    // Add customer info if provided (for display purposes)
+    if (customer_name) insertData.customer_name = customer_name;
+    if (customer_phone) insertData.customer_phone = customer_phone;
+    if (customer_email) insertData.customer_email = customer_email;
 
     // Add teknisi_id only if provided and not empty
     if (teknisi_id && teknisi_id !== '' && teknisi_id !== 'auto') {
