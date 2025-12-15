@@ -21,8 +21,9 @@ export default function HomePage() {
 
   // Auto-slide carousel
   useEffect(() => {
+    const slideCount = vouchers.length + 3; // 3 static slides + voucher slides
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % Math.max(3, vouchers.length + 2));
+      setCurrentSlide((prev) => (prev + 1) % slideCount);
     }, 5000);
     return () => clearInterval(timer);
   }, [vouchers.length]);
@@ -50,11 +51,13 @@ export default function HomePage() {
   };
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % Math.max(3, vouchers.length + 2));
+    const slideCount = vouchers.length + 3;
+    setCurrentSlide((prev) => (prev + 1) % slideCount);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + Math.max(3, vouchers.length + 2)) % Math.max(3, vouchers.length + 2));
+    const slideCount = vouchers.length + 3;
+    setCurrentSlide((prev) => (prev - 1 + slideCount) % slideCount);
   };
 
   const goToSlide = (index: number) => {
@@ -100,30 +103,59 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Slide 2: Voucher Promo General */}
+            {/* Slide 2: Service Booking CTA */}
             <div className="min-w-full">
-              <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 p-8 md:p-12">
+              <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 p-8 md:p-12">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <div className="flex-1 text-white">
                     <div className="flex items-center gap-2 mb-3">
-                      <Ticket className="h-8 w-8" />
-                      <span className="text-sm font-semibold uppercase tracking-wider">Promo Spesial</span>
+                      <Wrench className="h-8 w-8" />
+                      <span className="text-sm font-semibold uppercase tracking-wider">Service Profesional</span>
                     </div>
                     <h3 className="text-3xl md:text-4xl font-bold mb-4">
-                      Diskon Hingga 50%!
+                      HP Bermasalah? Kami Siap Bantu!
                     </h3>
-                    <p className="text-lg mb-6 text-amber-100">
-                      Gunakan kode voucher dan hemat lebih banyak untuk pembelian sparepart & aksesoris HP terbaik.
+                    <p className="text-lg mb-6 text-blue-100">
+                      Teknisi berpengalaman dengan tracking progress real-time. Booking sekarang dan dapatkan garansi service!
+                    </p>
+                    <Link href="/client/booking">
+                      <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50">
+                        <Wrench className="mr-2 h-5 w-5" />
+                        Booking Service
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="hidden md:block">
+                    <Wrench className="h-48 w-48 text-white/20" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Slide 3: Shopping CTA */}
+            <div className="min-w-full">
+              <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 p-8 md:p-12">
+                <div className="flex flex-col md:flex-row items-center gap-6">
+                  <div className="flex-1 text-white">
+                    <div className="flex items-center gap-2 mb-3">
+                      <ShoppingCart className="h-8 w-8" />
+                      <span className="text-sm font-semibold uppercase tracking-wider">Sparepart Original</span>
+                    </div>
+                    <h3 className="text-3xl md:text-4xl font-bold mb-4">
+                      Ribuan Produk Berkualitas!
+                    </h3>
+                    <p className="text-lg mb-6 text-emerald-100">
+                      Sparepart original, aksesoris HP terlengkap dengan harga bersahabat. Gratis ongkir untuk pembelian tertentu!
                     </p>
                     <Link href="/client/produk">
-                      <Button size="lg" className="bg-white text-amber-600 hover:bg-amber-50">
+                      <Button size="lg" className="bg-white text-emerald-600 hover:bg-emerald-50">
                         <ShoppingCart className="mr-2 h-5 w-5" />
                         Belanja Sekarang
                       </Button>
                     </Link>
                   </div>
                   <div className="hidden md:block">
-                    <Percent className="h-48 w-48 text-white/20" />
+                    <ShoppingCart className="h-48 w-48 text-white/20" />
                   </div>
                 </div>
               </div>
@@ -187,7 +219,7 @@ export default function HomePage() {
 
           {/* Dots Indicator */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-            {Array.from({ length: Math.max(3, vouchers.length + 2) }).map((_, index) => (
+            {Array.from({ length: vouchers.length + 3 }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
