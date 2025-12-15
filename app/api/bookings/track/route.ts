@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 
 export async function GET(request: Request) {
   try {
@@ -10,32 +10,52 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'service_code query param is required' }, { status: 400 });
     }
 
-    // Public endpoint: find booking by service_code and return sanitized fields
-    const { data, error } = await supabase
+    // Public endpoint: find booking by service_code using admin client to bypass RLS
+    const { data: booking, error: bookingError } = await supabaseAdmin
       .from('bookings')
-      .select(
-        `id, user_id, device_name, issue, notes, booking_date, service_code, teknisi_id, progress_status, progress_notes, estimated_completion, completed_at, created_at, users(id, name, phone, email), teknisi(id, name, phone, specialization, status)`
-      )
+      .select('*')
       .eq('service_code', code)
       .maybeSingle();
 
-    if (error) {
-      console.error('Supabase error fetching booking by code:', error);
+    if (bookingError) {
+      console.error('Supabase error fetching booking by code:', bookingError);
       return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
     }
 
-    if (!data) {
+    if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    // Sanitize response: do not return teknisi.password_hash or other sensitive fields
-    if (data.teknisi && 'password_hash' in data.teknisi) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password_hash, ...sanitizedTeknisi } = data.teknisi as Record<string, unknown>;
-      (data as Record<string, unknown>).teknisi = sanitizedTeknisi;
+    // Fetch user info
+    let user = null;
+    if (booking.user_id) {
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('id, name, phone, email')
+        .eq('id', booking.user_id)
+        .single();
+      user = userData;
     }
 
-    return NextResponse.json({ booking: data });
+    // Fetch teknisi info
+    let teknisi = null;
+    if (booking.teknisi_id) {
+      const { data: teknisiData } = await supabaseAdmin
+        .from('teknisi')
+        .select('id, name, phone, specialization, status')
+        .eq('id', booking.teknisi_id)
+        .single();
+      teknisi = teknisiData;
+    }
+
+    // Combine data
+    const result = {
+      ...booking,
+      user,
+      teknisi
+    };
+
+    return NextResponse.json({ booking: result });
   } catch (err) {
     console.error('Unexpected error in track route:', err);
     return NextResponse.json({ error: 'Unexpected server error' }, { status: 500 });
