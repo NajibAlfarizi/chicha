@@ -261,7 +261,7 @@ export default function ProductDetailPage() {
 
               {/* Product Name */}
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">{product.name}</h1>
+                <h1 className="text-3xl font-bold text-foreground mb-2">{product.name}</h1>
                 <div className="flex items-center gap-2">
                   <div className="flex text-amber-500">
                     {[...Array(5)].map((_, i) => {

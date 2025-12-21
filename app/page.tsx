@@ -21,7 +21,7 @@ export default function HomePage() {
 
   // Auto-slide carousel
   useEffect(() => {
-    const slideCount = vouchers.length + 3; // 3 static slides + voucher slides
+    const slideCount = vouchers.length + 3; // vouchers + 3 static slides
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slideCount);
     }, 5000);
@@ -44,6 +44,7 @@ export default function HomePage() {
     try {
       const response = await fetch('/api/vouchers');
       const data = await response.json();
+      console.log('📦 Fetched vouchers for home:', data.vouchers?.length || 0, data.vouchers);
       setVouchers(data.vouchers || []);
     } catch (error) {
       console.error('Error fetching vouchers:', error);
@@ -74,6 +75,41 @@ export default function HomePage() {
             className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${currentSlide * 100}%)` }}
           >
+            {/* Dynamic Voucher Slides - TAMPILKAN TERLEBIH DAHULU */}
+            {vouchers.map((voucher) => (
+              <div key={voucher.id} className="min-w-full">
+                <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-8 md:p-12">
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="flex-1 text-white">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Ticket className="h-8 w-8" />
+                        <span className="text-sm font-semibold uppercase tracking-wider">Kode Voucher</span>
+                      </div>
+                      <h3 className="text-3xl md:text-4xl font-bold mb-4">
+                        {voucher.name}
+                      </h3>
+                      <div className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-mono font-bold text-2xl mb-4">
+                        {voucher.code}
+                      </div>
+                      <p className="text-lg mb-6 text-blue-100">
+                        {voucher.description || (
+                          voucher.type === 'percentage' 
+                            ? `Diskon ${voucher.value}%${voucher.max_discount ? ` (maks Rp ${voucher.max_discount.toLocaleString('id-ID')})` : ''}` 
+                            : `Potongan Rp ${voucher.value.toLocaleString('id-ID')}`
+                        )}
+                      </p>
+                      <p className="text-sm text-blue-200">
+                        Min. belanja Rp {voucher.min_purchase.toLocaleString('id-ID')} • Kuota: {voucher.quota - voucher.used} tersisa
+                      </p>
+                    </div>
+                    <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                      <Ticket className="h-48 w-48 text-white/20" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
             {/* Slide 1: Target Reward */}
             <div className="min-w-full">
               <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 p-8 md:p-12">
@@ -96,7 +132,7 @@ export default function HomePage() {
                       </Button>
                     </Link>
                   </div>
-                  <div className="hidden md:block">
+                  <div className="hidden md:flex items-center justify-center flex-shrink-0">
                     <Gift className="h-48 w-48 text-white/20" />
                   </div>
                 </div>
@@ -125,7 +161,7 @@ export default function HomePage() {
                       </Button>
                     </Link>
                   </div>
-                  <div className="hidden md:block">
+                  <div className="hidden md:flex items-center justify-center flex-shrink-0">
                     <Wrench className="h-48 w-48 text-white/20" />
                   </div>
                 </div>
@@ -154,53 +190,12 @@ export default function HomePage() {
                       </Button>
                     </Link>
                   </div>
-                  <div className="hidden md:block">
+                  <div className="hidden md:flex items-center justify-center flex-shrink-0">
                     <ShoppingCart className="h-48 w-48 text-white/20" />
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Dynamic Voucher Slides */}
-            {vouchers.map((voucher) => (
-              <div key={voucher.id} className="min-w-full">
-                <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-8 md:p-12">
-                  <div className="flex flex-col md:flex-row items-center gap-6">
-                    <div className="flex-1 text-white">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Ticket className="h-8 w-8" />
-                        <span className="text-sm font-semibold uppercase tracking-wider">Kode Voucher</span>
-                      </div>
-                      <h3 className="text-3xl md:text-4xl font-bold mb-2">
-                        {voucher.name}
-                      </h3>
-                      <div className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-mono font-bold text-2xl mb-4">
-                        {voucher.code}
-                      </div>
-                      <p className="text-lg mb-2 text-blue-100">
-                        {voucher.description || (
-                          voucher.type === 'percentage' 
-                            ? `Diskon ${voucher.value}%${voucher.max_discount ? ` (maks Rp ${voucher.max_discount.toLocaleString('id-ID')})` : ''}` 
-                            : `Potongan Rp ${voucher.value.toLocaleString('id-ID')}`
-                        )}
-                      </p>
-                      <p className="text-sm text-blue-200 mb-6">
-                        Min. belanja Rp {voucher.min_purchase.toLocaleString('id-ID')} • Kuota: {voucher.quota - voucher.used} tersisa
-                      </p>
-                      <Link href="/client/produk">
-                        <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50">
-                          <ShoppingCart className="mr-2 h-5 w-5" />
-                          Belanja Sekarang
-                        </Button>
-                      </Link>
-                    </div>
-                    <div className="hidden md:block">
-                      <Ticket className="h-48 w-48 text-white/20" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
 
           {/* Navigation Arrows */}
@@ -310,14 +305,16 @@ export default function HomePage() {
         {loading ? (
           <div className="text-center text-muted-foreground py-12">Loading products...</div>
         ) : (
-          <div className="grid md:grid-cols-3 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {products.map((product) => (
               <Card key={product.id} className="border-amber-500/20 hover:border-amber-500/50 hover:shadow-lg transition-all overflow-hidden">
-                <div className="aspect-square bg-muted/30 flex items-center justify-center">
+                <div className="relative aspect-square bg-muted/30 overflow-hidden">
                   {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-2" />
                   ) : (
-                    <ShoppingCart className="h-20 w-20 text-muted-foreground" />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ShoppingCart className="h-20 w-20 text-muted-foreground" />
+                    </div>
                   )}
                 </div>
                 <CardHeader>

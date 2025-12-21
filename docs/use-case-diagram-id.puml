@@ -1,0 +1,444 @@
+@startuml Diagram Use Case Chicha Mobile
+
+' Konfigurasi
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+left to right direction
+
+' ============ AKTOR ============
+actor "Pelanggan" as customer
+actor "Admin" as admin
+actor "Teknisi" as teknisi
+actor "Payment Gateway\nMidtrans" as midtrans
+actor "Sistem" as system
+
+' ============ PAKET AUTENTIKASI ============
+package "Autentikasi" {
+  usecase "Login" as UC_Login
+  usecase "Registrasi" as UC_Register
+  usecase "Logout" as UC_Logout
+  usecase "Reset Password" as UC_ResetPassword
+  usecase "Validasi Kredensial" as UC_ValidateCredentials
+  usecase "Buat Sesi" as UC_CreateSession
+  usecase "Login Teknisi" as UC_TeknisiLogin
+}
+
+' ============ PAKET MANAJEMEN PRODUK ============
+package "Manajemen Produk" {
+  usecase "Lihat Daftar Produk" as UC_BrowseProducts
+  usecase "Lihat Detail Produk" as UC_ViewProductDetails
+  usecase "Cari Produk" as UC_SearchProducts
+  usecase "Filter Berdasarkan Kategori" as UC_FilterByCategory
+  usecase "Tambah Produk" as UC_CreateProduct
+  usecase "Update Produk" as UC_UpdateProduct
+  usecase "Hapus Produk" as UC_DeleteProduct
+  usecase "Kelola Stok" as UC_ManageStock
+  usecase "Upload Gambar Produk" as UC_UploadImage
+}
+
+' ============ PAKET MANAJEMEN KATEGORI ============
+package "Manajemen Kategori" {
+  usecase "Lihat Kategori" as UC_ViewCategories
+  usecase "Tambah Kategori" as UC_CreateCategory
+  usecase "Update Kategori" as UC_UpdateCategory
+  usecase "Hapus Kategori" as UC_DeleteCategory
+}
+
+' ============ PAKET KERANJANG & PESANAN ============
+package "Keranjang & Pesanan" {
+  usecase "Tambah ke Keranjang" as UC_AddToCart
+  usecase "Lihat Keranjang" as UC_ViewCart
+  usecase "Update Jumlah Item" as UC_UpdateCartQuantity
+  usecase "Hapus dari Keranjang" as UC_RemoveFromCart
+  usecase "Checkout" as UC_Checkout
+  usecase "Gunakan Voucher" as UC_ApplyVoucher
+  usecase "Buat Pesanan" as UC_CreateOrder
+  usecase "Hitung Total" as UC_CalculateTotal
+  usecase "Validasi Voucher" as UC_ValidateVoucher
+  usecase "Lacak Pesanan" as UC_TrackOrder
+  usecase "Lihat Riwayat Pesanan" as UC_ViewOrderHistory
+  usecase "Batalkan Pesanan" as UC_CancelOrder
+  usecase "Update Status Pesanan" as UC_UpdateOrderStatus
+  usecase "Kurangi Stok" as UC_ReduceStock
+  usecase "Update Penggunaan Voucher" as UC_UpdateVoucherUsage
+}
+
+' ============ PAKET PEMBAYARAN ============
+package "Proses Pembayaran" {
+  usecase "Proses Pembayaran" as UC_ProcessPayment
+  usecase "Generate Token Pembayaran" as UC_GeneratePaymentToken
+  usecase "Inisiasi Pembayaran Midtrans" as UC_InitiateMidtransPayment
+  usecase "Terima Notifikasi Pembayaran" as UC_ReceivePaymentNotification
+  usecase "Update Status Pembayaran" as UC_UpdatePaymentStatus
+  usecase "Handle Callback Pembayaran" as UC_HandlePaymentCallback
+  usecase "Verifikasi Signature Pembayaran" as UC_VerifyPaymentSignature
+}
+
+' ============ PAKET VOUCHER ============
+package "Manajemen Voucher" {
+  usecase "Lihat Voucher Tersedia" as UC_ViewVouchers
+  usecase "Tambah Voucher" as UC_CreateVoucher
+  usecase "Update Voucher" as UC_UpdateVoucher
+  usecase "Hapus Voucher" as UC_DeleteVoucher
+  usecase "Toggle Status Voucher" as UC_ToggleVoucherStatus
+  usecase "Cek Validitas Voucher" as UC_CheckVoucherValidity
+  usecase "Cek Kuota Voucher" as UC_CheckVoucherQuota
+}
+
+' ============ PAKET BOOKING SERVICE ============
+package "Booking Service" {
+  usecase "Buat Booking" as UC_CreateBooking
+  usecase "Generate Kode Service" as UC_GenerateServiceCode
+  usecase "Lacak Booking" as UC_TrackBooking
+  usecase "Lihat Status Booking" as UC_ViewBookingStatus
+  usecase "Lihat Booking Saya" as UC_ViewMyBookings
+  usecase "Assign Teknisi" as UC_AssignTeknisi
+  usecase "Update Status Booking" as UC_UpdateBookingStatus
+  usecase "Update Progress Service" as UC_UpdateServiceProgress
+  usecase "Selesaikan Service" as UC_CompleteService
+  usecase "Tambah Catatan Progress" as UC_AddProgressNotes
+  usecase "Lihat Service Ditugaskan" as UC_ViewAssignedServices
+  usecase "Diagnosa Masalah" as UC_DiagnoseIssue
+}
+
+' ============ PAKET KELUHAN & REVIEW ============
+package "Keluhan & Review" {
+  usecase "Kirim Keluhan" as UC_SubmitComplaint
+  usecase "Kirim Review Produk" as UC_SubmitReview
+  usecase "Lihat Keluhan Saya" as UC_ViewMyComplaints
+  usecase "Lihat Detail Keluhan" as UC_ViewComplaintDetails
+  usecase "Balas Keluhan" as UC_ReplyToComplaint
+  usecase "Update Status Keluhan" as UC_UpdateComplaintStatus
+  usecase "Beri Rating Produk" as UC_RateProduct
+}
+
+' ============ PAKET CHAT ============
+package "Sistem Chat" {
+  usecase "Kirim Pesan" as UC_SendMessage
+  usecase "Terima Pesan" as UC_ReceiveMessage
+  usecase "Lihat Riwayat Chat" as UC_ViewChatHistory
+  usecase "Lihat Chat Aktif" as UC_ViewActiveChats
+  usecase "Tandai Sudah Dibaca" as UC_MarkAsRead
+  usecase "Update Real-time" as UC_RealtimeUpdates
+}
+
+' ============ PAKET NOTIFIKASI ============
+package "Sistem Notifikasi" {
+  usecase "Kirim Notifikasi" as UC_SendNotification
+  usecase "Lihat Notifikasi" as UC_ViewNotifications
+  usecase "Tandai Notifikasi Dibaca" as UC_MarkNotificationAsRead
+  usecase "Buat Notifikasi Pesanan" as UC_CreateOrderNotification
+  usecase "Buat Notifikasi Booking" as UC_CreateBookingNotification
+  usecase "Buat Notifikasi Pembayaran" as UC_CreatePaymentNotification
+}
+
+' ============ PAKET MANAJEMEN USER ============
+package "Manajemen User" {
+  usecase "Lihat Daftar User" as UC_ViewUsers
+  usecase "Lihat Detail User" as UC_ViewUserDetails
+  usecase "Update Role User" as UC_UpdateUserRole
+  usecase "Hapus User" as UC_DeleteUser
+  usecase "Lihat Profil" as UC_ViewProfile
+  usecase "Update Profil" as UC_UpdateProfile
+}
+
+' ============ PAKET MANAJEMEN TEKNISI ============
+package "Manajemen Teknisi" {
+  usecase "Tambah Teknisi" as UC_CreateTeknisi
+  usecase "Lihat Daftar Teknisi" as UC_ViewTeknisiList
+  usecase "Update Teknisi" as UC_UpdateTeknisi
+  usecase "Hapus Teknisi" as UC_DeleteTeknisi
+  usecase "Toggle Status Teknisi" as UC_ToggleTeknisiStatus
+  usecase "Lihat Profil Teknisi" as UC_ViewTeknisiProfile
+  usecase "Lihat Pendapatan Teknisi" as UC_ViewTeknisiEarnings
+}
+
+' ============ PAKET TARGET/CRM ============
+package "Target & CRM" {
+  usecase "Lihat Target" as UC_ViewTargets
+  usecase "Buat Target" as UC_CreateTarget
+  usecase "Update Progress Target" as UC_UpdateTargetProgress
+  usecase "Tandai Target Tercapai" as UC_MarkTargetAchieved
+  usecase "Klaim Reward" as UC_ClaimReward
+  usecase "Lihat Target Saya" as UC_ViewMyTarget
+}
+
+' ============ PAKET DASHBOARD & ANALYTICS ============
+package "Dashboard & Analytics" {
+  usecase "Lihat Dashboard Admin" as UC_ViewAdminDashboard
+  usecase "Lihat Dashboard Teknisi" as UC_ViewTeknisiDashboard
+  usecase "Lihat Statistik Penjualan" as UC_ViewSalesStatistics
+  usecase "Lihat Statistik Revenue" as UC_ViewRevenueStatistics
+  usecase "Lihat Statistik Service" as UC_ViewServiceStatistics
+  usecase "Lihat Produk Terlaris" as UC_ViewTopProducts
+  usecase "Lihat Pesanan Terbaru" as UC_ViewRecentOrders
+}
+
+' ============================================
+' RELASI PELANGGAN
+' ============================================
+
+' Autentikasi
+customer --> UC_Login
+customer --> UC_Register
+customer --> UC_Logout
+customer --> UC_ResetPassword
+
+' Produk
+customer --> UC_BrowseProducts
+customer --> UC_ViewProductDetails
+customer --> UC_SearchProducts
+customer --> UC_FilterByCategory
+
+' Belanja & Pesanan
+customer --> UC_AddToCart
+customer --> UC_ViewCart
+customer --> UC_UpdateCartQuantity
+customer --> UC_RemoveFromCart
+customer --> UC_Checkout
+customer --> UC_ApplyVoucher
+customer --> UC_TrackOrder
+customer --> UC_ViewOrderHistory
+customer --> UC_CancelOrder
+
+' Pembayaran
+customer --> UC_ProcessPayment
+
+' Voucher
+customer --> UC_ViewVouchers
+
+' Booking
+customer --> UC_CreateBooking
+customer --> UC_TrackBooking
+customer --> UC_ViewMyBookings
+customer --> UC_ViewBookingStatus
+
+' Keluhan & Review
+customer --> UC_SubmitComplaint
+customer --> UC_SubmitReview
+customer --> UC_ViewMyComplaints
+customer --> UC_ViewComplaintDetails
+
+' Chat
+customer --> UC_SendMessage
+customer --> UC_ViewChatHistory
+
+' Notifikasi
+customer --> UC_ViewNotifications
+customer --> UC_MarkNotificationAsRead
+
+' Profil
+customer --> UC_ViewProfile
+customer --> UC_UpdateProfile
+
+' Target/CRM
+customer --> UC_ViewMyTarget
+customer --> UC_ClaimReward
+
+' ============================================
+' RELASI ADMIN
+' ============================================
+
+' Autentikasi
+admin --> UC_Login
+admin --> UC_Logout
+
+' Manajemen Produk
+admin --> UC_CreateProduct
+admin --> UC_UpdateProduct
+admin --> UC_DeleteProduct
+admin --> UC_ManageStock
+admin --> UC_UploadImage
+admin --> UC_BrowseProducts
+
+' Manajemen Kategori
+admin --> UC_CreateCategory
+admin --> UC_UpdateCategory
+admin --> UC_DeleteCategory
+admin --> UC_ViewCategories
+
+' Manajemen Pesanan
+admin --> UC_UpdateOrderStatus
+admin --> UC_ViewOrderHistory
+
+' Manajemen Voucher
+admin --> UC_CreateVoucher
+admin --> UC_UpdateVoucher
+admin --> UC_DeleteVoucher
+admin --> UC_ToggleVoucherStatus
+admin --> UC_ViewVouchers
+
+' Manajemen Booking
+admin --> UC_AssignTeknisi
+admin --> UC_UpdateBookingStatus
+
+' Manajemen Keluhan
+admin --> UC_ReplyToComplaint
+admin --> UC_UpdateComplaintStatus
+admin --> UC_ViewComplaintDetails
+
+' Chat
+admin --> UC_SendMessage
+admin --> UC_ViewActiveChats
+admin --> UC_ViewChatHistory
+
+' Manajemen User
+admin --> UC_ViewUsers
+admin --> UC_ViewUserDetails
+admin --> UC_UpdateUserRole
+admin --> UC_DeleteUser
+
+' Manajemen Teknisi
+admin --> UC_CreateTeknisi
+admin --> UC_ViewTeknisiList
+admin --> UC_UpdateTeknisi
+admin --> UC_DeleteTeknisi
+admin --> UC_ToggleTeknisiStatus
+
+' Manajemen Target
+admin --> UC_ViewTargets
+admin --> UC_CreateTarget
+admin --> UC_MarkTargetAchieved
+
+' Dashboard
+admin --> UC_ViewAdminDashboard
+admin --> UC_ViewSalesStatistics
+admin --> UC_ViewRevenueStatistics
+admin --> UC_ViewServiceStatistics
+admin --> UC_ViewTopProducts
+admin --> UC_ViewRecentOrders
+
+' ============================================
+' RELASI TEKNISI
+' ============================================
+
+' Autentikasi
+teknisi --> UC_TeknisiLogin
+teknisi --> UC_Logout
+
+' Manajemen Service
+teknisi --> UC_ViewAssignedServices
+teknisi --> UC_UpdateServiceProgress
+teknisi --> UC_CompleteService
+teknisi --> UC_AddProgressNotes
+teknisi --> UC_DiagnoseIssue
+teknisi --> UC_UpdateBookingStatus
+
+' Chat
+teknisi --> UC_SendMessage
+teknisi --> UC_ViewChatHistory
+
+' Profil
+teknisi --> UC_ViewTeknisiProfile
+teknisi --> UC_ViewTeknisiEarnings
+
+' Dashboard
+teknisi --> UC_ViewTeknisiDashboard
+teknisi --> UC_ViewServiceStatistics
+
+' ============================================
+' RELASI MIDTRANS
+' ============================================
+midtrans --> UC_ReceivePaymentNotification
+midtrans --> UC_HandlePaymentCallback
+
+' ============================================
+' RELASI SISTEM
+' ============================================
+system --> UC_SendNotification
+system --> UC_UpdateTargetProgress
+system --> UC_RealtimeUpdates
+
+' ============================================
+' RELASI INCLUDE
+' ============================================
+
+' Login termasuk validasi kredensial dan buat sesi
+UC_Login ..> UC_ValidateCredentials : <<include>>
+UC_Login ..> UC_CreateSession : <<include>>
+UC_TeknisiLogin ..> UC_ValidateCredentials : <<include>>
+UC_TeknisiLogin ..> UC_CreateSession : <<include>>
+
+' Checkout termasuk buat pesanan, hitung total, dan pembayaran
+UC_Checkout ..> UC_CreateOrder : <<include>>
+UC_Checkout ..> UC_CalculateTotal : <<include>>
+UC_Checkout ..> UC_ProcessPayment : <<include>>
+
+' Buat pesanan termasuk kurangi stok
+UC_CreateOrder ..> UC_ReduceStock : <<include>>
+
+' Gunakan voucher termasuk validasi voucher
+UC_ApplyVoucher ..> UC_ValidateVoucher : <<include>>
+UC_ApplyVoucher ..> UC_UpdateVoucherUsage : <<include>>
+
+' Validasi voucher termasuk cek validitas dan kuota
+UC_ValidateVoucher ..> UC_CheckVoucherValidity : <<include>>
+UC_ValidateVoucher ..> UC_CheckVoucherQuota : <<include>>
+
+' Proses pembayaran termasuk generate token dan inisiasi Midtrans
+UC_ProcessPayment ..> UC_GeneratePaymentToken : <<include>>
+UC_ProcessPayment ..> UC_InitiateMidtransPayment : <<include>>
+
+' Terima notifikasi pembayaran termasuk verifikasi signature dan update status
+UC_ReceivePaymentNotification ..> UC_VerifyPaymentSignature : <<include>>
+UC_ReceivePaymentNotification ..> UC_UpdatePaymentStatus : <<include>>
+
+' Handle callback pembayaran termasuk update status pembayaran
+UC_HandlePaymentCallback ..> UC_UpdatePaymentStatus : <<include>>
+
+' Buat booking termasuk generate kode service
+UC_CreateBooking ..> UC_GenerateServiceCode : <<include>>
+
+' Buat/Update pesanan/booking termasuk kirim notifikasi
+UC_CreateOrder ..> UC_CreateOrderNotification : <<include>>
+UC_CreateBooking ..> UC_CreateBookingNotification : <<include>>
+UC_UpdatePaymentStatus ..> UC_CreatePaymentNotification : <<include>>
+
+' Kirim jenis notifikasi
+UC_CreateOrderNotification ..> UC_SendNotification : <<include>>
+UC_CreateBookingNotification ..> UC_SendNotification : <<include>>
+UC_CreatePaymentNotification ..> UC_SendNotification : <<include>>
+
+' Update progress service termasuk tambah catatan progress
+UC_UpdateServiceProgress ..> UC_AddProgressNotes : <<include>>
+
+' Chat termasuk update real-time
+UC_SendMessage ..> UC_RealtimeUpdates : <<include>>
+UC_ReceiveMessage ..> UC_RealtimeUpdates : <<include>>
+
+' Kirim review termasuk beri rating produk
+UC_SubmitReview ..> UC_RateProduct : <<include>>
+
+' ============================================
+' RELASI EXTEND
+' ============================================
+
+' Checkout diperluas dengan gunakan voucher (opsional)
+UC_ApplyVoucher ..> UC_Checkout : <<extend>>
+
+' Batalkan pesanan memperluas lacak pesanan
+UC_CancelOrder ..> UC_TrackOrder : <<extend>>
+
+' Update status booking memperluas lihat status booking
+UC_UpdateBookingStatus ..> UC_ViewBookingStatus : <<extend>>
+
+' Assign teknisi memperluas buat booking
+UC_AssignTeknisi ..> UC_CreateBooking : <<extend>>
+
+' Balas keluhan memperluas lihat detail keluhan
+UC_ReplyToComplaint ..> UC_ViewComplaintDetails : <<extend>>
+
+' Tandai sudah dibaca memperluas lihat notifikasi
+UC_MarkNotificationAsRead ..> UC_ViewNotifications : <<extend>>
+
+' Tandai sudah dibaca memperluas lihat riwayat chat
+UC_MarkAsRead ..> UC_ViewChatHistory : <<extend>>
+
+' Klaim reward memperluas lihat target saya
+UC_ClaimReward ..> UC_ViewMyTarget : <<extend>>
+
+' Upload gambar memperluas tambah/update produk
+UC_UploadImage ..> UC_CreateProduct : <<extend>>
+UC_UploadImage ..> UC_UpdateProduct : <<extend>>
+
+@enduml

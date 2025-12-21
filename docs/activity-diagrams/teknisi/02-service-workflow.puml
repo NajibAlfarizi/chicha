@@ -1,0 +1,175 @@
+@startuml Activity Diagram - Teknisi Service Workflow
+
+title Activity Diagram Teknisi: Proses Mengerjakan Service
+
+|Teknisi|
+start
+:Login ke portal teknisi;
+:Buka halaman Service /teknisi/service;
+
+|Sistem|
+:Query bookings WHERE:
+- teknisi_id = current_teknisi
+- status IN ('baru', 'proses');
+:Tampilkan list service aktif;
+
+|Teknisi|
+:Pilih booking untuk dikerjakan;
+:Klik "Lihat Detail";
+
+|Sistem|
+:Load detail booking:
+- Service code
+- Customer info (nama, HP, email)
+- Device info
+- Issue description
+- Notes
+- Booking date
+- Progress history;
+
+|Teknisi|
+:Review info service;
+
+' ===== FASE 1: DIAGNOSA =====
+:Mulai diagnosa perangkat;
+:Klik "Update Progress";
+:Pilih status "Diagnosed";
+:Input catatan diagnosa:
+- Masalah yang ditemukan
+- Estimasi perbaikan
+- Biaya (opsional);
+:Klik "Simpan Progress";
+
+|Sistem|
+:Update booking:
+- progress_status = 'diagnosed'
+- progress_notes
+- updated_at;
+
+fork
+  |Sistem|
+  :Insert service_progress:
+  - booking_id
+  - description (catatan)
+  - progress_status
+  - created_at;
+fork again
+  |Sistem|
+  :Insert notifikasi ke pelanggan:
+  "Service [code] sudah didiagnosa
+  [progress_notes]";
+  
+  |Pelanggan|
+  :Terima notifikasi real-time;
+  :Bisa lihat di tracking;
+end fork
+
+|Teknisi|
+' ===== DECISION: BUTUH SPAREPART? =====
+if (Butuh sparepart?) then (ya)
+  :Klik "Update Progress";
+  :Pilih status "Waiting Parts";
+  :Input catatan:
+  - Sparepart yang dibutuhkan
+  - Estimasi kedatangan;
+  :Klik "Simpan";
+  
+  |Sistem|
+  :Update progress_status = 'waiting_parts';
+  :Insert service_progress;
+  :Kirim notifikasi ke pelanggan;
+  
+  |Teknisi|
+  :Tunggu sparepart datang;
+  
+  note right
+    Service dalam status waiting
+    Teknisi bisa kerjakan service lain
+  end note
+  
+  :Sparepart sudah datang;
+  :Update ke "In Progress";
+else (tidak)
+  :Langsung update ke "In Progress";
+endif
+
+|Sistem|
+:Update progress_status = 'in_progress';
+:Kirim notifikasi;
+
+' ===== FASE 2: PENGERJAAN =====
+|Teknisi|
+:Mulai kerjakan perbaikan;
+
+repeat
+  :Kerjakan service;
+  
+  if (Ada update progress?) then (ya)
+    :Klik "Tambah Catatan Progress";
+    :Input update:
+    - Apa yang sudah dikerjakan
+    - Progress %
+    - Estimasi selesai;
+    :Klik "Simpan";
+    
+    |Sistem|
+    :Insert service_progress;
+    :Kirim notifikasi ke pelanggan;
+    
+    |Pelanggan|
+    :Terima update real-time;
+  endif
+  
+  |Teknisi|
+
+repeat while (Service selesai?) is (tidak)
+->ya;
+
+' ===== FASE 3: SELESAI =====
+:Service sudah selesai;
+:Klik "Selesaikan Service";
+:Pilih status "Completed";
+:Input catatan akhir:
+- Hasil perbaikan
+- Garansi (jika ada)
+- Biaya total
+- Rekomendasi perawatan;
+:Klik "Selesaikan";
+
+|Sistem|
+:Update booking:
+- status = 'selesai'
+- progress_status = 'completed'
+- completed_at = now();
+
+fork
+  |Sistem|
+  :Hitung pendapatan teknisi;
+  :Update teknisi earnings
+  (jika ada sistem komisi);
+fork again
+  |Sistem|
+  :Insert notifikasi ke pelanggan:
+  "Service [code] sudah selesai!
+  [progress_notes]
+  
+  Silakan berikan review Anda";
+fork again
+  |Sistem|
+  :Insert notifikasi ke admin:
+  "Service [code] selesai
+  Teknisi: [nama]";
+end fork
+
+|Teknisi|
+:Tampilkan notifikasi berhasil;
+:Service pindah ke tab "Selesai";
+
+|Pelanggan|
+:Terima notifikasi;
+:Bisa ambil perangkat;
+:Bisa submit review;
+
+stop
+
+@enduml

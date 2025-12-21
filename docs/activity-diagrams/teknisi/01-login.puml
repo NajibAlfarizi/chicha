@@ -1,0 +1,76 @@
+@startuml Activity Diagram - Teknisi Login
+
+title Activity Diagram Teknisi: Proses Login
+
+|Teknisi|
+start
+:Buka halaman login teknisi
+/teknisi/login;
+:Isi form login:
+- Username
+- Password;
+:Klik tombol "Login";
+
+|Sistem|
+:Terima kredensial;
+:Query tabel teknisi WHERE username;
+
+if (Teknisi ditemukan?) then (tidak)
+  |Teknisi|
+  :Tampilkan error
+  "Username tidak ditemukan";
+  stop
+else (ya)
+  |Sistem|
+  :Ambil password_hash;
+  :Verify password;
+  
+  if (Password cocok?) then (tidak)
+    |Teknisi|
+    :Tampilkan error
+    "Password salah";
+    stop
+  else (ya)
+    |Sistem|
+    :Cek status teknisi;
+    
+    if (Status = active?) then (tidak)
+      |Teknisi|
+      :Tampilkan error
+      "Akun Anda tidak aktif
+      Hubungi admin";
+      stop
+    else (ya)
+      |Sistem|
+      :Buat session teknisi;
+      :Simpan teknisi data ke context;
+      :Redirect ke /teknisi/dashboard;
+      
+      |Teknisi|
+      :Dashboard teknisi terbuka;
+      
+      :Tampilkan metrics:
+      - Service ditugaskan
+      - Service selesai bulan ini
+      - Total pendapatan
+      - Rating rata-rata;
+      
+      :Tampilkan list service aktif:
+      - Kode service
+      - Perangkat
+      - Customer
+      - Status
+      - Tanggal booking;
+      
+      note right
+        Teknisi hanya lihat
+        service yang ditugaskan
+        ke dia
+      end note
+      
+      stop
+    endif
+  endif
+endif
+
+@enduml

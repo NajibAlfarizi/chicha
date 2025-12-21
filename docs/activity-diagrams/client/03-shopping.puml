@@ -1,0 +1,102 @@
+@startuml Activity Diagram - Client Shopping
+
+title Activity Diagram Client: Belanja Produk
+
+|Pelanggan|
+start
+:Buka halaman produk /client/produk;
+
+|Sistem|
+:Query tabel products 
+dengan stock > 0;
+:Load categories untuk filter;
+:Tampilkan grid produk 
+(nama, harga, gambar, stok);
+
+|Pelanggan|
+if (Ingin cari produk spesifik?) then (ya)
+  :Ketik keyword di search bar;
+  
+  |Sistem|
+  :Filter produk berdasarkan 
+  nama atau deskripsi;
+  :Tampilkan hasil search;
+  
+  |Pelanggan|
+else (tidak)
+endif
+
+if (Ingin filter kategori?) then (ya)
+  :Pilih kategori dari dropdown;
+  
+  |Sistem|
+  :Filter produk berdasarkan 
+  category_id;
+  :Tampilkan hasil filter;
+  
+  |Pelanggan|
+else (tidak)
+endif
+
+:Pilih produk yang menarik;
+:Klik card produk;
+
+|Sistem|
+:Redirect ke /client/produk/[id];
+:Query detail produk:
+- Deskripsi lengkap
+- Spesifikasi
+- Stock
+- Review/rating;
+:Tampilkan halaman detail;
+
+|Pelanggan|
+:Lihat detail produk;
+:Input jumlah yang ingin dibeli;
+:Klik "Tambah ke Keranjang";
+
+|Sistem|
+:Cek stok tersedia >= jumlah;
+
+if (Stok cukup?) then (tidak)
+  |Pelanggan|
+  :Tampilkan error
+  "Stok tidak mencukupi.
+  Tersedia: [stock] item";
+  stop
+else (ya)
+  |Sistem|
+  :Load cart dari localStorage;
+  
+  if (Produk sudah ada di cart?) then (ya)
+    :Update quantity 
+    (quantity lama + quantity baru);
+  else (tidak)
+    :Tambahkan item baru ke cart:
+    - product
+    - quantity;
+  endif
+  
+  :Save cart ke localStorage;
+  :Update badge keranjang (+1);
+  
+  |Pelanggan|
+  :Tampilkan notifikasi
+  "Produk ditambahkan ke keranjang";
+  
+  if (Lanjut belanja?) then (ya)
+    :Kembali ke /client/produk;
+    
+    note right
+      Loop kembali ke 
+      browsing produk
+    end note
+    
+  else (tidak)
+    :Klik icon keranjang;
+    :Redirect ke /client/keranjang;
+    stop
+  endif
+endif
+
+@enduml

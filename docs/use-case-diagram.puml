@@ -1,0 +1,444 @@
+@startuml Chicha Mobile Use Case Diagram
+
+' Configuration
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+left to right direction
+
+' ============ ACTORS ============
+actor "Customer" as customer
+actor "Admin" as admin
+actor "Teknisi" as teknisi
+actor "Midtrans Payment\nGateway" as midtrans
+actor "System" as system
+
+' ============ AUTHENTICATION PACKAGE ============
+package "Authentication" {
+  usecase "Login" as UC_Login
+  usecase "Register" as UC_Register
+  usecase "Logout" as UC_Logout
+  usecase "Reset Password" as UC_ResetPassword
+  usecase "Validate Credentials" as UC_ValidateCredentials
+  usecase "Create Session" as UC_CreateSession
+  usecase "Teknisi Login" as UC_TeknisiLogin
+}
+
+' ============ PRODUCT MANAGEMENT PACKAGE ============
+package "Product Management" {
+  usecase "Browse Products" as UC_BrowseProducts
+  usecase "View Product Details" as UC_ViewProductDetails
+  usecase "Search Products" as UC_SearchProducts
+  usecase "Filter by Category" as UC_FilterByCategory
+  usecase "Create Product" as UC_CreateProduct
+  usecase "Update Product" as UC_UpdateProduct
+  usecase "Delete Product" as UC_DeleteProduct
+  usecase "Manage Stock" as UC_ManageStock
+  usecase "Upload Product Image" as UC_UploadImage
+}
+
+' ============ CATEGORY MANAGEMENT PACKAGE ============
+package "Category Management" {
+  usecase "View Categories" as UC_ViewCategories
+  usecase "Create Category" as UC_CreateCategory
+  usecase "Update Category" as UC_UpdateCategory
+  usecase "Delete Category" as UC_DeleteCategory
+}
+
+' ============ SHOPPING CART & ORDER PACKAGE ============
+package "Shopping Cart & Order" {
+  usecase "Add to Cart" as UC_AddToCart
+  usecase "View Cart" as UC_ViewCart
+  usecase "Update Cart Quantity" as UC_UpdateCartQuantity
+  usecase "Remove from Cart" as UC_RemoveFromCart
+  usecase "Checkout" as UC_Checkout
+  usecase "Apply Voucher" as UC_ApplyVoucher
+  usecase "Create Order" as UC_CreateOrder
+  usecase "Calculate Total" as UC_CalculateTotal
+  usecase "Validate Voucher" as UC_ValidateVoucher
+  usecase "Track Order" as UC_TrackOrder
+  usecase "View Order History" as UC_ViewOrderHistory
+  usecase "Cancel Order" as UC_CancelOrder
+  usecase "Update Order Status" as UC_UpdateOrderStatus
+  usecase "Reduce Stock" as UC_ReduceStock
+  usecase "Update Voucher Usage" as UC_UpdateVoucherUsage
+}
+
+' ============ PAYMENT PACKAGE ============
+package "Payment Processing" {
+  usecase "Process Payment" as UC_ProcessPayment
+  usecase "Generate Payment Token" as UC_GeneratePaymentToken
+  usecase "Initiate Midtrans Payment" as UC_InitiateMidtransPayment
+  usecase "Receive Payment Notification" as UC_ReceivePaymentNotification
+  usecase "Update Payment Status" as UC_UpdatePaymentStatus
+  usecase "Handle Payment Callback" as UC_HandlePaymentCallback
+  usecase "Verify Payment Signature" as UC_VerifyPaymentSignature
+}
+
+' ============ VOUCHER PACKAGE ============
+package "Voucher Management" {
+  usecase "View Available Vouchers" as UC_ViewVouchers
+  usecase "Create Voucher" as UC_CreateVoucher
+  usecase "Update Voucher" as UC_UpdateVoucher
+  usecase "Delete Voucher" as UC_DeleteVoucher
+  usecase "Toggle Voucher Status" as UC_ToggleVoucherStatus
+  usecase "Check Voucher Validity" as UC_CheckVoucherValidity
+  usecase "Check Voucher Quota" as UC_CheckVoucherQuota
+}
+
+' ============ BOOKING/SERVICE PACKAGE ============
+package "Service Booking" {
+  usecase "Create Booking" as UC_CreateBooking
+  usecase "Generate Service Code" as UC_GenerateServiceCode
+  usecase "Track Booking" as UC_TrackBooking
+  usecase "View Booking Status" as UC_ViewBookingStatus
+  usecase "View My Bookings" as UC_ViewMyBookings
+  usecase "Assign Teknisi" as UC_AssignTeknisi
+  usecase "Update Booking Status" as UC_UpdateBookingStatus
+  usecase "Update Service Progress" as UC_UpdateServiceProgress
+  usecase "Complete Service" as UC_CompleteService
+  usecase "Add Progress Notes" as UC_AddProgressNotes
+  usecase "View Assigned Services" as UC_ViewAssignedServices
+  usecase "Diagnose Issue" as UC_DiagnoseIssue
+}
+
+' ============ COMPLAINT & REVIEW PACKAGE ============
+package "Complaint & Review" {
+  usecase "Submit Complaint" as UC_SubmitComplaint
+  usecase "Submit Product Review" as UC_SubmitReview
+  usecase "View My Complaints" as UC_ViewMyComplaints
+  usecase "View Complaint Details" as UC_ViewComplaintDetails
+  usecase "Reply to Complaint" as UC_ReplyToComplaint
+  usecase "Update Complaint Status" as UC_UpdateComplaintStatus
+  usecase "Rate Product" as UC_RateProduct
+}
+
+' ============ CHAT PACKAGE ============
+package "Chat System" {
+  usecase "Send Message" as UC_SendMessage
+  usecase "Receive Message" as UC_ReceiveMessage
+  usecase "View Chat History" as UC_ViewChatHistory
+  usecase "View Active Chats" as UC_ViewActiveChats
+  usecase "Mark as Read" as UC_MarkAsRead
+  usecase "Real-time Updates" as UC_RealtimeUpdates
+}
+
+' ============ NOTIFICATION PACKAGE ============
+package "Notification System" {
+  usecase "Send Notification" as UC_SendNotification
+  usecase "View Notifications" as UC_ViewNotifications
+  usecase "Mark Notification as Read" as UC_MarkNotificationAsRead
+  usecase "Create Order Notification" as UC_CreateOrderNotification
+  usecase "Create Booking Notification" as UC_CreateBookingNotification
+  usecase "Create Payment Notification" as UC_CreatePaymentNotification
+}
+
+' ============ USER MANAGEMENT PACKAGE ============
+package "User Management" {
+  usecase "View Users" as UC_ViewUsers
+  usecase "View User Details" as UC_ViewUserDetails
+  usecase "Update User Role" as UC_UpdateUserRole
+  usecase "Delete User" as UC_DeleteUser
+  usecase "View User Profile" as UC_ViewProfile
+  usecase "Update Profile" as UC_UpdateProfile
+}
+
+' ============ TEKNISI MANAGEMENT PACKAGE ============
+package "Teknisi Management" {
+  usecase "Create Teknisi" as UC_CreateTeknisi
+  usecase "View Teknisi List" as UC_ViewTeknisiList
+  usecase "Update Teknisi" as UC_UpdateTeknisi
+  usecase "Delete Teknisi" as UC_DeleteTeknisi
+  usecase "Toggle Teknisi Status" as UC_ToggleTeknisiStatus
+  usecase "View Teknisi Profile" as UC_ViewTeknisiProfile
+  usecase "View Teknisi Earnings" as UC_ViewTeknisiEarnings
+}
+
+' ============ TARGET/CRM PACKAGE ============
+package "Target & CRM" {
+  usecase "View Targets" as UC_ViewTargets
+  usecase "Create Target" as UC_CreateTarget
+  usecase "Update Target Progress" as UC_UpdateTargetProgress
+  usecase "Mark Target as Achieved" as UC_MarkTargetAchieved
+  usecase "Claim Reward" as UC_ClaimReward
+  usecase "View My Target" as UC_ViewMyTarget
+}
+
+' ============ DASHBOARD & ANALYTICS PACKAGE ============
+package "Dashboard & Analytics" {
+  usecase "View Admin Dashboard" as UC_ViewAdminDashboard
+  usecase "View Teknisi Dashboard" as UC_ViewTeknisiDashboard
+  usecase "View Sales Statistics" as UC_ViewSalesStatistics
+  usecase "View Revenue Statistics" as UC_ViewRevenueStatistics
+  usecase "View Service Statistics" as UC_ViewServiceStatistics
+  usecase "View Top Products" as UC_ViewTopProducts
+  usecase "View Recent Orders" as UC_ViewRecentOrders
+}
+
+' ============================================
+' CUSTOMER RELATIONSHIPS
+' ============================================
+
+' Authentication
+customer --> UC_Login
+customer --> UC_Register
+customer --> UC_Logout
+customer --> UC_ResetPassword
+
+' Products
+customer --> UC_BrowseProducts
+customer --> UC_ViewProductDetails
+customer --> UC_SearchProducts
+customer --> UC_FilterByCategory
+
+' Shopping & Orders
+customer --> UC_AddToCart
+customer --> UC_ViewCart
+customer --> UC_UpdateCartQuantity
+customer --> UC_RemoveFromCart
+customer --> UC_Checkout
+customer --> UC_ApplyVoucher
+customer --> UC_TrackOrder
+customer --> UC_ViewOrderHistory
+customer --> UC_CancelOrder
+
+' Payment
+customer --> UC_ProcessPayment
+
+' Vouchers
+customer --> UC_ViewVouchers
+
+' Bookings
+customer --> UC_CreateBooking
+customer --> UC_TrackBooking
+customer --> UC_ViewMyBookings
+customer --> UC_ViewBookingStatus
+
+' Complaints & Reviews
+customer --> UC_SubmitComplaint
+customer --> UC_SubmitReview
+customer --> UC_ViewMyComplaints
+customer --> UC_ViewComplaintDetails
+
+' Chat
+customer --> UC_SendMessage
+customer --> UC_ViewChatHistory
+
+' Notifications
+customer --> UC_ViewNotifications
+customer --> UC_MarkNotificationAsRead
+
+' Profile
+customer --> UC_ViewProfile
+customer --> UC_UpdateProfile
+
+' Target/CRM
+customer --> UC_ViewMyTarget
+customer --> UC_ClaimReward
+
+' ============================================
+' ADMIN RELATIONSHIPS
+' ============================================
+
+' Authentication
+admin --> UC_Login
+admin --> UC_Logout
+
+' Product Management
+admin --> UC_CreateProduct
+admin --> UC_UpdateProduct
+admin --> UC_DeleteProduct
+admin --> UC_ManageStock
+admin --> UC_UploadImage
+admin --> UC_BrowseProducts
+
+' Category Management
+admin --> UC_CreateCategory
+admin --> UC_UpdateCategory
+admin --> UC_DeleteCategory
+admin --> UC_ViewCategories
+
+' Order Management
+admin --> UC_UpdateOrderStatus
+admin --> UC_ViewOrderHistory
+
+' Voucher Management
+admin --> UC_CreateVoucher
+admin --> UC_UpdateVoucher
+admin --> UC_DeleteVoucher
+admin --> UC_ToggleVoucherStatus
+admin --> UC_ViewVouchers
+
+' Booking Management
+admin --> UC_AssignTeknisi
+admin --> UC_UpdateBookingStatus
+
+' Complaint Management
+admin --> UC_ReplyToComplaint
+admin --> UC_UpdateComplaintStatus
+admin --> UC_ViewComplaintDetails
+
+' Chat
+admin --> UC_SendMessage
+admin --> UC_ViewActiveChats
+admin --> UC_ViewChatHistory
+
+' User Management
+admin --> UC_ViewUsers
+admin --> UC_ViewUserDetails
+admin --> UC_UpdateUserRole
+admin --> UC_DeleteUser
+
+' Teknisi Management
+admin --> UC_CreateTeknisi
+admin --> UC_ViewTeknisiList
+admin --> UC_UpdateTeknisi
+admin --> UC_DeleteTeknisi
+admin --> UC_ToggleTeknisiStatus
+
+' Target Management
+admin --> UC_ViewTargets
+admin --> UC_CreateTarget
+admin --> UC_MarkTargetAchieved
+
+' Dashboard
+admin --> UC_ViewAdminDashboard
+admin --> UC_ViewSalesStatistics
+admin --> UC_ViewRevenueStatistics
+admin --> UC_ViewServiceStatistics
+admin --> UC_ViewTopProducts
+admin --> UC_ViewRecentOrders
+
+' ============================================
+' TEKNISI RELATIONSHIPS
+' ============================================
+
+' Authentication
+teknisi --> UC_TeknisiLogin
+teknisi --> UC_Logout
+
+' Service Management
+teknisi --> UC_ViewAssignedServices
+teknisi --> UC_UpdateServiceProgress
+teknisi --> UC_CompleteService
+teknisi --> UC_AddProgressNotes
+teknisi --> UC_DiagnoseIssue
+teknisi --> UC_UpdateBookingStatus
+
+' Chat
+teknisi --> UC_SendMessage
+teknisi --> UC_ViewChatHistory
+
+' Profile
+teknisi --> UC_ViewTeknisiProfile
+teknisi --> UC_ViewTeknisiEarnings
+
+' Dashboard
+teknisi --> UC_ViewTeknisiDashboard
+teknisi --> UC_ViewServiceStatistics
+
+' ============================================
+' MIDTRANS RELATIONSHIPS
+' ============================================
+midtrans --> UC_ReceivePaymentNotification
+midtrans --> UC_HandlePaymentCallback
+
+' ============================================
+' SYSTEM RELATIONSHIPS
+' ============================================
+system --> UC_SendNotification
+system --> UC_UpdateTargetProgress
+system --> UC_RealtimeUpdates
+
+' ============================================
+' INCLUDE RELATIONSHIPS
+' ============================================
+
+' Login includes validate credentials and create session
+UC_Login ..> UC_ValidateCredentials : <<include>>
+UC_Login ..> UC_CreateSession : <<include>>
+UC_TeknisiLogin ..> UC_ValidateCredentials : <<include>>
+UC_TeknisiLogin ..> UC_CreateSession : <<include>>
+
+' Checkout includes create order, calculate total, and payment
+UC_Checkout ..> UC_CreateOrder : <<include>>
+UC_Checkout ..> UC_CalculateTotal : <<include>>
+UC_Checkout ..> UC_ProcessPayment : <<include>>
+
+' Create Order includes reduce stock
+UC_CreateOrder ..> UC_ReduceStock : <<include>>
+
+' Apply Voucher includes validate voucher
+UC_ApplyVoucher ..> UC_ValidateVoucher : <<include>>
+UC_ApplyVoucher ..> UC_UpdateVoucherUsage : <<include>>
+
+' Validate Voucher includes check validity and quota
+UC_ValidateVoucher ..> UC_CheckVoucherValidity : <<include>>
+UC_ValidateVoucher ..> UC_CheckVoucherQuota : <<include>>
+
+' Process Payment includes generate token and initiate Midtrans
+UC_ProcessPayment ..> UC_GeneratePaymentToken : <<include>>
+UC_ProcessPayment ..> UC_InitiateMidtransPayment : <<include>>
+
+' Receive Payment Notification includes verify signature and update status
+UC_ReceivePaymentNotification ..> UC_VerifyPaymentSignature : <<include>>
+UC_ReceivePaymentNotification ..> UC_UpdatePaymentStatus : <<include>>
+
+' Handle Payment Callback includes update payment status
+UC_HandlePaymentCallback ..> UC_UpdatePaymentStatus : <<include>>
+
+' Create Booking includes generate service code
+UC_CreateBooking ..> UC_GenerateServiceCode : <<include>>
+
+' Create/Update order/booking includes send notification
+UC_CreateOrder ..> UC_CreateOrderNotification : <<include>>
+UC_CreateBooking ..> UC_CreateBookingNotification : <<include>>
+UC_UpdatePaymentStatus ..> UC_CreatePaymentNotification : <<include>>
+
+' Send notification types
+UC_CreateOrderNotification ..> UC_SendNotification : <<include>>
+UC_CreateBookingNotification ..> UC_SendNotification : <<include>>
+UC_CreatePaymentNotification ..> UC_SendNotification : <<include>>
+
+' Update Service Progress includes add progress notes
+UC_UpdateServiceProgress ..> UC_AddProgressNotes : <<include>>
+
+' Chat includes real-time updates
+UC_SendMessage ..> UC_RealtimeUpdates : <<include>>
+UC_ReceiveMessage ..> UC_RealtimeUpdates : <<include>>
+
+' Submit Review includes rate product
+UC_SubmitReview ..> UC_RateProduct : <<include>>
+
+' ============================================
+' EXTEND RELATIONSHIPS
+' ============================================
+
+' Checkout extends with apply voucher (optional)
+UC_ApplyVoucher ..> UC_Checkout : <<extend>>
+
+' Cancel order extends track order
+UC_CancelOrder ..> UC_TrackOrder : <<extend>>
+
+' Update booking status extends view booking status
+UC_UpdateBookingStatus ..> UC_ViewBookingStatus : <<extend>>
+
+' Assign teknisi extends create booking
+UC_AssignTeknisi ..> UC_CreateBooking : <<extend>>
+
+' Reply to complaint extends view complaint details
+UC_ReplyToComplaint ..> UC_ViewComplaintDetails : <<extend>>
+
+' Mark as read extends view notifications
+UC_MarkNotificationAsRead ..> UC_ViewNotifications : <<extend>>
+
+' Mark as read extends view chat history
+UC_MarkAsRead ..> UC_ViewChatHistory : <<extend>>
+
+' Claim reward extends view my target
+UC_ClaimReward ..> UC_ViewMyTarget : <<extend>>
+
+' Upload image extends create/update product
+UC_UploadImage ..> UC_CreateProduct : <<extend>>
+UC_UploadImage ..> UC_UpdateProduct : <<extend>>
+
+@enduml

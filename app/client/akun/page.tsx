@@ -24,7 +24,8 @@ import {
   Save,
   LogOut,
   Lock,
-  TrendingUp
+  TrendingUp,
+  CheckCircle
 } from 'lucide-react';
 import { Order, Booking, Target as TargetType } from '@/lib/types';
 import { toast } from 'sonner';
@@ -807,113 +808,257 @@ function AccountContent() {
 
       {/* Modal Detail Pesanan */}
       <Dialog open={showOrderDetail} onOpenChange={setShowOrderDetail}>
-        <DialogContent className="bg-slate-800 border-amber-500/20 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-amber-500">
-              Detail Pesanan
-            </DialogTitle>
+        <DialogContent className="bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-500/20 text-gray-900 dark:text-white max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="border-b border-amber-200 dark:border-amber-500/20 pb-4">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl font-bold text-amber-600 dark:text-amber-500">
+                Detail Pesanan
+              </DialogTitle>
+              <div className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                #{selectedOrder?.id.slice(0, 8)}
+              </div>
+            </div>
           </DialogHeader>
           
           {selectedOrder && (
             <div className="space-y-6">
-              {/* Order Info */}
-              <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-700">
-                <div>
-                  <p className="text-slate-400 text-sm">Order ID</p>
-                  <p className="font-mono text-sm">{selectedOrder.id}</p>
+              {/* Timeline Status */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 rounded-xl p-6 border border-amber-200 dark:border-transparent">
+                <h3 className="font-semibold text-amber-900 dark:text-amber-500 mb-6 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Status Pesanan
+                </h3>
+                <div className="relative">
+                  {/* Timeline Line */}
+                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 dark:from-amber-700 dark:via-amber-600 dark:to-amber-500"></div>
+                  
+                  {/* Timeline Steps */}
+                  <div className="space-y-6 relative">
+                    {/* Step 1: Pending */}
+                    <div className="flex items-start gap-4">
+                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                        ['pending', 'dikirim', 'selesai'].includes(selectedOrder.status)
+                          ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
+                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
+                      }`}>
+                        <ShoppingBag className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 pt-2">
+                        <p className="font-semibold text-gray-900 dark:text-white">Pesanan Dibuat</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                          {new Date(selectedOrder.created_at).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                        {selectedOrder.status === 'pending' && selectedOrder.payment_status !== 'paid' && (
+                          <Badge className="mt-2 bg-yellow-500 text-white">Menunggu Pembayaran</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Step 2: Konfirmasi Pembayaran */}
+                    <div className="flex items-start gap-4">
+                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                        selectedOrder.payment_status === 'paid' || ['dikirim', 'selesai'].includes(selectedOrder.status)
+                          ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
+                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
+                      }`}>
+                        <CheckCircle className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 pt-2">
+                        <p className="font-semibold text-gray-900 dark:text-white">Pembayaran Dikonfirmasi</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                          {selectedOrder.payment_status === 'paid'
+                            ? 'Pembayaran telah dikonfirmasi'
+                            : 'Menunggu konfirmasi pembayaran'}
+                        </p>
+                        {selectedOrder.status === 'pending' && selectedOrder.payment_status === 'paid' && (
+                          <Badge className="mt-2 bg-blue-500 text-white">Menunggu Diproses</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Step 3: Dikirim/Diproses */}
+                    <div className="flex items-start gap-4">
+                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                        ['dikirim', 'selesai'].includes(selectedOrder.status)
+                          ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
+                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
+                      } ${selectedOrder.status === 'dikirim' ? 'animate-pulse' : ''}`}>
+                        <Wrench className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 pt-2">
+                        <p className="font-semibold text-gray-900 dark:text-white">Pesanan Dikirim/Diproses</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                          {['dikirim', 'selesai'].includes(selectedOrder.status)
+                            ? 'Pesanan sedang disiapkan/dikirim'
+                            : 'Menunggu diproses'}
+                        </p>
+                        {selectedOrder.status === 'dikirim' && (
+                          <Badge className="mt-2 bg-purple-500 text-white animate-pulse">Sedang Diproses</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Step 4: Selesai or Dibatalkan */}
+                    <div className="flex items-start gap-4">
+                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                        selectedOrder.status === 'selesai'
+                          ? 'bg-green-500 border-green-300 shadow-lg shadow-green-500/50'
+                          : selectedOrder.status === 'dibatalkan'
+                          ? 'bg-red-500 border-red-300 shadow-lg shadow-red-500/50'
+                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
+                      }`}>
+                        {selectedOrder.status === 'selesai' ? (
+                          <Trophy className="h-5 w-5 text-white" />
+                        ) : selectedOrder.status === 'dibatalkan' ? (
+                          <span className="text-white font-bold text-xl">✕</span>
+                        ) : (
+                          <Gift className="h-5 w-5 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1 pt-2">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedOrder.status === 'selesai' ? 'Pesanan Selesai' : 
+                           selectedOrder.status === 'dibatalkan' ? 'Pesanan Dibatalkan' : 'Selesai'}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                          {selectedOrder.status === 'selesai' 
+                            ? 'Pesanan telah selesai, terima kasih!' 
+                            : selectedOrder.status === 'dibatalkan'
+                            ? selectedOrder.cancel_reason || 'Pesanan telah dibatalkan'
+                            : 'Menunggu penyelesaian'}
+                        </p>
+                        {selectedOrder.status === 'selesai' && (
+                          <Badge className="mt-2 bg-green-500 text-white">Selesai</Badge>
+                        )}
+                        {selectedOrder.status === 'dibatalkan' && (
+                          <Badge className="mt-2 bg-red-500 text-white">Dibatalkan</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-slate-400 text-sm">Status</p>
-                  <div className="mt-1">{getOrderStatusBadge(selectedOrder.status)}</div>
-                </div>
-                <div>
-                  <p className="text-slate-400 text-sm">Tanggal Order</p>
-                  <p className="text-sm">
-                    {new Date(selectedOrder.created_at).toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-400 text-sm">Metode Pembayaran</p>
-                  <p className="text-sm capitalize">{selectedOrder.payment_method.replace('_', ' ')}</p>
+              </div>
+
+              {/* Order Info Card */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900/30 dark:to-slate-900/30 rounded-lg p-4 border border-blue-200 dark:border-transparent">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600 dark:text-slate-400 mb-1">Tanggal Order</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {new Date(selectedOrder.created_at).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-slate-400 mb-1">Metode Pembayaran</p>
+                    <p className="font-medium text-gray-900 dark:text-white capitalize">
+                      {selectedOrder.payment_method.replace('_', ' ')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-slate-400 mb-1">Status Pembayaran</p>
+                    <div className="mt-1">
+                      {selectedOrder.payment_status === 'paid' && (
+                        <Badge className="bg-green-500 text-white">Lunas</Badge>
+                      )}
+                      {selectedOrder.payment_status === 'pending' && (
+                        <Badge className="bg-yellow-500 text-white">Menunggu</Badge>
+                      )}
+                      {selectedOrder.payment_status === 'failed' && (
+                        <Badge className="bg-red-500 text-white">Gagal</Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Customer Info */}
               {selectedOrder.customer_info && (
-                <div className="space-y-2 pb-4 border-b border-slate-700">
-                  <h3 className="font-semibold text-amber-500">Informasi Pelanggan</h3>
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-900/30 dark:to-slate-900/30 rounded-lg p-4 border border-purple-200 dark:border-transparent">
+                  <h3 className="font-semibold text-purple-900 dark:text-purple-400 mb-3 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Informasi Pelanggan
+                  </h3>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className="text-slate-400">Nama</p>
-                      <p>{selectedOrder.customer_info.name}</p>
+                      <p className="text-gray-600 dark:text-slate-400">Nama</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{selectedOrder.customer_info.name}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400">Email</p>
-                      <p>{selectedOrder.customer_info.email}</p>
+                      <p className="text-gray-600 dark:text-slate-400">Email</p>
+                      <p className="font-medium text-gray-900 dark:text-white text-xs">{selectedOrder.customer_info.email}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400">Telepon</p>
-                      <p>{selectedOrder.customer_info.phone}</p>
+                      <p className="text-gray-600 dark:text-slate-400">Telepon</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{selectedOrder.customer_info.phone}</p>
                     </div>
-                    <div>
-                      <p className="text-slate-400">Alamat</p>
-                      <p className="col-span-2">{selectedOrder.customer_info.address}</p>
+                    <div className="col-span-2">
+                      <p className="text-gray-600 dark:text-slate-400">Alamat</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{selectedOrder.customer_info.address}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Items */}
-              <div className="space-y-2">
-                <h3 className="font-semibold text-amber-500">Item Pesanan</h3>
-                <div className="space-y-3">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-amber-600 dark:text-amber-500 flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5" />
+                  Item Pesanan
+                </h3>
+                <div className="space-y-2">
                   {selectedOrder.order_items && selectedOrder.order_items.length > 0 ? (
                     selectedOrder.order_items.map((item: any) => (
-                      <div key={item.id} className="flex justify-between items-start bg-slate-700/30 p-3 rounded">
+                      <div key={item.id} className="flex justify-between items-center bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-700/30 dark:to-slate-700/30 p-4 rounded-lg border border-gray-200 dark:border-transparent hover:shadow-md transition-shadow">
                         <div className="flex-1">
-                          <p className="font-medium">{item.product?.name || 'Produk tidak ditemukan'}</p>
-                          <p className="text-sm text-slate-400">
-                            Rp {(item.price || 0).toLocaleString('id-ID')} x {item.quantity}
+                          <p className="font-semibold text-gray-900 dark:text-white">{item.product?.name || 'Produk tidak ditemukan'}</p>
+                          <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">
+                            Rp {(item.price || 0).toLocaleString('id-ID')} × {item.quantity}
                           </p>
                         </div>
-                        <p className="font-semibold text-amber-500">
+                        <p className="font-bold text-amber-600 dark:text-amber-500 text-lg">
                           Rp {((item.price || 0) * item.quantity).toLocaleString('id-ID')}
                         </p>
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-400 text-center py-4">Tidak ada item</p>
+                    <p className="text-sm text-gray-500 dark:text-slate-400 text-center py-4">Tidak ada item</p>
                   )}
                 </div>
               </div>
 
               {/* Price Breakdown */}
-              <div className="space-y-3 pt-4 border-t border-slate-700">
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 rounded-xl p-5 border border-amber-200 dark:border-transparent space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Subtotal</span>
-                  <span>Rp {(selectedOrder.subtotal || selectedOrder.total_amount).toLocaleString('id-ID')}</span>
+                  <span className="text-gray-700 dark:text-slate-300">Subtotal</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    Rp {(selectedOrder.subtotal || selectedOrder.total_amount).toLocaleString('id-ID')}
+                  </span>
                 </div>
                 
                 {(selectedOrder.discount_amount ?? 0) > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">
+                    <span className="text-gray-700 dark:text-slate-300">
                       Diskon {selectedOrder.voucher_code ? `(${selectedOrder.voucher_code})` : ''}
                     </span>
-                    <span className="text-green-400">
+                    <span className="font-medium text-green-600 dark:text-green-400">
                       - Rp {(selectedOrder.discount_amount ?? 0).toLocaleString('id-ID')}
                     </span>
                   </div>
                 )}
                 
-                <div className="flex justify-between items-center pt-3 border-t border-slate-700">
-                  <p className="text-lg font-semibold">Total Pembayaran</p>
-                  <p className="text-2xl font-bold text-amber-500">
+                <div className="flex justify-between items-center pt-3 border-t-2 border-amber-300 dark:border-amber-600">
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">Total Pembayaran</p>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-500">
                     Rp {selectedOrder.total_amount.toLocaleString('id-ID')}
                   </p>
                 </div>
@@ -925,70 +1070,230 @@ function AccountContent() {
 
       {/* Modal Track Booking */}
       <Dialog open={showBookingTrack} onOpenChange={setShowBookingTrack}>
-        <DialogContent className="bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-500/20 text-gray-900 dark:text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-500/20 text-gray-900 dark:text-white max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="border-b border-amber-200 dark:border-amber-500/20 pb-4">
-            <DialogTitle className="text-xl font-bold text-amber-600 dark:text-amber-500">
-              Track Service - {selectedBooking?.service_code || 'N/A'}
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl font-bold text-amber-600 dark:text-amber-500">
+                Track Service
+              </DialogTitle>
+              <div className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                {selectedBooking?.service_code || 'N/A'}
+              </div>
+            </div>
           </DialogHeader>
           
           {selectedBooking && (
             <div className="space-y-6">
-              {/* Service Info */}
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg space-y-3 border border-amber-200 dark:border-transparent">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-slate-400">Device:</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.device_name}</span>
+              {/* Timeline Status Progress */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 rounded-xl p-6 border border-amber-200 dark:border-transparent">
+                <h3 className="font-semibold text-amber-900 dark:text-amber-500 mb-6 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Status Perbaikan
+                </h3>
+                <div className="relative">
+                  {/* Timeline Line */}
+                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-amber-300 via-amber-400 to-amber-500 dark:from-amber-700 dark:via-amber-600 dark:to-amber-500"></div>
+                  
+                  {/* Timeline Steps */}
+                  <div className="space-y-6 relative">
+                    {/* Step 1: Booking Dibuat */}
+                    <div className="flex items-start gap-4">
+                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                        ['baru', 'proses', 'selesai'].includes(selectedBooking.status)
+                          ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
+                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
+                      }`}>
+                        <Wrench className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 pt-2">
+                        <p className="font-semibold text-gray-900 dark:text-white">Booking Dibuat</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                          {new Date(selectedBooking.created_at).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                        {selectedBooking.status === 'baru' && selectedBooking.progress_status === 'pending' && (
+                          <Badge className="mt-2 bg-yellow-500 text-white">Menunggu Teknisi</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Step 2: Diagnosa */}
+                    <div className="flex items-start gap-4">
+                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                        ['diagnosed', 'in_progress', 'waiting_parts', 'completed'].includes(selectedBooking.progress_status || 'pending') || ['proses', 'selesai'].includes(selectedBooking.status)
+                          ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
+                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
+                      }`}>
+                        <Eye className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 pt-2">
+                        <p className="font-semibold text-gray-900 dark:text-white">Diagnosa</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                          {['diagnosed', 'in_progress', 'waiting_parts', 'completed'].includes(selectedBooking.progress_status || 'pending')
+                            ? 'Device telah didiagnosa'
+                            : 'Menunggu diagnosa'}
+                        </p>
+                        {selectedBooking.progress_status === 'diagnosed' && (
+                          <Badge className="mt-2 bg-blue-500 text-white">Diagnosa Selesai</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Step 3: Dalam Perbaikan */}
+                    <div className="flex items-start gap-4">
+                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                        ['in_progress', 'waiting_parts', 'completed'].includes(selectedBooking.progress_status || 'pending') || selectedBooking.status === 'selesai'
+                          ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
+                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
+                      } ${selectedBooking.progress_status === 'in_progress' ? 'animate-pulse' : ''}`}>
+                        <Wrench className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 pt-2">
+                        <p className="font-semibold text-gray-900 dark:text-white">Dalam Perbaikan</p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                          {['in_progress', 'waiting_parts', 'completed'].includes(selectedBooking.progress_status || 'pending')
+                            ? 'Device sedang diperbaiki'
+                            : 'Menunggu perbaikan'}
+                        </p>
+                        {selectedBooking.progress_status === 'in_progress' && (
+                          <Badge className="mt-2 bg-purple-500 text-white animate-pulse">Sedang Dikerjakan</Badge>
+                        )}
+                        {selectedBooking.progress_status === 'waiting_parts' && (
+                          <Badge className="mt-2 bg-orange-500 text-white">Menunggu Sparepart</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Step 4: Selesai or Dibatalkan */}
+                    <div className="flex items-start gap-4">
+                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
+                        selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai'
+                          ? 'bg-green-500 border-green-300 shadow-lg shadow-green-500/50'
+                          : selectedBooking.progress_status === 'cancelled'
+                          ? 'bg-red-500 border-red-300 shadow-lg shadow-red-500/50'
+                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
+                      }`}>
+                        {selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai' ? (
+                          <CheckCircle className="h-5 w-5 text-white" />
+                        ) : selectedBooking.progress_status === 'cancelled' ? (
+                          <span className="text-white font-bold text-xl">✕</span>
+                        ) : (
+                          <Gift className="h-5 w-5 text-white" />
+                        )}
+                      </div>
+                      <div className="flex-1 pt-2">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai' ? 'Perbaikan Selesai' : 
+                           selectedBooking.progress_status === 'cancelled' ? 'Perbaikan Dibatalkan' : 'Selesai'}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
+                          {selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai'
+                            ? selectedBooking.completed_at 
+                              ? new Date(selectedBooking.completed_at).toLocaleDateString('id-ID', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              : 'Perbaikan telah selesai'
+                            : selectedBooking.progress_status === 'cancelled'
+                            ? 'Booking telah dibatalkan'
+                            : 'Menunggu penyelesaian'}
+                        </p>
+                        {(selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai') && (
+                          <Badge className="mt-2 bg-green-500 text-white">Selesai</Badge>
+                        )}
+                        {selectedBooking.progress_status === 'cancelled' && (
+                          <Badge className="mt-2 bg-red-500 text-white">Dibatalkan</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-slate-400">Issue:</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.issue}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-slate-400">Status:</span>
-                  <Badge className="capitalize">
-                    {selectedBooking.status}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Progress:</span>
-                  <Badge variant="outline" className="capitalize">
-                    {selectedBooking.progress_status || 'pending'}
-                  </Badge>
+              </div>
+
+              {/* Device Info Card */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900/30 dark:to-slate-900/30 rounded-lg p-4 border border-blue-200 dark:border-transparent">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-400 mb-3 flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4" />
+                  Informasi Device
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-slate-400">Device</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.device_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-slate-400">Keluhan</span>
+                    <span className="font-semibold text-gray-900 dark:text-white text-right max-w-[60%]">{selectedBooking.issue}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-slate-400">Tanggal Booking</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {new Date(selectedBooking.booking_date).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Teknisi Info */}
               {selectedBooking.teknisi && (
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg space-y-3 border border-amber-200 dark:border-transparent">
-                  <h3 className="font-semibold text-amber-600 dark:text-amber-500 mb-2">Teknisi Assigned</h3>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-slate-400">Name:</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.teknisi.name}</span>
-                  </div>
-                  {selectedBooking.teknisi.phone && (
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-900/30 dark:to-slate-900/30 rounded-lg p-4 border border-purple-200 dark:border-transparent">
+                  <h3 className="font-semibold text-purple-900 dark:text-purple-400 mb-3 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Teknisi Assigned
+                  </h3>
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-slate-400">Phone:</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.teknisi.phone}</span>
+                      <span className="text-gray-600 dark:text-slate-400">Nama</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.teknisi.name}</span>
                     </div>
-                  )}
+                    {selectedBooking.teknisi.phone && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-slate-400">Telepon</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.teknisi.phone}</span>
+                      </div>
+                    )}
+                    {selectedBooking.teknisi.specialization && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-slate-400">Spesialisasi</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{selectedBooking.teknisi.specialization}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
               {/* Progress Notes */}
               {selectedBooking.progress_notes && (
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg border border-amber-200 dark:border-transparent">
-                  <h3 className="font-semibold text-amber-600 dark:text-amber-500 mb-2">Progress Notes</h3>
-                  <p className="text-gray-800 dark:text-slate-300">{selectedBooking.progress_notes}</p>
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-slate-900/30 dark:to-slate-900/30 rounded-lg p-4 border border-green-200 dark:border-transparent">
+                  <h3 className="font-semibold text-green-900 dark:text-green-400 mb-2 flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Catatan Progress
+                  </h3>
+                  <p className="text-gray-800 dark:text-slate-300 text-sm">{selectedBooking.progress_notes}</p>
                 </div>
               )}
 
               {/* Estimated Completion */}
               {selectedBooking.estimated_completion && (
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg border border-amber-200 dark:border-transparent">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-slate-400">Estimated Completion:</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 rounded-lg p-4 border border-amber-200 dark:border-transparent">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-5 w-5 text-amber-600 dark:text-amber-500" />
+                      <span className="font-semibold text-gray-900 dark:text-white">Estimasi Selesai</span>
+                    </div>
+                    <span className="font-bold text-amber-600 dark:text-amber-500">
                       {new Date(selectedBooking.estimated_completion).toLocaleDateString('id-ID', {
                         day: 'numeric',
                         month: 'long',
@@ -1000,44 +1305,6 @@ function AccountContent() {
                   </div>
                 </div>
               )}
-
-              {/* Timeline */}
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 p-4 rounded-lg border border-amber-200 dark:border-transparent">
-                <h3 className="font-semibold text-amber-600 dark:text-amber-500 mb-3">Timeline</h3>
-                <div className="space-y-3">
-                  <div className="flex gap-3">
-                    <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">Booking Created</p>
-                      <p className="text-sm text-gray-600 dark:text-slate-400">
-                        {new Date(selectedBooking.created_at).toLocaleString('id-ID')}
-                      </p>
-                    </div>
-                  </div>
-                  {selectedBooking.updated_at && selectedBooking.updated_at !== selectedBooking.created_at && (
-                    <div className="flex gap-3">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Last Updated</p>
-                        <p className="text-sm text-gray-600 dark:text-slate-400">
-                          {new Date(selectedBooking.updated_at).toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {selectedBooking.completed_at && (
-                    <div className="flex gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                      <div>
-                        <p className="font-semibold">Completed</p>
-                        <p className="text-sm text-slate-400">
-                          {new Date(selectedBooking.completed_at).toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           )}
         </DialogContent>

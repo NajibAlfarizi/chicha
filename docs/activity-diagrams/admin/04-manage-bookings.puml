@@ -1,0 +1,136 @@
+@startuml Activity Diagram - Admin Manage Bookings
+
+title Activity Diagram Admin: Kelola Booking Service
+
+|Admin|
+start
+:Buka halaman Booking /admin/booking;
+
+|Sistem|
+:Query tabel bookings dengan:
+- users
+- teknisi;
+:Tampilkan tabel booking;
+
+|Admin|
+:Lihat list booking dengan:
+- Kode service
+- Customer
+- Perangkat
+- Masalah
+- Teknisi (jika sudah assign)
+- Status
+- Tanggal;
+
+if (Ingin filter?) then (ya)
+  :Pilih filter:
+  - Status (baru/proses/selesai)
+  - Dengan/tanpa teknisi
+  - Tanggal range;
+  
+  |Sistem|
+  :Filter hasil;
+  
+  |Admin|
+endif
+
+:Pilih booking;
+:Klik "Lihat Detail";
+
+|Sistem|
+:Load detail booking:
+- Customer info
+- Device info
+- Issue description
+- Service code
+- Teknisi assigned
+- Progress history
+- Notes;
+
+|Admin|
+:Review detail booking;
+
+if (Status?) then (baru - belum assign)
+  :Klik "Assign Teknisi";
+  
+  |Sistem|
+  :Query teknisi WHERE status = 'active';
+  :Tampilkan dropdown teknisi:
+  - Nama
+  - Spesialisasi
+  - Jumlah service aktif;
+  
+  |Admin|
+  :Pilih teknisi yang sesuai;
+  :Klik "Assign";
+  
+  |Sistem|
+  :Update booking:
+  - teknisi_id
+  - status = 'proses'
+  - assigned_at;
+  
+  fork
+    |Sistem|
+    :Insert notifikasi ke teknisi:
+    "Service baru ditugaskan
+    Kode: [service_code]
+    Perangkat: [device_name]";
+    
+    |Teknisi|
+    :Terima notifikasi;
+    :Badge service (+1);
+  fork again
+    |Sistem|
+    :Insert notifikasi ke pelanggan:
+    "Teknisi [nama] telah ditugaskan
+    untuk service Anda";
+    
+    |Pelanggan|
+    :Terima notifikasi;
+  end fork
+  
+  |Admin|
+  :Tampilkan notifikasi
+  "Teknisi berhasil ditugaskan";
+  stop
+
+elseif (proses) then
+  :Lihat progress dari teknisi;
+  
+  if (Ingin reassign teknisi?) then (ya)
+    :Klik "Ganti Teknisi";
+    :Pilih teknisi baru;
+    
+    |Sistem|
+    :Update teknisi_id;
+    :Insert notifikasi ke teknisi baru dan lama;
+    
+    |Admin|
+    :Notifikasi berhasil;
+  endif
+  
+  if (Ingin update status manual?) then (ya)
+    :Pilih status baru;
+    :Tambah catatan;
+    
+    |Sistem|
+    :Update booking;
+    :Insert notifikasi ke pelanggan;
+    
+    |Admin|
+    :Notifikasi berhasil;
+  endif
+  
+  stop
+
+else (selesai)
+  :Review hasil service;
+  :Lihat review dari pelanggan
+  (jika ada);
+  
+  :Tidak ada aksi lebih lanjut;
+  stop
+endif
+
+@enduml

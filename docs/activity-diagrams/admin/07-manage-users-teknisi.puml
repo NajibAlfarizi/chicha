@@ -1,0 +1,164 @@
+@startuml Activity Diagram - Admin Manage Users & Teknisi
+
+title Activity Diagram Admin: Kelola User & Teknisi
+
+|Admin|
+start
+
+if (Kelola apa?) then (Users)
+  :Buka /admin/user;
+  
+  |Sistem|
+  :Query tabel users;
+  :Tampilkan list users:
+  - Nama
+  - Email
+  - Role
+  - Tanggal gabung
+  - Total pesanan;
+  
+  |Admin|
+  :Pilih user;
+  :Klik "Lihat Detail";
+  
+  |Sistem|
+  :Load user dengan:
+  - Orders
+  - Bookings
+  - Complaints
+  - Targets;
+  
+  |Admin|
+  :Lihat statistik user:
+  - Total spending
+  - Order count
+  - Booking count;
+  
+  if (Aksi?) then (Update Role)
+    :Pilih role baru (user/admin);
+    :Konfirmasi;
+    
+    |Sistem|
+    :Update users.role;
+    
+    |Admin|
+    :Notifikasi berhasil;
+    stop
+    
+  else (Hapus User)
+    :Klik "Hapus";
+    :Konfirmasi penghapusan;
+    
+    |Sistem|
+    :Cek pesanan/booking aktif;
+    
+    if (Ada transaksi aktif?) then (ya)
+      |Admin|
+      :Warning tidak bisa hapus;
+      stop
+    else (tidak)
+      |Sistem|
+      :Soft delete user;
+      
+      |Admin|
+      :Notifikasi berhasil;
+      stop
+    endif
+  endif
+
+else (Teknisi)
+  :Buka /admin/teknisi;
+  
+  |Sistem|
+  :Query tabel teknisi;
+  :Tampilkan list teknisi:
+  - Nama
+  - Spesialisasi
+  - Status
+  - Total service
+  - Service aktif;
+  
+  |Admin|
+  if (Aksi?) then (Tambah Teknisi)
+    :Klik "Tambah Teknisi";
+    :Isi form:
+    - Nama
+    - Username
+    - Password
+    - Nomor HP
+    - Email
+    - Spesialisasi
+    - Status (active);
+    
+    :Klik "Simpan";
+    
+    |Sistem|
+    :Validasi username unique;
+    :Hash password;
+    :Insert ke tabel teknisi;
+    
+    |Admin|
+    :Notifikasi berhasil;
+    :Berikan kredensial ke teknisi;
+    stop
+    
+  elseif (Edit Teknisi) then
+    :Pilih teknisi;
+    :Klik "Edit";
+    :Update data;
+    
+    |Sistem|
+    :Update tabel teknisi;
+    
+    |Admin|
+    :Notifikasi berhasil;
+    stop
+    
+  elseif (Toggle Status) then
+    :Pilih teknisi;
+    :Toggle active/inactive;
+    
+    |Sistem|
+    :Update status;
+    
+    if (Set inactive?) then (ya)
+      :Cek service aktif;
+      
+      if (Ada service aktif?) then (ya)
+        |Admin|
+        :Warning
+        "Teknisi masih punya service aktif
+        Reassign dulu";
+        stop
+      endif
+    endif
+    
+    |Admin|
+    :Notifikasi berhasil;
+    stop
+    
+  else (Hapus Teknisi)
+    :Klik "Hapus";
+    :Konfirmasi;
+    
+    |Sistem|
+    :Cek booking terkait;
+    
+    if (Pernah handle booking?) then (ya)
+      |Admin|
+      :Warning tidak bisa hapus
+      (histori harus tetap ada);
+      :Saran: Set inactive saja;
+      stop
+    else (tidak)
+      |Sistem|
+      :Delete teknisi;
+      
+      |Admin|
+      :Notifikasi berhasil;
+      stop
+    endif
+  endif
+endif
+
+@enduml

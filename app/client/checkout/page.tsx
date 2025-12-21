@@ -494,92 +494,92 @@ export default function CheckoutPage() {
 
   return (
     <ClientLayout>
-      <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
+      <div className="container mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8 bg-gray-50 dark:bg-transparent">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <CreditCard className="h-8 w-8 text-amber-500" />
               Checkout
             </h1>
-            <p className="text-slate-400 mt-2">Lengkapi informasi untuk menyelesaikan pesanan</p>
+            <p className="text-gray-600 dark:text-slate-400 mt-2">Lengkapi informasi untuk menyelesaikan pesanan</p>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Checkout Form */}
             <div className="lg:col-span-2 space-y-6">
               {/* Customer Information */}
-              <Card className="bg-slate-900/90 border-slate-700">
+              <Card className="bg-white dark:bg-slate-900/90 border-gray-200 dark:border-slate-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-white">Informasi Pelanggan</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-white">Informasi Pelanggan</CardTitle>
                   {loadingProfile && (
                     <p className="text-xs text-amber-500">Memuat data profil...</p>
                   )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-slate-300">Nama Lengkap</Label>
+                    <Label htmlFor="name" className="text-gray-700 dark:text-slate-300">Nama Lengkap</Label>
                     <Input
                       id="name"
                       value={customerInfo.name}
                       onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
                       placeholder="Masukkan nama lengkap"
-                      className="bg-slate-900/50 border-slate-700 text-white"
+                      className="bg-gray-50 dark:bg-slate-900/50 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-slate-300">Email</Label>
+                    <Label htmlFor="email" className="text-gray-700 dark:text-slate-300">Email</Label>
                     <Input
                       id="email"
                       type="email"
                       value={customerInfo.email}
                       onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
                       placeholder="email@example.com"
-                      className="bg-slate-900/50 border-slate-700 text-white"
+                      className="bg-gray-50 dark:bg-slate-900/50 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-slate-300">Nomor HP</Label>
+                    <Label htmlFor="phone" className="text-gray-700 dark:text-slate-300">Nomor HP</Label>
                     <Input
                       id="phone"
                       value={customerInfo.phone}
                       onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
                       placeholder="08xxxxxxxxxx"
-                      className="bg-slate-900/50 border-slate-700 text-white"
+                      className="bg-gray-50 dark:bg-slate-900/50 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address" className="text-slate-300">Alamat Pengiriman</Label>
+                    <Label htmlFor="address" className="text-gray-700 dark:text-slate-300">Alamat Pengiriman</Label>
                     <Input
                       id="address"
                       value={customerInfo.address}
                       onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
                       placeholder="Masukkan alamat lengkap"
-                      className="bg-slate-900/50 border-slate-700 text-white"
+                      className="bg-gray-50 dark:bg-slate-900/50 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white"
                     />
                   </div>
                 </CardContent>
               </Card>
 
               {/* Voucher Section */}
-              <Card className="bg-slate-900/90 border-slate-700">
+              <Card className="bg-white dark:bg-slate-900/90 border-gray-200 dark:border-slate-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
+                  <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
                     <Ticket className="h-5 w-5 text-amber-500" />
                     Voucher Diskon
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {appliedVoucher ? (
-                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                    <div className="bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                            <span className="font-bold text-green-400">{appliedVoucher.code}</span>
+                            <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-500" />
+                            <span className="font-bold text-green-700 dark:text-green-400">{appliedVoucher.code}</span>
                           </div>
-                          <p className="text-sm text-slate-300">{appliedVoucher.name}</p>
-                          <p className="text-lg font-bold text-green-400 mt-2">
+                          <p className="text-sm text-gray-700 dark:text-slate-300">{appliedVoucher.name}</p>
+                          <p className="text-lg font-bold text-green-700 dark:text-green-400 mt-2">
                             - Rp {appliedVoucher.discount.toLocaleString('id-ID')}
                           </p>
                         </div>
@@ -587,7 +587,7 @@ export default function CheckoutPage() {
                           variant="ghost"
                           size="sm"
                           onClick={handleRemoveVoucher}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10"
                         >
                           Hapus
                         </Button>
@@ -597,7 +597,7 @@ export default function CheckoutPage() {
                     <div className="space-y-3">
                       {/* Dropdown Voucher Selector */}
                       <div className="space-y-2">
-                        <Label className="text-slate-300">Pilih Voucher</Label>
+                        <Label className="text-gray-700 dark:text-slate-300">Pilih Voucher</Label>
                         <Select
                           value=""
                           onValueChange={(voucherCode) => {
@@ -607,12 +607,12 @@ export default function CheckoutPage() {
                           }}
                           disabled={voucherLoading}
                         >
-                          <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                          <SelectTrigger className="bg-gray-50 dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white">
                             <SelectValue placeholder="Pilih voucher yang tersedia" />
                           </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-700">
+                          <SelectContent className="bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
                             {availableVouchers.length === 0 ? (
-                              <SelectItem value="none" disabled className="text-slate-400">
+                              <SelectItem value="none" disabled className="text-gray-400 dark:text-slate-400">
                                 Tidak ada voucher tersedia
                               </SelectItem>
                             ) : (
@@ -628,23 +628,23 @@ export default function CheckoutPage() {
                                     disabled={!isAvailable}
                                     className={`${
                                       isAvailable
-                                        ? 'text-white hover:bg-slate-700'
-                                        : 'text-slate-500 opacity-50'
+                                        ? 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700'
+                                        : 'text-gray-400 dark:text-slate-500 opacity-50'
                                     }`}
                                   >
                                     <div className="flex flex-col py-1">
                                       <div className="flex items-center gap-2">
-                                        <span className="font-mono font-bold text-amber-400">
+                                        <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
                                           {voucher.code}
                                         </span>
                                         {quotaLeft <= 10 && quotaLeft > 0 && (
-                                          <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">
+                                          <span className="text-xs bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded">
                                             Sisa {quotaLeft}
                                           </span>
                                         )}
                                       </div>
-                                      <span className="text-sm text-slate-300">{voucher.name}</span>
-                                      <span className="text-xs text-slate-400">
+                                      <span className="text-sm text-gray-700 dark:text-slate-300">{voucher.name}</span>
+                                      <span className="text-xs text-gray-600 dark:text-slate-400">
                                         {voucher.type === 'percentage' ? (
                                           <>Diskon {voucher.value}%</>
                                         ) : (
@@ -653,12 +653,12 @@ export default function CheckoutPage() {
                                         {' • Min. Rp '}{voucher.min_purchase.toLocaleString('id-ID')}
                                       </span>
                                       {!isEligible && (
-                                        <span className="text-xs text-red-400 mt-0.5">
+                                        <span className="text-xs text-red-600 dark:text-red-400 mt-0.5">
                                           ⚠️ Belanja kurang dari minimal
                                         </span>
                                       )}
                                       {quotaLeft === 0 && (
-                                        <span className="text-xs text-red-400 mt-0.5">
+                                        <span className="text-xs text-red-600 dark:text-red-400 mt-0.5">
                                           ❌ Kuota habis
                                         </span>
                                       )}
@@ -674,10 +674,10 @@ export default function CheckoutPage() {
                       {/* Manual Input Voucher */}
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-slate-700" />
+                          <span className="w-full border-t border-gray-300 dark:border-slate-700" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-slate-900 px-2 text-slate-400">Atau masukkan kode</span>
+                          <span className="bg-white dark:bg-slate-900 px-2 text-gray-600 dark:text-slate-400">Atau masukkan kode</span>
                         </div>
                       </div>
 
@@ -686,7 +686,7 @@ export default function CheckoutPage() {
                           value={voucherCode}
                           onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                           placeholder="Masukkan kode voucher"
-                          className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                          className="bg-gray-50 dark:bg-slate-800 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
                           disabled={voucherLoading}
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && voucherCode.trim()) {
@@ -703,7 +703,7 @@ export default function CheckoutPage() {
                         </Button>
                       </div>
 
-                      <p className="text-xs text-slate-400 flex items-start gap-1">
+                      <p className="text-xs text-gray-600 dark:text-slate-400 flex items-start gap-1">
                         <span>💡</span>
                         <span>Pilih voucher dari dropdown atau masukkan kode manual. Hanya 1 voucher per transaksi.</span>
                       </p>
@@ -713,35 +713,32 @@ export default function CheckoutPage() {
               </Card>
 
               {/* Payment Method */}
-              <Card className="bg-slate-900/90 border-slate-700">
+              <Card className="bg-white dark:bg-slate-900/90 border-gray-200 dark:border-slate-700 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-white">Metode Pembayaran</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-white">Metode Pembayaran</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <SelectTrigger className="bg-slate-900/50 border-slate-700 text-white">
+                    <SelectTrigger className="bg-gray-50 dark:bg-slate-900/50 border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem value="midtrans" className="text-white">
+                    <SelectContent className="bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
+                      <SelectItem value="midtrans" className="text-gray-900 dark:text-white">
                         💳 Midtrans Payment Gateway
                       </SelectItem>
-                      <SelectItem value="transfer_bank" className="text-white">Transfer Bank Manual</SelectItem>
-                      <SelectItem value="cod" className="text-white">Cash on Delivery (COD)</SelectItem>
+                      <SelectItem value="cod" className="text-gray-900 dark:text-white">💵 Cash on Delivery (COD)</SelectItem>
                     </SelectContent>
                   </Select>
 
-                  <div className="mt-4 bg-slate-700/30 rounded-lg p-4">
-                    <p className="text-slate-300 text-sm">
+                  <div className="mt-4 bg-blue-50 dark:bg-slate-700/30 rounded-lg p-4 border border-blue-200 dark:border-transparent">
+                    <p className="text-gray-700 dark:text-slate-300 text-sm">
                       {paymentMethod === 'midtrans' && (
                         <span>
                           💳 <strong>Midtrans Payment Gateway</strong><br/>
                           Bayar dengan berbagai metode: Credit Card, Debit Card, GoPay, ShopeePay, QRIS, Bank Transfer (BCA, Mandiri, BNI, BRI, Permata), dan lainnya.
                         </span>
                       )}
-                      {paymentMethod === 'transfer_bank' && '� Transfer manual ke rekening BCA/Mandiri setelah checkout'}
                       {paymentMethod === 'cod' && '💵 Bayar saat barang diterima'}
-                      {paymentMethod === 'credit_card' && '💳 Pembayaran aman dengan kartu kredit/debit'}
                     </p>
                   </div>
                 </CardContent>
@@ -750,16 +747,16 @@ export default function CheckoutPage() {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <Card className="bg-slate-900/90 border-slate-700 sticky top-24">
+              <Card className="bg-white dark:bg-slate-900/90 border-gray-200 dark:border-slate-700 shadow-sm sticky top-24">
                 <CardHeader>
-                  <CardTitle className="text-white">Ringkasan Pesanan</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-white">Ringkasan Pesanan</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Items List */}
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {cartItems.map((item) => (
                       <div key={item.product.id} className="flex gap-3">
-                        <div className="w-16 h-16 bg-slate-700 rounded flex items-center justify-center flex-shrink-0">
+                        <div className="w-16 h-16 bg-gray-200 dark:bg-slate-700 rounded flex items-center justify-center shrink-0">
                           {item.product.image_url ? (
                             <img
                               src={item.product.image_url}
@@ -767,17 +764,17 @@ export default function CheckoutPage() {
                               className="w-full h-full object-cover rounded"
                             />
                           ) : (
-                            <ShoppingCart className="h-6 w-6 text-slate-500" />
+                            <ShoppingCart className="h-6 w-6 text-gray-400 dark:text-slate-500" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-medium truncate">
+                          <p className="text-gray-900 dark:text-white text-sm font-medium truncate">
                             {item.product.name}
                           </p>
-                          <p className="text-slate-400 text-xs">
+                          <p className="text-gray-600 dark:text-slate-400 text-xs">
                             {item.quantity} x Rp {item.product.price.toLocaleString('id-ID')}
                           </p>
-                          <p className="text-amber-500 text-sm font-semibold">
+                          <p className="text-amber-600 dark:text-amber-500 text-sm font-semibold">
                             Rp {(item.product.price * item.quantity).toLocaleString('id-ID')}
                           </p>
                         </div>
@@ -785,13 +782,13 @@ export default function CheckoutPage() {
                     ))}
                   </div>
 
-                  <div className="border-t border-slate-700 pt-4 space-y-2">
-                    <div className="flex justify-between text-slate-300">
+                  <div className="border-t border-gray-200 dark:border-slate-700 pt-4 space-y-2">
+                    <div className="flex justify-between text-gray-700 dark:text-slate-300">
                       <span>Subtotal</span>
                       <span>Rp {getSubtotal().toLocaleString('id-ID')}</span>
                     </div>
                     {appliedVoucher && (
-                      <div className="flex justify-between text-green-500">
+                      <div className="flex justify-between text-green-600 dark:text-green-500">
                         <span className="flex items-center gap-1">
                           <Ticket className="h-4 w-4" />
                           Diskon Voucher
@@ -799,14 +796,14 @@ export default function CheckoutPage() {
                         <span>- Rp {getDiscount().toLocaleString('id-ID')}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-slate-300">
+                    <div className="flex justify-between text-gray-700 dark:text-slate-300">
                       <span>Ongkir</span>
                       <span>Rp 0</span>
                     </div>
-                    <div className="border-t border-slate-700 pt-2">
-                      <div className="flex justify-between text-white font-bold text-lg">
+                    <div className="border-t border-gray-200 dark:border-slate-700 pt-2">
+                      <div className="flex justify-between text-gray-900 dark:text-white font-bold text-lg">
                         <span>Total Bayar</span>
-                        <span className="text-amber-500">
+                        <span className="text-amber-600 dark:text-amber-500">
                           Rp {getTotalPrice().toLocaleString('id-ID')}
                         </span>
                       </div>
@@ -814,9 +811,9 @@ export default function CheckoutPage() {
                   </div>
 
                   {appliedVoucher && paymentMethod === 'midtrans' && (
-                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
-                      <p className="text-xs text-green-400 flex items-start gap-2">
-                        <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div className="bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 rounded-lg p-3">
+                      <p className="text-xs text-green-700 dark:text-green-400 flex items-start gap-2">
+                        <CheckCircle className="h-4 w-4 mt-0.5 shrink-0" />
                         <span>
                           <strong>Voucher {appliedVoucher.code} akan otomatis diterapkan.</strong>
                           <br />
@@ -829,7 +826,7 @@ export default function CheckoutPage() {
                   <Button
                     onClick={handleCheckout}
                     disabled={loading || !customerInfo.name || !customerInfo.phone}
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold"
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-white dark:text-slate-900 font-semibold shadow-sm"
                   >
                     {loading ? (
                       'Memproses...'
@@ -841,7 +838,7 @@ export default function CheckoutPage() {
                     )}
                   </Button>
 
-                  <p className="text-xs text-slate-500 text-center">
+                  <p className="text-xs text-gray-500 dark:text-slate-500 text-center">
                     Dengan melanjutkan, Anda menyetujui syarat dan ketentuan
                   </p>
                 </CardContent>

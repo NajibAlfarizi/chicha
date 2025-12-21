@@ -1,0 +1,122 @@
+@startuml Activity Diagram - Admin Manage Target
+
+title Activity Diagram Admin: Kelola Target & CRM
+
+|Admin|
+start
+:Buka halaman Target /admin/target;
+
+|Sistem|
+:Query tabel targets dengan users;
+:Tampilkan tabel target:
+- User
+- Target amount
+- Current amount
+- Progress %
+- Reward
+- Status
+- Reward claimed;
+
+|Admin|
+if (Aksi?) then (Buat Target Baru)
+  :Klik "Buat Target";
+  
+  |Sistem|
+  :Query users untuk dropdown;
+  
+  |Admin|
+  :Pilih user target;
+  :Isi form:
+  - Target amount (Rp 1.000.000)
+  - Reward description 
+    (Voucher 50K / Cashback 5%);
+  
+  :Klik "Simpan";
+  
+  |Sistem|
+  :Validasi:
+  - User tidak punya target aktif
+  - Target amount > 0;
+  
+  if (User sudah punya target aktif?) then (ya)
+    |Admin|
+    :Tampilkan error
+    "User sudah memiliki target aktif
+    Selesaikan target lama dulu";
+    stop
+  else (tidak)
+    |Sistem|
+    :Insert ke tabel targets:
+    - user_id
+    - target_amount
+    - current_amount = 0
+    - status = 'active'
+    - reward
+    - reward_claimed = false;
+    
+    fork
+      |Sistem|
+      :Insert notifikasi ke user:
+      "Target baru untuk Anda!
+      Belanja Rp [amount]
+      Dapatkan [reward]";
+      
+      |Pelanggan|
+      :Terima notifikasi;
+      :Badge target aktif;
+    end fork
+    
+    |Admin|
+    :Notifikasi target dibuat;
+    stop
+  endif
+
+elseif (Update Target Manual) then
+  :Pilih target;
+  :Klik "Update Progress";
+  :Input current_amount manual;
+  
+  |Sistem|
+  :Update target.current_amount;
+  
+  if (current_amount >= target_amount?) then (ya)
+    :Update status = 'achieved';
+    :Insert notifikasi ke user
+    "Target tercapai! Klaim reward";
+  endif
+  
+  |Admin|
+  :Notifikasi berhasil;
+  stop
+
+elseif (Tandai Tercapai) then
+  :Pilih target;
+  :Klik "Tandai Tercapai";
+  :Konfirmasi;
+  
+  |Sistem|
+  :Update status = 'achieved';
+  :Insert notifikasi ke user;
+  
+  |Admin|
+  :Notifikasi berhasil;
+  stop
+
+else (Monitor Progress)
+  :Lihat progress real-time;
+  :Filter by status (aktif/tercapai);
+  
+  :Lihat detail user:
+  - Riwayat pesanan
+  - Total belanja
+  - Progress target;
+  
+  note right
+    Progress auto-update
+    saat pesanan selesai
+  end note
+  
+  stop
+endif
+
+@enduml

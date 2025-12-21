@@ -1,0 +1,76 @@
+@startuml Activity Diagram - Client Register
+
+title Activity Diagram Client: Proses Registrasi
+
+|Pelanggan|
+start
+:Buka halaman registrasi /auth/register;
+:Isi form registrasi:
+- Nama lengkap
+- Email
+- Nomor HP
+- Password;
+:Klik tombol "Daftar";
+
+|Sistem|
+:Terima data registrasi;
+:Validasi format:
+- Email format valid
+- HP format valid (08xxx)
+- Password minimal 6 karakter;
+
+if (Format valid?) then (tidak)
+  |Pelanggan|
+  :Tampilkan error validasi;
+  stop
+else (ya)
+  |Sistem|
+  :Query tabel users 
+  cek email sudah ada;
+  
+  if (Email sudah terdaftar?) then (ya)
+    |Pelanggan|
+    :Tampilkan error
+    "Email sudah digunakan";
+    stop
+  else (tidak)
+    |Sistem|
+    :Hash password dengan bcrypt;
+    :Insert ke tabel users:
+    - name
+    - email
+    - phone
+    - password_hash
+    - role = 'user'
+    - created_at;
+    
+    :Buat session Supabase Auth;
+    :Simpan user data ke context;
+    
+    fork
+      |Sistem|
+      :Redirect ke /client/produk;
+    fork again
+      |Sistem|
+      :Cek apakah ada target default;
+      if (Ada target default?) then (ya)
+        :Assign target ke user baru;
+        :Kirim notifikasi target;
+      endif
+    end fork
+    
+    |Pelanggan|
+    :Halaman produk terbuka;
+    :Tampilkan welcome message
+    "Selamat bergabung, [Nama]!";
+    
+    note right
+      User langsung login
+      otomatis setelah registrasi
+    end note
+    
+    stop
+  endif
+endif
+
+@enduml

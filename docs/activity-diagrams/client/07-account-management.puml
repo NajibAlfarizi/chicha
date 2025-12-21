@@ -1,0 +1,189 @@
+@startuml Activity Diagram - Client Account
+
+title Activity Diagram Client: Manajemen Akun
+
+|Pelanggan|
+start
+:Login ke sistem;
+:Klik icon profil/akun;
+:Redirect ke /client/akun;
+
+|Sistem|
+:Load data user dari session;
+:Query orders, bookings, complaints, target;
+:Tampilkan halaman akun dengan tabs:
+- Profil
+- Riwayat Pesanan
+- Riwayat Booking
+- Keluhan
+- Target Saya
+- Notifikasi;
+
+|Pelanggan|
+if (Tab yang dibuka?) then (Profil)
+  :Lihat info profil:
+  - Nama
+  - Email
+  - Nomor HP
+  - Tanggal bergabung;
+  
+  if (Ingin update profil?) then (ya)
+    :Klik "Edit Profil";
+    :Update nama, email, atau HP;
+    :Klik "Simpan";
+    
+    |Sistem|
+    :Validasi input;
+    :Update tabel users;
+    
+    |Pelanggan|
+    :Tampilkan notifikasi
+    "Profil berhasil diperbarui";
+  endif
+  
+elseif (Riwayat Pesanan) then
+  |Sistem|
+  :Query orders WHERE user_id;
+  :Order by created_at DESC;
+  
+  |Pelanggan|
+  :Lihat list pesanan dengan:
+  - Order ID
+  - Tanggal
+  - Total
+  - Status
+  - Payment status;
+  
+  :Pilih pesanan;
+  :Lihat detail lengkap;
+  
+  if (Pesanan selesai?) then (ya)
+    :Tampilkan tombol
+    "Review Produk";
+    
+    if (Klik review?) then (ya)
+      :Pilih produk dari order_items;
+      :Input rating dan komentar;
+      :Klik "Kirim Review";
+      
+      |Sistem|
+      :Insert complaint dengan rating;
+      
+      |Pelanggan|
+      :Notifikasi berhasil;
+    endif
+  endif
+
+elseif (Riwayat Booking) then
+  |Sistem|
+  :Query bookings WHERE user_id;
+  
+  |Pelanggan|
+  :Lihat list booking dengan:
+  - Kode service
+  - Perangkat
+  - Tanggal
+  - Status
+  - Teknisi;
+  
+  :Pilih booking;
+  :Redirect ke track dengan
+  kode service auto-fill;
+
+elseif (Keluhan) then
+  |Sistem|
+  :Query complaints WHERE user_id;
+  
+  |Pelanggan|
+  :Lihat list keluhan dengan status;
+  
+  if (Ingin tambah keluhan?) then (ya)
+    :Klik "Tambah Keluhan";
+    :Opsional: Pilih pesanan terkait;
+    :Tulis keluhan;
+    :Klik "Kirim";
+    
+    |Sistem|
+    :Insert complaint;
+    :Kirim notifikasi ke admin;
+    
+    |Pelanggan|
+    :Notifikasi terkirim;
+  endif
+  
+  :Pilih keluhan;
+  :Lihat detail dan balasan admin;
+
+elseif (Target Saya) then
+  |Sistem|
+  :Query target WHERE user_id AND status = 'active';
+  
+  if (Ada target aktif?) then (tidak)
+    |Pelanggan|
+    :Tampilkan
+    "Belum ada target saat ini";
+  else (ya)
+    |Sistem|
+    :Hitung progress:
+    percentage = 
+    (current_amount / target_amount) × 100;
+    
+    |Pelanggan|
+    :Lihat target card:
+    - Target amount
+    - Current amount
+    - Progress bar
+    - Reward;
+    
+    if (Status = achieved?) then (ya)
+      if (Reward belum diklaim?) then (ya)
+        :Tampilkan tombol
+        "Klaim Reward";
+        
+        if (Klik klaim?) then (ya)
+          |Sistem|
+          :Update reward_claimed = true;
+          :Generate voucher atau
+          proses cashback;
+          :Kirim voucher code ke pelanggan;
+          
+          |Pelanggan|
+          :Tampilkan notifikasi
+          "Reward berhasil diklaim!
+          Kode voucher: [code]";
+        endif
+      else (sudah diklaim)
+        :Tampilkan badge
+        "Reward sudah diklaim";
+      endif
+    endif
+  endif
+
+else (Notifikasi)
+  |Sistem|
+  :Query notifications WHERE user_id;
+  :Order by created_at DESC;
+  
+  |Pelanggan|
+  :Lihat list notifikasi dengan:
+  - Icon sesuai type
+  - Title
+  - Message
+  - Timestamp
+  - Status read/unread;
+  
+  :Klik notifikasi;
+  
+  |Sistem|
+  :Update is_read = true;
+  :Redirect ke halaman terkait:
+  - order → tracking
+  - booking → tracking
+  - complaint → detail keluhan
+  - target → tab target;
+  
+endif
+
+stop
+
+@enduml

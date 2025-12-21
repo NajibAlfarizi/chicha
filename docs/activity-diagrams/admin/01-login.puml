@@ -1,0 +1,69 @@
+@startuml Activity Diagram - Admin Login
+
+title Activity Diagram Admin: Proses Login
+
+|Admin|
+start
+:Buka halaman login /auth/login;
+:Isi form login:
+- Email
+- Password;
+:Klik tombol "Login";
+
+|Sistem|
+:Terima kredensial;
+:Query tabel users WHERE email;
+
+if (User ditemukan?) then (tidak)
+  |Admin|
+  :Tampilkan error
+  "Email tidak terdaftar";
+  stop
+else (ya)
+  |Sistem|
+  :Verify password;
+  
+  if (Password cocok?) then (tidak)
+    |Admin|
+    :Tampilkan error
+    "Password salah";
+    stop
+  else (ya)
+    |Sistem|
+    :Cek role user;
+    
+    if (Role = 'admin'?) then (tidak)
+      |Admin|
+      :Tampilkan error
+      "Anda tidak memiliki akses admin";
+      stop
+    else (ya)
+      |Sistem|
+      :Buat session;
+      :Simpan admin data ke context;
+      :Redirect ke /admin/dashboard;
+      
+      |Admin|
+      :Dashboard admin terbuka;
+      :Tampilkan metrics:
+      - Total pesanan
+      - Total revenue
+      - Pending bookings
+      - Total users;
+      
+      :Tampilkan charts:
+      - Sales trend
+      - Revenue by category
+      - Top products;
+      
+      note right
+        Admin punya akses penuh
+        ke semua halaman admin
+      end note
+      
+      stop
+    endif
+  endif
+endif
+
+@enduml

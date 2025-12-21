@@ -1,0 +1,188 @@
+@startuml Activity Diagram - Client Checkout
+
+title Activity Diagram Client: Checkout dan Pembayaran
+
+|Pelanggan|
+start
+:Berada di halaman keranjang;
+:Review items dan total;
+
+if (Ingin ubah quantity?) then (ya)
+  :Klik +/- untuk update;
+  
+  |Sistem|
+  :Update cart localStorage;
+  :Recalculate subtotal;
+  
+  |Pelanggan|
+endif
+
+if (Ingin hapus item?) then (ya)
+  :Klik tombol hapus;
+  
+  |Sistem|
+  :Remove dari cart;
+  :Update badge;
+  
+  |Pelanggan|
+endif
+
+:Klik "Checkout";
+
+|Sistem|
+:Redirect ke /client/checkout;
+:Load cart items;
+:Hitung subtotal;
+
+|Pelanggan|
+:Isi informasi pengiriman:
+- Nama lengkap
+- Email
+- Nomor HP
+- Alamat lengkap;
+
+if (Punya kode voucher?) then (ya)
+  :Input kode voucher;
+  :Klik "Gunakan Voucher";
+  
+  |Sistem|
+  :Query voucher dari database;
+  :Validasi:
+  - Code exists
+  - is_active = true
+  - valid_from <= now <= valid_until
+  - quota > used
+  - subtotal >= min_purchase;
+  
+  if (Voucher valid?) then (tidak)
+    |Pelanggan|
+    :Tampilkan error
+    "Voucher tidak valid/kadaluarsa";
+  else (ya)
+    |Sistem|
+    if (Voucher type = percentage?) then (ya)
+      :discount = subtotal × (value/100);
+      :Cek max_discount;
+      if (discount > max_discount?) then (ya)
+        :discount = max_discount;
+      endif
+    else (fixed)
+      :discount = value;
+    endif
+    
+    :total = subtotal - discount;
+    :Tampilkan total setelah diskon;
+    
+    |Pelanggan|
+    :Lihat diskon diterapkan;
+  endif
+else (tidak)
+  |Sistem|
+  :total = subtotal;
+endif
+
+|Pelanggan|
+:Review total pembayaran;
+:Klik "Bayar Sekarang";
+
+|Sistem|
+:Validasi semua field terisi;
+
+if (Data lengkap?) then (tidak)
+  |Pelanggan|
+  :Tampilkan error
+  "Lengkapi data pengiriman";
+  stop
+else (ya)
+  |Sistem|
+  :Generate unique order_id;
+  :Insert ke tabel orders:
+  - user_id
+  - customer_name/email/phone/address
+  - total_amount
+  - subtotal
+  - discount_amount
+  - voucher_id (jika ada)
+  - payment_status = 'pending'
+  - status = 'pending';
+  
+  :Insert order_items dari cart;
+  
+  fork
+    |Sistem|
+    :Update stock produk:
+    stock = stock - quantity;
+  fork again
+    |Sistem|
+    if (Pakai voucher?) then (ya)
+      :Update voucher:
+      used = used + 1;
+      :Insert voucher_usage;
+    endif
+  end fork
+  
+  :Generate midtrans_order_id;
+  :Request payment token dari Midtrans API;
+  
+  |Midtrans|
+  :Generate Snap token;
+  :Return token;
+  
+  |Sistem|
+  :Update order dengan midtrans_order_id;
+  :Clear cart localStorage;
+  :Redirect ke Midtrans Snap;
+  
+  |Pelanggan|
+  :Popup Midtrans terbuka;
+  :Pilih metode pembayaran:
+  - GoPay
+  - OVO
+  - DANA
+  - Virtual Account (BCA, Mandiri, BNI)
+  - Kartu Kredit
+  - QRIS;
+  
+  :Lakukan pembayaran;
+  
+  |Midtrans|
+  :Proses pembayaran;
+  
+  if (Pembayaran sukses?) then (ya)
+    :Send webhook notification 
+    ke /api/payment/notification;
+    
+    |Sistem|
+    :Verify signature;
+    :Update payment_status = 'paid';
+    :Kirim notifikasi ke pelanggan;
+    
+    |Pelanggan|
+    :Redirect ke /client/checkout/success;
+    :Tampilkan detail pesanan
+    dan nomor pesanan;
+    
+    note right
+      Pelanggan bisa track
+      pesanan di halaman
+      riwayat atau tracking
+    end note
+    
+    stop
+    
+  else (gagal/pending)
+    |Midtrans|
+    :Send notification status failed;
+    
+    |Sistem|
+    :Update payment_status = 'failed';
+    
+    |Pelanggan|
+    :Redirect ke /client/checkout/error;
+    :Tampilkan pesan error
+    dan opsi retry;
+    stop
+  endif
+endif
+
+@enduml

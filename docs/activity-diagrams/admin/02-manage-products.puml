@@ -1,0 +1,139 @@
+@startuml Activity Diagram - Admin Manage Products
+
+title Activity Diagram Admin: Kelola Produk
+
+|Admin|
+start
+:Buka halaman Produk /admin/produk;
+
+|Sistem|
+:Query tabel products dengan categories;
+:Tampilkan tabel produk:
+- Nama
+- Kategori
+- Harga
+- Stok
+- Gambar
+- Aksi (Edit/Hapus);
+
+|Admin|
+if (Aksi?) then (Tambah Produk)
+  :Klik "Tambah Produk";
+  :Isi form:
+  - Nama produk
+  - Kategori
+  - Harga
+  - Stok awal
+  - Deskripsi
+  - Upload gambar (opsional);
+  
+  :Klik "Simpan";
+  
+  |Sistem|
+  :Validasi input;
+  
+  if (Data valid?) then (tidak)
+    |Admin|
+    :Tampilkan error validasi;
+    stop
+  else (ya)
+    |Sistem|
+    if (Ada gambar?) then (ya)
+      :Upload gambar ke storage;
+      :Dapatkan image_url;
+    endif
+    
+    :Insert ke tabel products:
+    - name
+    - category_id
+    - price
+    - stock
+    - description
+    - image_url;
+    
+    :Refresh tabel produk;
+    
+    |Admin|
+    :Tampilkan notifikasi
+    "Produk berhasil ditambahkan";
+    stop
+  endif
+
+elseif (Edit Produk) then
+  :Pilih produk;
+  :Klik "Edit";
+  
+  |Sistem|
+  :Load data produk ke form;
+  
+  |Admin|
+  :Update data:
+  - Nama
+  - Kategori
+  - Harga
+  - Stok
+  - Deskripsi
+  - Ganti gambar (opsional);
+  
+  :Klik "Simpan";
+  
+  |Sistem|
+  :Validasi input;
+  
+  if (Ganti gambar?) then (ya)
+    :Upload gambar baru;
+    :Hapus gambar lama;
+    :Update image_url;
+  endif
+  
+  :Update tabel products;
+  
+  |Admin|
+  :Notifikasi berhasil;
+  stop
+
+elseif (Update Stok) then
+  :Pilih produk;
+  :Klik icon edit stok;
+  :Input stok baru;
+  :Klik "Simpan";
+  
+  |Sistem|
+  :Update products.stock;
+  
+  |Admin|
+  :Notifikasi berhasil;
+  stop
+
+else (Hapus Produk)
+  :Pilih produk;
+  :Klik "Hapus";
+  :Konfirmasi penghapusan;
+  
+  |Sistem|
+  :Cek apakah produk ada di order_items;
+  
+  if (Produk pernah dibeli?) then (ya)
+    |Admin|
+    :Tampilkan warning
+    "Produk pernah dibeli,
+    tidak bisa dihapus";
+    
+    :Saran: Set stok = 0 atau
+    tandai sebagai inactive;
+    stop
+  else (tidak)
+    |Sistem|
+    :Delete produk;
+    
+    if (Ada gambar?) then (ya)
+      :Hapus gambar dari storage;
+    endif
+    
+    |Admin|
+    :Notifikasi berhasil;
+    stop
+  endif
+endif
+
+@enduml

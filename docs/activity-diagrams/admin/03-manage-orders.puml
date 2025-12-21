@@ -1,0 +1,128 @@
+@startuml Activity Diagram - Admin Manage Orders
+
+title Activity Diagram Admin: Kelola Pesanan
+
+|Admin|
+start
+:Buka halaman Pesanan /admin/pesanan;
+
+|Sistem|
+:Query tabel orders dengan:
+- order_items
+- users
+- vouchers;
+:Order by created_at DESC;
+:Tampilkan tabel pesanan;
+
+|Admin|
+:Lihat list pesanan dengan:
+- Order ID
+- Customer
+- Total
+- Payment Status
+- Status
+- Tanggal;
+
+if (Ingin filter?) then (ya)
+  :Pilih filter:
+  - Status (pending/dikirim/selesai)
+  - Payment status
+  - Tanggal range;
+  
+  |Sistem|
+  :Filter dan tampilkan hasil;
+  
+  |Admin|
+endif
+
+:Pilih pesanan;
+:Klik "Lihat Detail";
+
+|Sistem|
+:Load detail lengkap:
+- Customer info
+- Daftar produk dengan qty dan harga
+- Subtotal, diskon, total
+- Voucher yang digunakan
+- Alamat pengiriman
+- Payment status
+- Riwayat status;
+
+|Admin|
+:Review detail pesanan;
+
+if (Payment status?) then (pending)
+  :Tampilkan pesan
+  "Menunggu pembayaran pelanggan";
+  
+  note right
+    Admin tidak bisa update status
+    jika belum bayar
+  end note
+  
+  stop
+
+else (paid)
+  if (Status saat ini?) then (pending)
+    :Klik "Proses Pesanan";
+    :Konfirmasi akan dikirim;
+    
+    |Sistem|
+    :Update order.status = 'dikirim';
+    :Timestamp dikirm_at;
+    
+    fork
+      |Sistem|
+      :Insert notifikasi ke pelanggan:
+      "Pesanan #[id] sedang dikirim";
+    fork again
+      |Sistem|
+      :Bisa input resi pengiriman (opsional);
+    end fork
+    
+    |Admin|
+    :Tampilkan notifikasi berhasil;
+    stop
+    
+  elseif (dikirim) then
+    :Klik "Tandai Selesai";
+    :Konfirmasi pesanan sudah sampai;
+    
+    |Sistem|
+    :Update order.status = 'selesai';
+    :Timestamp completed_at;
+    
+    fork
+      |Sistem|
+      :Insert notifikasi ke pelanggan:
+      "Pesanan #[id] sudah sampai
+      Terima kasih!";
+    fork again
+      |Sistem|
+      :Trigger update target pelanggan;
+      :current_amount += order.total_amount;
+      
+      if (Target tercapai?) then (ya)
+        :Update target.status = 'achieved';
+        :Insert notifikasi target tercapai;
+      endif
+    end fork
+    
+    |Admin|
+    :Tampilkan notifikasi berhasil;
+    stop
+    
+  else (selesai)
+    :Pesanan sudah selesai;
+    :Tidak ada aksi lebih lanjut;
+    stop
+  endif
+
+else (failed/expired)
+  :Pembayaran gagal;
+  :Sarankan pelanggan
+  pesan ulang;
+  stop
+endif
+
+@enduml

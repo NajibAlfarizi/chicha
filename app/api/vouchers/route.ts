@@ -29,9 +29,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    console.log(`📊 Raw vouchers from DB: ${data?.length || 0}`);
+
     let vouchers = data || [];
 
-    // If userId provided, filter out vouchers already used by this user
+    // Filter out vouchers with no remaining quota (for both home and checkout)
+    if (!isAdmin) {
+      const beforeFilter = vouchers.length;
+      vouchers = vouchers.filter(v => v.used < v.quota);
+      console.log(`📊 After quota filter: ${vouchers.length} (removed ${beforeFilter - vouchers.length} with no quota)`);
+    }
+
+    // If userId provided (checkout page), filter out vouchers already used by this user
     if (userId && !isAdmin) {
       const { data: usedVouchers } = await supabaseAdmin
         .from('voucher_usage')

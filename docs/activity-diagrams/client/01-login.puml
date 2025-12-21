@@ -1,0 +1,75 @@
+@startuml Activity Diagram - Client Login
+
+title Activity Diagram Client: Proses Login
+
+|Pelanggan|
+start
+:Buka halaman login /auth/login;
+:Isi form login:
+- Email
+- Password;
+:Klik tombol "Login";
+
+|Sistem|
+:Terima kredensial;
+:Validasi format email dan password;
+
+if (Format valid?) then (tidak)
+  |Pelanggan|
+  :Tampilkan error
+  "Format email/password tidak valid";
+  stop
+else (ya)
+  |Sistem|
+  :Query tabel users 
+  berdasarkan email;
+  
+  if (User ditemukan?) then (tidak)
+    |Pelanggan|
+    :Tampilkan error
+    "Email tidak terdaftar";
+    stop
+  else (ya)
+    |Sistem|
+    :Ambil password_hash dari database;
+    :Compare dengan password input;
+    
+    if (Password cocok?) then (tidak)
+      |Pelanggan|
+      :Tampilkan error
+      "Password salah";
+      stop
+    else (ya)
+      |Sistem|
+      :Cek role user;
+      
+      if (Role = 'user'?) then (tidak)
+        |Pelanggan|
+        :Tampilkan error
+        "Akun ini bukan pelanggan.
+        Silakan login di portal yang sesuai";
+        stop
+      else (ya)
+        |Sistem|
+        :Buat session dengan Supabase Auth;
+        :Simpan user data ke context;
+        :Redirect ke /client/produk;
+        
+        |Pelanggan|
+        :Halaman produk terbuka;
+        :Tampilkan notifikasi
+        "Selamat datang, [Nama]";
+        
+        note right
+          Session tersimpan di cookie
+          User bisa akses halaman 
+          protected (akun, riwayat, dll)
+        end note
+        
+        stop
+      endif
+    endif
+  endif
+endif
+
+@enduml

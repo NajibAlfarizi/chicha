@@ -1,0 +1,95 @@
+@startuml Activity Diagram - Client Booking Service
+
+title Activity Diagram Client: Booking Service
+
+|Pelanggan|
+start
+:Buka halaman booking /client/booking;
+:Isi form booking service:
+- Nama perangkat (HP/Laptop/Tablet)
+- Deskripsi masalah
+- Tanggal booking
+- Nama pelanggan
+- Nomor HP
+- Email
+- Catatan tambahan (opsional);
+
+:Klik "Buat Booking";
+
+|Sistem|
+:Terima data booking;
+:Validasi input:
+- Semua field required terisi
+- Format tanggal valid
+- Tanggal >= hari ini;
+
+if (Data valid?) then (tidak)
+  |Pelanggan|
+  :Tampilkan error validasi;
+  stop
+else (ya)
+  |Sistem|
+  :Generate kode service unik;
+  
+  repeat
+    :Generate random:
+    "SRV-" + YYYYMMDD + "-" + 
+    4 char random (A-Z0-9);
+    
+    :Query cek kode di database;
+  repeat while (Kode sudah ada?) is (ya)
+  ->tidak;
+  
+  :Insert ke tabel bookings:
+  - user_id (dari session)
+  - device_name
+  - issue
+  - booking_date
+  - customer_name/phone/email
+  - notes
+  - service_code (unik)
+  - status = 'baru'
+  - progress_status = 'pending';
+  
+  fork
+    |Sistem|
+    :Insert notifikasi untuk pelanggan:
+    "Booking berhasil dibuat
+    Kode: [service_code]";
+    
+    |Pelanggan|
+    :Terima notifikasi real-time;
+  fork again
+    |Sistem|
+    :Insert notifikasi untuk admin:
+    "Booking baru dari [customer_name]
+    Perangkat: [device_name]";
+    
+    |Admin|
+    :Badge booking (+1);
+    :Terima notifikasi;
+  end fork
+  
+  |Pelanggan|
+  :Redirect ke halaman sukses;
+  :Tampilkan kode service besar:
+  [service_code];
+  
+  :Tampilkan pesan:
+  "Simpan kode ini untuk tracking
+  service tanpa perlu login";
+  
+  note right
+    Pelanggan bisa track
+    di /client/track dengan
+    memasukkan kode service
+  end note
+  
+  :Tampilkan estimasi:
+  "Service akan diproses
+  maksimal 1x24 jam";
+  
+  stop
+endif
+
+@enduml

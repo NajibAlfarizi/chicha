@@ -1,0 +1,152 @@
+@startuml Activity Diagram - Teknisi View Earnings
+
+title Activity Diagram Teknisi: Lihat Pendapatan & Statistik
+
+|Teknisi|
+start
+:Login ke portal teknisi;
+:Buka dashboard /teknisi/dashboard;
+
+|Sistem|
+:Query bookings WHERE:
+- teknisi_id = current_teknisi;
+:Query service selesai per periode;
+:Hitung statistik;
+
+|Teknisi|
+:Lihat card metrics:
+- Total service selesai (bulan ini)
+- Total service aktif
+- Total pendapatan (jika ada sistem komisi)
+- Rating rata-rata;
+
+:Lihat chart:
+- Service per hari/minggu
+- Completion rate
+- Trend service;
+
+|Teknisi|
+if (Ingin detail pendapatan?) then (ya)
+  :Klik "Lihat Detail Pendapatan";
+  
+  |Sistem|
+  :Query bookings WHERE:
+  - teknisi_id = current
+  - status = 'selesai';
+  :Group by bulan;
+  :Hitung total per periode;
+  
+  |Teknisi|
+  :Lihat tabel pendapatan:
+  - Periode (bulan)
+  - Jumlah service
+  - Total pendapatan
+  - Komisi (jika ada);
+  
+  :Lihat detail per service:
+  - Kode service
+  - Customer
+  - Perangkat
+  - Tanggal selesai
+  - Biaya
+  - Komisi;
+endif
+
+|Teknisi|
+if (Ingin lihat riwayat service?) then (ya)
+  :Klik tab "Riwayat Service";
+  
+  |Sistem|
+  :Query semua booking teknisi;
+  :Tampilkan dengan filter:
+  - Semua
+  - Selesai
+  - Dalam proses
+  - Tanggal range;
+  
+  |Teknisi|
+  :Pilih filter periode;
+  :Lihat list service;
+  :Klik service untuk detail;
+  
+  |Sistem|
+  :Load detail lengkap:
+  - Customer info
+  - Device info
+  - Riwayat progress
+  - Review customer (jika ada);
+  
+  |Teknisi|
+  :Review performa service;
+  
+  if (Ada review customer?) then (ya)
+    :Lihat rating dan komentar;
+    
+    note right
+      Feedback untuk
+      improve service quality
+    end note
+  endif
+endif
+
+|Teknisi|
+if (Ingin lihat profil?) then (ya)
+  :Klik "Profil Saya";
+  
+  |Sistem|
+  :Load data teknisi:
+  - Nama
+  - Username
+  - Email
+  - HP
+  - Spesialisasi
+  - Status
+  - Tanggal bergabung;
+  
+  |Teknisi|
+  :Lihat info profil;
+  
+  if (Ingin update info?) then (ya)
+    :Klik "Edit Profil";
+    :Update:
+    - Nama
+    - Email
+    - HP
+    - Spesialisasi;
+    :Klik "Simpan";
+    
+    |Sistem|
+    :Update tabel teknisi;
+    
+    |Teknisi|
+    :Notifikasi berhasil;
+  endif
+  
+  if (Ingin ganti password?) then (ya)
+    :Klik "Ganti Password";
+    :Input:
+    - Password lama
+    - Password baru
+    - Konfirmasi password;
+    :Klik "Simpan";
+    
+    |Sistem|
+    :Verify password lama;
+    
+    if (Password lama benar?) then (tidak)
+      |Teknisi|
+      :Error password lama salah;
+    else (ya)
+      |Sistem|
+      :Hash password baru;
+      :Update password_hash;
+      
+      |Teknisi|
+      :Notifikasi berhasil;
+    endif
+  endif
+endif
+
+stop
+
+@enduml

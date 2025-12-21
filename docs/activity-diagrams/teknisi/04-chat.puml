@@ -1,0 +1,117 @@
+@startuml Activity Diagram - Teknisi Chat
+
+title Activity Diagram Teknisi: Chat dengan Pelanggan
+
+|Teknisi|
+start
+:Login ke portal teknisi;
+:Buka halaman Chat /teknisi/chat;
+
+|Sistem|
+:Query chat WHERE:
+- sender_id = teknisi OR
+- receiver_id = teknisi;
+:Group by conversation partner;
+:Load unread count per chat;
+:Tampilkan list chat:
+- Customer name
+- Last message preview
+- Timestamp
+- Unread count;
+
+|Teknisi|
+:Lihat list chat aktif;
+:Pilih chat dengan customer;
+
+|Sistem|
+:Load riwayat pesan dengan customer:
+- sender
+- message
+- timestamp
+- is_read;
+:Subscribe Supabase Realtime
+channel teknisi-customer;
+:Mark unread messages as read;
+
+|Teknisi|
+:Lihat riwayat chat;
+:Lihat info customer di sidebar:
+- Nama
+- Email
+- HP
+- Service terkait (jika ada);
+
+repeat
+  |Teknisi|
+  if (Ingin kirim pesan?) then (ya)
+    :Ketik pesan di input box;
+    :Klik "Kirim" atau Enter;
+    
+    |Sistem|
+    :Validasi pesan tidak kosong;
+    
+    if (Pesan valid?) then (ya)
+      :Insert ke tabel chat:
+      - sender_id = teknisi_id
+      - receiver_id = customer_id
+      - message
+      - is_read = false
+      - created_at;
+      
+      :Broadcast via Realtime
+      ke channel customer;
+      
+      |Pelanggan|
+      :Terima pesan real-time;
+      :Tampilkan di chat window;
+      :Increment unread count
+      (jika tidak buka chat);
+      
+      |Teknisi|
+      :Pesan muncul di window;
+      :Auto-scroll ke bawah;
+    endif
+  endif
+  
+  |Teknisi|
+  if (Ada pesan masuk?) then (ya)
+    |Pelanggan|
+    :Ketik dan kirim pesan;
+    
+    |Sistem|
+    :Insert chat;
+    :Broadcast ke teknisi;
+    
+    |Teknisi|
+    :Terima pesan real-time;
+    :Tampilkan di window;
+    :Play notification sound;
+    
+    if (Sedang buka chat ini?) then (ya)
+      |Sistem|
+      :Auto mark as read;
+      :Broadcast read status;
+      
+      |Pelanggan|
+      :Lihat status "Dibaca";
+    else (tidak)
+      |Teknisi|
+      :Increment unread count;
+      :Tampilkan badge notifikasi;
+    endif
+  endif
+
+repeat while (Chat selesai?) is (tidak)
+->ya;
+
+|Teknisi|
+:Tutup chat window;
+
+note right
+  Chat history tersimpan
+  dan bisa dibuka kapan saja
+end note
+
+stop
+
+@enduml

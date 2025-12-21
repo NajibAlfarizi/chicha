@@ -1,0 +1,163 @@
+@startuml Activity Diagram - Client Tracking
+
+title Activity Diagram Client: Tracking Pesanan & Service
+
+|Pelanggan|
+start
+:Buka halaman tracking /client/track;
+
+if (Ingin track apa?) then (Pesanan)
+  :Pilih tab "Pesanan";
+  :Input Order ID atau 
+  Midtrans Order ID;
+  :Klik "Lacak Pesanan";
+  
+  |Sistem|
+  :Query tabel orders 
+  berdasarkan order_id atau midtrans_order_id;
+  
+  if (Pesanan ditemukan?) then (tidak)
+    |Pelanggan|
+    :Tampilkan error
+    "Pesanan tidak ditemukan";
+    stop
+  else (ya)
+    |Sistem|
+    :Load detail pesanan dengan order_items;
+    :Load customer_info;
+    :Check payment_status dan status;
+    
+    |Pelanggan|
+    :Tampilkan detail:
+    - Nomor pesanan
+    - Tanggal order
+    - Daftar produk
+    - Total pembayaran
+    - Info pengiriman;
+    
+    :Tampilkan timeline status:
+    ✓ Pesanan Dibuat
+    ✓ Menunggu Pembayaran
+    ◯ Dibayar
+    ◯ Dikemas
+    ◯ Dikirim
+    ◯ Selesai;
+    
+    if (Payment_status = pending 
+    AND status = pending?) then (ya)
+      :Tampilkan tombol 
+      "Batalkan Pesanan";
+      
+      if (Klik tombol batal?) then (ya)
+        :Konfirmasi pembatalan;
+        :Input alasan pembatalan;
+        :Klik "Ya, Batalkan";
+        
+        |Sistem|
+        :Update order:
+        - status = 'dibatalkan'
+        - cancel_reason
+        - cancelled_at;
+        
+        :Kembalikan stok produk;
+        
+        :Kirim notifikasi ke admin
+        "Pesanan #[id] dibatalkan";
+        
+        |Pelanggan|
+        :Tampilkan notifikasi
+        "Pesanan berhasil dibatalkan";
+        :Refresh timeline;
+      endif
+    endif
+    
+    stop
+  endif
+
+else (Service)
+  :Pilih tab "Service";
+  :Input Kode Service 
+  (SRV-YYYYMMDD-XXXX);
+  :Klik "Lacak Service";
+  
+  |Sistem|
+  :Query tabel bookings 
+  berdasarkan service_code;
+  
+  if (Booking ditemukan?) then (tidak)
+    |Pelanggan|
+    :Tampilkan error
+    "Kode service tidak valid";
+    stop
+  else (ya)
+    |Sistem|
+    :Load detail booking;
+    :Load teknisi info (jika sudah assign);
+    :Load service_progress history;
+    
+    |Pelanggan|
+    :Tampilkan detail booking:
+    - Kode service
+    - Perangkat
+    - Masalah
+    - Tanggal booking
+    - Status;
+    
+    if (Teknisi sudah assign?) then (ya)
+      :Tampilkan info teknisi:
+      - Nama
+      - Spesialisasi
+      - Nomor HP;
+    else (tidak)
+      :Tampilkan
+      "Menunggu teknisi ditugaskan";
+    endif
+    
+    :Tampilkan timeline progress:
+    ✓ Pending (menunggu assign)
+    ◯ Diagnosed (didiagnosa)
+    ◯ In Progress (dikerjakan)
+    ◯ Waiting Parts (tunggu sparepart)
+    ◯ Completed (selesai);
+    
+    :Tampilkan riwayat progress
+    dengan catatan dari teknisi:
+    [timestamp] - [status]
+    "[progress_notes]";
+    
+    if (Status = completed?) then (ya)
+      :Tampilkan tombol
+      "Beri Review";
+      
+      if (Klik review?) then (ya)
+        :Modal review terbuka;
+        :Input rating 1-5 bintang;
+        :Input komentar;
+        :Klik "Kirim Review";
+        
+        |Sistem|
+        :Insert ke tabel complaints:
+        - user_id
+        - booking_id
+        - rating
+        - message
+        - status = 'belum dibaca';
+        
+        :Kirim notifikasi ke admin dan teknisi;
+        
+        |Pelanggan|
+        :Tampilkan notifikasi
+        "Terima kasih atas review Anda";
+      endif
+    endif
+    
+    note right
+      Progress update real-time
+      via Supabase Realtime
+    end note
+    
+    stop
+  endif
+endif
+
+@enduml

@@ -1,0 +1,174 @@
+@startuml Activity Diagram - Admin Manage Vouchers
+
+title Activity Diagram Admin: Kelola Voucher
+
+|Admin|
+start
+:Buka halaman Voucher /admin/voucher;
+
+|Sistem|
+:Query tabel vouchers;
+:Tampilkan tabel voucher dengan:
+- Kode
+- Nama
+- Tipe (percentage/fixed)
+- Nilai
+- Min pembelian
+- Kuota/Used
+- Valid dari-sampai
+- Status aktif;
+
+|Admin|
+if (Aksi?) then (Tambah Voucher)
+  :Klik "Tambah Voucher";
+  :Isi form voucher:
+  - Kode (contoh: PROMO2025)
+  - Nama
+  - Deskripsi
+  - Tipe: percentage atau fixed
+  - Nilai (10 untuk 10% atau Rp10.000)
+  - Min pembelian (Rp100.000)
+  - Max diskon (jika percentage)
+  - Kuota (100)
+  - Tanggal mulai
+  - Tanggal berakhir;
+  
+  :Klik "Simpan";
+  
+  |Sistem|
+  :Validasi input:
+  - Kode required dan unique
+  - Nilai > 0
+  - Tanggal valid >= hari ini
+  - Kuota > 0;
+  
+  if (Kode sudah ada?) then (ya)
+    |Admin|
+    :Tampilkan error
+    "Kode voucher sudah digunakan";
+    stop
+  else (tidak)
+    if (Data valid?) then (tidak)
+      |Admin|
+      :Tampilkan error validasi;
+      stop
+    else (ya)
+      |Sistem|
+      :Insert ke tabel vouchers:
+      - is_active = true
+      - used = 0;
+      
+      |Admin|
+      :Tampilkan notifikasi
+      "Voucher berhasil dibuat";
+      :Refresh tabel;
+      stop
+    endif
+  endif
+
+elseif (Edit Voucher) then
+  :Pilih voucher;
+  :Klik "Edit";
+  
+  |Sistem|
+  :Load data voucher ke form;
+  
+  |Admin|
+  :Update data:
+  - Nama/deskripsi
+  - Nilai
+  - Min pembelian
+  - Max diskon
+  - Kuota (bisa ditambah)
+  - Tanggal berakhir (extend);
+  
+  note right
+    Kode tidak bisa diubah
+    untuk menjaga konsistensi
+  end note
+  
+  :Klik "Simpan";
+  
+  |Sistem|
+  :Update tabel vouchers;
+  
+  |Admin|
+  :Notifikasi berhasil;
+  stop
+
+elseif (Toggle Status) then
+  :Pilih voucher;
+  :Klik toggle aktif/nonaktif;
+  
+  |Sistem|
+  :Update is_active;
+  
+  if (Set nonaktif?) then (ya)
+    note right
+      Voucher tidak bisa
+      digunakan pelanggan
+    end note
+  else (aktif)
+    :Cek tanggal valid;
+    if (Sudah kadaluarsa?) then (ya)
+      |Admin|
+      :Tampilkan warning
+      "Voucher sudah kadaluarsa,
+      update tanggal dulu";
+    endif
+  endif
+  
+  |Admin|
+  :Notifikasi berhasil;
+  stop
+
+else (Hapus Voucher)
+  :Pilih voucher;
+  :Klik "Hapus";
+  :Konfirmasi penghapusan;
+  
+  |Sistem|
+  :Cek voucher.used;
+  
+  if (Voucher pernah digunakan?) then (ya)
+    |Admin|
+    :Tampilkan warning
+    "Voucher sudah digunakan [used] kali
+    
+    Opsi:
+    1. Nonaktifkan saja (recommended)
+    2. Tetap hapus (data usage tetap ada)";
+    
+    if (Pilih opsi?) then (1-Nonaktifkan)
+      |Sistem|
+      :Update is_active = false;
+      
+      |Admin|
+      :Notifikasi berhasil;
+      stop
+      
+    else (2-Hapus)
+      |Sistem|
+      :Delete voucher;
+      
+      note right
+        voucher_usage tetap ada
+        untuk histori
+      end note
+      
+      |Admin|
+      :Notifikasi dihapus;
+      stop
+    endif
+    
+  else (belum digunakan)
+    |Sistem|
+    :Delete voucher;
+    
+    |Admin|
+    :Notifikasi berhasil;
+    stop
+  endif
+endif
+
+@enduml
