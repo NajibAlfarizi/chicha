@@ -4,9 +4,6 @@ import { useEffect, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -19,28 +16,23 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wrench, Eye, UserPlus, MessageSquarePlus } from 'lucide-react';
-import { Booking, User, ServiceProgress } from '@/lib/types';
+import { Wrench, Eye } from 'lucide-react';
+import { Booking, ServiceProgress } from '@/lib/types';
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [teknisi, setTeknisi] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<Booking & { progress?: ServiceProgress[] } | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isProgressDialogOpen, setIsProgressDialogOpen] = useState(false);
-  const [progressData, setProgressData] = useState({ description: '', progress_status: '' });
   const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     fetchBookings();
-    fetchTeknisi();
   }, []);
 
   const fetchBookings = async () => {
@@ -55,16 +47,6 @@ export default function AdminBookingsPage() {
     }
   };
 
-  const fetchTeknisi = async () => {
-    try {
-      const response = await fetch('/api/users?role=teknisi');
-      const data = await response.json();
-      setTeknisi(data.users || []);
-    } catch (error) {
-      console.error('Error fetching teknisi:', error);
-    }
-  };
-
   const fetchBookingDetail = async (bookingId: string) => {
     try {
       const response = await fetch(`/api/bookings/${bookingId}`);
@@ -76,90 +58,36 @@ export default function AdminBookingsPage() {
     }
   };
 
-  const assignTeknisi = async (bookingId: string, teknisiId: string) => {
-    try {
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teknisi_id: teknisiId, status: 'proses' }),
-      });
-
-      if (response.ok) {
-        fetchBookings();
-        if (selectedBooking?.id === bookingId) {
-          fetchBookingDetail(bookingId);
-        }
-      }
-    } catch (error) {
-      console.error('Error assigning teknisi:', error);
-    }
-  };
-
-  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (response.ok) {
-        fetchBookings();
-        if (selectedBooking?.id === bookingId) {
-          fetchBookingDetail(bookingId);
-        }
-      }
-    } catch (error) {
-      console.error('Error updating booking status:', error);
-    }
-  };
-
-  const addProgress = async () => {
-    if (!selectedBooking) return;
-
-    try {
-      const response = await fetch('/api/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          booking_id: selectedBooking.id,
-          ...progressData,
-        }),
-      });
-
-      if (response.ok) {
-        setIsProgressDialogOpen(false);
-        setProgressData({ description: '', progress_status: '' });
-        fetchBookingDetail(selectedBooking.id);
-      }
-    } catch (error) {
-      console.error('Error adding progress:', error);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
+  const getProgressBadge = (status?: string) => {
     const colors: Record<string, string> = {
-      baru: 'bg-blue-500/20 text-blue-500 border-blue-500/50',
-      proses: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50',
-      selesai: 'bg-green-500/20 text-green-500 border-green-500/50',
+      pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50',
+      diagnosed: 'bg-blue-500/20 text-blue-500 border-blue-500/50',
+      in_progress: 'bg-purple-500/20 text-purple-500 border-purple-500/50',
+      waiting_parts: 'bg-orange-500/20 text-orange-500 border-orange-500/50',
+      completed: 'bg-green-500/20 text-green-500 border-green-500/50',
+      cancelled: 'bg-red-500/20 text-red-500 border-red-500/50',
     };
 
     const labels: Record<string, string> = {
-      baru: 'Baru',
-      proses: 'Proses',
-      selesai: 'Selesai',
+      pending: 'Pending',
+      diagnosed: 'Diagnosed',
+      in_progress: 'In Progress',
+      waiting_parts: 'Waiting Parts',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
     };
 
+    const currentStatus = status || 'pending';
     return (
-      <Badge className={colors[status] || ''}>
-        {labels[status] || status}
+      <Badge className={colors[currentStatus] || colors.pending}>
+        {labels[currentStatus] || currentStatus}
       </Badge>
     );
   };
 
   const filteredBookings = filterStatus === 'all'
     ? bookings
-    : bookings.filter(booking => booking.status === filterStatus);
+    : bookings.filter(booking => booking.progress_status === filterStatus);
 
   return (
     <AdminLayout>
@@ -185,10 +113,13 @@ export default function AdminBookingsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent >
-                  <SelectItem value="all" >Semua Status</SelectItem>
-                  <SelectItem value="baru" >Baru</SelectItem>
-                  <SelectItem value="proses" >Proses</SelectItem>
-                  <SelectItem value="selesai" >Selesai</SelectItem>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="diagnosed">Diagnosed</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="waiting_parts">Waiting Parts</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -239,7 +170,7 @@ export default function AdminBookingsPage() {
                           <span className="text-muted-foreground italic">Belum ditugaskan</span>
                         )}
                       </TableCell>
-                      <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                      <TableCell>{getProgressBadge(booking.progress_status)}</TableCell>
                       <TableCell >
                         {new Date(booking.booking_date).toLocaleDateString('id-ID')}
                       </TableCell>
@@ -272,79 +203,189 @@ export default function AdminBookingsPage() {
               </DialogDescription>
             </DialogHeader>
             {selectedBooking && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {/* Customer & Device Info */}
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="shadow-sm p-4 rounded-lg">
-                    <h4 className="font-semibold  mb-2">Informasi Pelanggan</h4>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Informasi Pelanggan</h4>
                     <div className="space-y-1 text-sm">
-                      <p >Nama: {selectedBooking.customer_name || selectedBooking.user?.name || 'N/A'}</p>
-                      <p >Email: {selectedBooking.customer_email || selectedBooking.user?.email || '-'}</p>
-                      <p >Phone: {selectedBooking.customer_phone || selectedBooking.user?.phone || '-'}</p>
+                      <p><span className="text-muted-foreground">Nama:</span> {selectedBooking.customer_name || selectedBooking.user?.name || 'N/A'}</p>
+                      <p><span className="text-muted-foreground">Email:</span> {selectedBooking.customer_email || selectedBooking.user?.email || '-'}</p>
+                      <p><span className="text-muted-foreground">Phone:</span> {selectedBooking.customer_phone || selectedBooking.user?.phone || '-'}</p>
                     </div>
                   </div>
-                  <div className="shadow-sm p-4 rounded-lg">
-                    <h4 className="font-semibold  mb-2">Informasi Device</h4>
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Informasi Device</h4>
                     <div className="space-y-1 text-sm">
-                      <p >Device: {selectedBooking.device_name}</p>
-                      <p >Keluhan: {selectedBooking.issue}</p>
-                      <p >
-                        Tanggal Booking: {new Date(selectedBooking.booking_date).toLocaleDateString('id-ID')}
-                      </p>
+                      <p><span className="text-muted-foreground">Device:</span> {selectedBooking.device_name}</p>
+                      <p><span className="text-muted-foreground">Keluhan:</span> {selectedBooking.issue}</p>
+                      <p><span className="text-muted-foreground">Tanggal Booking:</span> {new Date(selectedBooking.booking_date).toLocaleDateString('id-ID')}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Assign Teknisi */}
-                <div className="shadow-sm p-4 rounded-lg">
-                  <h4 className="font-semibold  mb-3 flex items-center gap-2">
-                    <UserPlus className="h-5 w-5 text-amber-500" />
-                    Assign Teknisi
-                  </h4>
-                  <div className="flex items-center gap-3">
-                    <Select
-                      value={selectedBooking.teknisi_id || ''}
-                      onValueChange={(value) => assignTeknisi(selectedBooking.id, value)}
-                    >
-                      <SelectTrigger className="/50  ">
-                        <SelectValue placeholder="Pilih teknisi" />
-                      </SelectTrigger>
-                      <SelectContent >
-                        {teknisi.map((tech) => (
-                          <SelectItem key={tech.id} value={tech.id} >
-                            {tech.name} - {tech.phone}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {selectedBooking.teknisi && (
-                      <Badge className="bg-green-500/20 text-green-500">
-                        {selectedBooking.teknisi.name}
-                      </Badge>
-                    )}
+                {/* Teknisi Info */}
+                {selectedBooking.teknisi && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <h4 className="font-semibold mb-2 text-amber-700 dark:text-amber-400">Teknisi yang Ditugaskan</h4>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold">
+                        {selectedBooking.teknisi.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{selectedBooking.teknisi.name}</p>
+                        <p className="text-sm text-muted-foreground">{selectedBooking.teknisi.phone || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="bg-muted/50 p-6 rounded-lg">
+                  <h4 className="font-semibold mb-6">Status Perbaikan</h4>
+                  <div className="relative pl-8">
+                    {/* Vertical Line connecting all steps */}
+                    <div className="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-amber-500 via-amber-500/50 to-muted"></div>
+                    
+                    {/* Step 1: Pending */}
+                    <div className="relative mb-8">
+                      <div className="flex items-start gap-4">
+                        <div className={`absolute -left-[29px] w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 ${
+                          selectedBooking.progress_status
+                            ? 'bg-amber-500 border-amber-500'
+                            : 'bg-white dark:bg-slate-900 border-muted'
+                        }`}>
+                          {selectedBooking.progress_status && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 -mt-1">
+                          <p className="font-semibold text-base mb-1">Booking Dibuat (Pending)</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(selectedBooking.created_at).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          {selectedBooking.teknisi && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <div className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                {selectedBooking.teknisi.name.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                Teknisi: {selectedBooking.teknisi.name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Diagnosed */}
+                    <div className="relative mb-8">
+                      <div className="flex items-start gap-4">
+                        <div className={`absolute -left-[29px] w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 ${
+                          selectedBooking.progress_status === 'diagnosed' || 
+                          selectedBooking.progress_status === 'in_progress' || 
+                          selectedBooking.progress_status === 'waiting_parts' || 
+                          selectedBooking.progress_status === 'completed'
+                            ? 'bg-blue-500 border-blue-500'
+                            : 'bg-white dark:bg-slate-900 border-muted'
+                        }`}>
+                          {(selectedBooking.progress_status === 'diagnosed' || 
+                            selectedBooking.progress_status === 'in_progress' || 
+                            selectedBooking.progress_status === 'waiting_parts' || 
+                            selectedBooking.progress_status === 'completed') && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 -mt-1">
+                          <p className="font-semibold text-base mb-1">Diagnosed</p>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedBooking.progress_status === 'diagnosed' || 
+                             selectedBooking.progress_status === 'in_progress' || 
+                             selectedBooking.progress_status === 'waiting_parts' || 
+                             selectedBooking.progress_status === 'completed'
+                              ? 'Teknisi sudah mendiagnosa masalah'
+                              : 'Menunggu diagnosa'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3: In Progress / Waiting Parts */}
+                    <div className="relative mb-8">
+                      <div className="flex items-start gap-4">
+                        <div className={`absolute -left-[29px] w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 ${
+                          selectedBooking.progress_status === 'in_progress' || 
+                          selectedBooking.progress_status === 'waiting_parts' || 
+                          selectedBooking.progress_status === 'completed'
+                            ? 'bg-purple-500 border-purple-500'
+                            : 'bg-white dark:bg-slate-900 border-muted'
+                        }`}>
+                          {(selectedBooking.progress_status === 'in_progress' || 
+                            selectedBooking.progress_status === 'waiting_parts' || 
+                            selectedBooking.progress_status === 'completed') && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 -mt-1">
+                          <p className="font-semibold text-base mb-1">
+                            {selectedBooking.progress_status === 'waiting_parts' 
+                              ? 'Menunggu Spare Part' 
+                              : 'Sedang Dikerjakan'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedBooking.progress_status === 'in_progress'
+                              ? 'Teknisi sedang mengerjakan perbaikan'
+                              : selectedBooking.progress_status === 'waiting_parts'
+                              ? 'Menunggu spare part tersedia'
+                              : selectedBooking.progress_status === 'completed'
+                              ? 'Perbaikan sudah selesai dikerjakan'
+                              : 'Belum dimulai'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 4: Completed */}
+                    <div className="relative">
+                      <div className="flex items-start gap-4">
+                        <div className={`absolute -left-[29px] w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 ${
+                          selectedBooking.progress_status === 'completed'
+                            ? 'bg-green-500 border-green-500'
+                            : 'bg-white dark:bg-slate-900 border-muted'
+                        }`}>
+                          {selectedBooking.progress_status === 'completed' && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 -mt-1">
+                          <p className="font-semibold text-base mb-1">Selesai</p>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedBooking.progress_status === 'completed'
+                              ? 'Perbaikan telah diselesaikan'
+                              : 'Menunggu penyelesaian'}
+                          </p>
+                          {selectedBooking.estimated_completion && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Est. selesai: {new Date(selectedBooking.estimated_completion).toLocaleDateString('id-ID')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Progress Updates */}
-                <div className="shadow-sm p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-semibold  flex items-center gap-2">
-                      <MessageSquarePlus className="h-5 w-5 text-amber-500" />
-                      Progress Updates
-                    </h4>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsProgressDialogOpen(true)}
-                      className="bg-amber-500 hover:bg-amber-600 text-white"
-                    >
-                      <MessageSquarePlus className="h-4 w-4 mr-1" />
-                      Tambah Progress
-                    </Button>
-                  </div>
-                  <div className="space-y-3">
-                    {selectedBooking.progress && selectedBooking.progress.length > 0 ? (
-                      selectedBooking.progress.map((prog) => (
-                        <div key={prog.id} className="border-l-4 border-amber-500 pl-4 py-2 bg-muted/30 rounded">
+                {/* Progress Updates from Teknisi */}
+                {selectedBooking.progress && selectedBooking.progress.length > 0 && (
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-3">Update dari Teknisi</h4>
+                    <div className="space-y-3">
+                      {selectedBooking.progress.map((prog) => (
+                        <div key={prog.id} className="border-l-4 border-amber-500 pl-4 py-2 bg-background rounded">
                           <div className="flex justify-between items-start mb-1">
                             <Badge className="bg-blue-500/20 text-blue-500 text-xs">
                               {prog.progress_status}
@@ -353,40 +394,32 @@ export default function AdminBookingsPage() {
                               {new Date(prog.updated_at).toLocaleString('id-ID')}
                             </span>
                           </div>
-                          <p className="text-sm ">{prog.description}</p>
+                          <p className="text-sm">{prog.description}</p>
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground italic text-sm">Belum ada progress update</p>
-                    )}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Update Status */}
-                <div className="shadow-sm p-4 rounded-lg">
-                  <h4 className="font-semibold  mb-3">Update Status Booking</h4>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => updateBookingStatus(selectedBooking.id, 'baru')}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                      disabled={selectedBooking.status === 'baru'}
-                    >
-                      Baru
-                    </Button>
-                    <Button
-                      onClick={() => updateBookingStatus(selectedBooking.id, 'proses')}
-                      className="flex-1 bg-yellow-600 hover:bg-yellow-700"
-                      disabled={selectedBooking.status === 'proses'}
-                    >
-                      Proses
-                    </Button>
-                    <Button
-                      onClick={() => updateBookingStatus(selectedBooking.id, 'selesai')}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      disabled={selectedBooking.status === 'selesai'}
-                    >
-                      Selesai
-                    </Button>
+                {/* Current Status Badge */}
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Status Saat Ini:</span>
+                    <Badge className={
+                      selectedBooking.progress_status === 'completed' ? 'bg-green-500/20 text-green-500' :
+                      selectedBooking.progress_status === 'in_progress' ? 'bg-purple-500/20 text-purple-500' :
+                      selectedBooking.progress_status === 'waiting_parts' ? 'bg-orange-500/20 text-orange-500' :
+                      selectedBooking.progress_status === 'diagnosed' ? 'bg-blue-500/20 text-blue-500' :
+                      selectedBooking.progress_status === 'cancelled' ? 'bg-red-500/20 text-red-500' :
+                      'bg-yellow-500/20 text-yellow-500'
+                    }>
+                      {selectedBooking.progress_status === 'completed' ? 'Completed' :
+                       selectedBooking.progress_status === 'in_progress' ? 'In Progress' :
+                       selectedBooking.progress_status === 'waiting_parts' ? 'Waiting Parts' :
+                       selectedBooking.progress_status === 'diagnosed' ? 'Diagnosed' :
+                       selectedBooking.progress_status === 'cancelled' ? 'Cancelled' :
+                       'Pending'}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -394,52 +427,7 @@ export default function AdminBookingsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Add Progress Dialog */}
-        <Dialog open={isProgressDialogOpen} onOpenChange={setIsProgressDialogOpen}>
-          <DialogContent className=" border-amber-500/20 ">
-            <DialogHeader>
-              <DialogTitle className="text-amber-500">Tambah Progress Update</DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                Tambahkan update progress perbaikan
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="progress_status" >Status Progress</Label>
-                <Input
-                  id="progress_status"
-                  value={progressData.progress_status}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProgressData({ ...progressData, progress_status: e.target.value })}
-                  placeholder="Contoh: Sedang diagnosa"
-                  
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description" >Deskripsi</Label>
-                <Textarea
-                  id="description"
-                  value={progressData.description}
-                  onChange={(e) => setProgressData({ ...progressData, description: e.target.value })}
-                  placeholder="Detail progress perbaikan..."
-                  
-                  rows={4}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setIsProgressDialogOpen(false)}
-                
-              >
-                Batal
-              </Button>
-              <Button onClick={addProgress} className="bg-amber-500 hover:bg-amber-600 text-white">
-                Tambah Progress
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+
       </div>
     </AdminLayout>
   );
