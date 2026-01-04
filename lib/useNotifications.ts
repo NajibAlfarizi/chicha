@@ -39,6 +39,38 @@ export function useNotifications(userId: string | undefined) {
     }
   }, [userId]);
 
+  // Initial fetch and setup realtime subscription
+  useEffect(() => {
+    if (!userId) return;
+
+    // Initial fetch
+    fetchNotifications();
+
+    // Setup realtime subscription
+    import('@/lib/supabaseClient').then(({ supabase }) => {
+      const channel = supabase
+        .channel('notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`,
+          },
+          () => {
+            // Refresh notifications when there's a change
+            fetchNotifications();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    });
+  }, [userId, fetchNotifications]);
+
   const markAsRead = async (notificationId: string) => {
     try {
       const response = await fetch('/api/notifications', {
@@ -80,15 +112,6 @@ export function useNotifications(userId: string | undefined) {
       console.error('Error marking all as read:', error);
     }
   };
-
-  useEffect(() => {
-    fetchNotifications();
-
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
 
   return {
     notifications,
