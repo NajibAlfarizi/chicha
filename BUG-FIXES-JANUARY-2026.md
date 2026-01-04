@@ -29,7 +29,34 @@
 **File yang diubah:**
 - `lib/useNotifications.ts`
 
-### 3. ✅ Environment Variable Configuration
+### 3. ✅ Teknisi Tidak Muncul di Daftar User
+
+**Masalah:**
+- Teknisi yang dibuat di halaman `/admin/teknisi` tidak muncul di halaman `/admin/user`
+- Sistem menggunakan 2 table terpisah: `teknisi` dan `users`
+- Tidak ada sinkronisasi antara kedua table
+
+**Solusi:**
+- Update API `/api/teknisi` untuk otomatis sync dengan table `users`
+- Saat create teknisi: otomatis create entry di table `users` dengan role='teknisi'
+- Saat update teknisi: otomatis update entry di table `users` yang sesuai
+- Saat delete teknisi: otomatis delete entry di table `users` yang sesuai
+- Tambah rollback mechanism jika salah satu operasi gagal
+
+**File yang diubah:**
+- `app/api/teknisi/route.ts` - POST, PUT, DELETE methods
+- `sync-teknisi-to-users.sql` - Migration script untuk teknisi yang sudah ada
+
+**Struktur Mapping:**
+```
+teknisi.name        → users.name
+teknisi.email       → users.email
+teknisi.phone       → users.phone
+teknisi.specialization → users.address
+                      users.role = 'teknisi'
+```
+
+### 4. ✅ Environment Variable Configuration
 
 **File baru:**
 - `.env.example` - Template untuk environment variables

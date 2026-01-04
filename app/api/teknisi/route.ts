@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if username already exists
+    // Check if username already exists in teknisi table
     const { data: existing } = await supabaseAdmin
       .from('teknisi')
       .select('username')
@@ -90,11 +90,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if email already exists in users table
+    if (email) {
+      const { data: existingUser } = await supabaseAdmin
+        .from('users')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      if (existingUser) {
+        return NextResponse.json(
+          { error: 'Email already exists' },
+          { status: 409 }
+        );
+      }
+    }
+
     // Hash password
     const password_hash = await bcrypt.hash(password, 10);
 
-    // Insert teknisi
-    const { data, error } = await supabaseAdmin
+    // 1. Insert into teknisi table
+    const { data: teknisiData, error: teknisiError } = await supabaseAdmin
       .from('teknisi')
       .insert({
         name,
@@ -108,11 +124,32 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (error) throw error;
+    if (teknisiError) throw teknisiError;
+
+    // 2. Also create user entry with role 'teknisi'
+    const { error: userError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        name,
+        email: email || `${username}@teknisi.local`,
+        role: 'teknisi',
+        phone,
+        address: specialization || null,
+      });
+
+    if (userError) {
+      // Rollback - delete teknisi if user creation fails
+      await supabaseAdmin
+        .from('teknisi')
+        .delete()
+        .eq('id', teknisiData.id);
+      
+      throw userError;
+    }
 
     // Remove password_hash from response
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password_hash: _, ...sanitizedData } = data;
+    const { password_hash: _, ...sanitizedData } = teknisiData;
 
     return NextResponse.json({
       teknisi: sanitizedData,
@@ -140,6 +177,13 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Get current teknisi data
+    const { data: currentTeknisi } = await supabaseAdmin
+      .from('teknisi')
+      .select('email, name')
+      .eq('id', id)
+      .single();
+
     interface UpdateData {
       updated_at: string;
       name?: string;
@@ -165,18 +209,34 @@ export async function PUT(request: NextRequest) {
       updateData.password_hash = await bcrypt.hash(password, 10);
     }
 
-    const { data, error } = await supabaseAdmin
+    // 1. Update teknisi table
+    const { data: teknisiData, error: teknisiError } = await supabaseAdmin
       .from('teknisi')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (teknisiError) throw teknisiError;
+
+    // 2. Update corresponding user entry
+    if (currentTeknisi?.email) {
+      const userUpdateData: Record<string, unknown> = {};
+      if (name) userUpdateData.name = name;
+      if (phone !== undefined) userUpdateData.phone = phone;
+      if (email !== undefined) userUpdateData.email = email;
+      if (specialization !== undefined) userUpdateData.address = specialization;
+
+      await supabaseAdmin
+        .from('users')
+        .update(userUpdateData)
+        .eq('email', currentTeknisi.email)
+        .eq('role', 'teknisi');
+    }
 
     // Remove password_hash from response
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password_hash: _, ...sanitizedData } = data;
+    const { password_hash: _, ...sanitizedData } = teknisiData;
 
     return NextResponse.json({
       teknisi: sanitizedData,
@@ -204,12 +264,29 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const { error } = await supabaseAdmin
+    // Get teknisi email before deleting
+    const { data: teknisi } = await supabaseAdmin
+      .from('teknisi')
+      .select('email')
+      .eq('id', id)
+      .single();
+
+    // 1. Delete from teknisi table
+    const { error: teknisiError } = await supabaseAdmin
       .from('teknisi')
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (teknisiError) throw teknisiError;
+
+    // 2. Delete corresponding user entry
+    if (teknisi?.email) {
+      await supabaseAdmin
+        .from('users')
+        .delete()
+        .eq('email', teknisi.email)
+        .eq('role', 'teknisi');
+    }
 
     return NextResponse.json({
       message: 'Teknisi deleted successfully',
