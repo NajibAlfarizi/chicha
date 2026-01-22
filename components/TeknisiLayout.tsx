@@ -2,6 +2,7 @@
 
 import { ReactNode, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
@@ -46,12 +47,16 @@ export default function TeknisiLayout({ children }: TeknisiLayoutProps) {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                <Wrench className="h-6 w-6 text-white" />
-              </div>
+              <Image 
+                src="/logo-chicha.jpg" 
+                alt="Chicha Mobile Logo" 
+                width={40} 
+                height={40} 
+                className="rounded-full object-cover shadow-lg"
+              />
               <div>
-                <h1 className="text-xl font-bold text-amber-600 dark:text-amber-400">Teknisi Panel</h1>
-                <p className="text-xs text-muted-foreground">Chicha Mobile</p>
+                <h1 className="text-lg font-bold text-amber-600 dark:text-amber-400">Chicha Mobile</h1>
+                <p className="text-xs text-muted-foreground">Teknisi Panel</p>
               </div>
             </div>
 

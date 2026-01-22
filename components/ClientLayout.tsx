@@ -2,6 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
@@ -40,10 +41,14 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-linear-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg">
-                <ShoppingCart className="h-5 w-5 md:h-6 md:w-6 text-white" />
-              </div>
+            <Link href="/" className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity">
+              <Image 
+                src="/logo-chicha.jpg" 
+                alt="Chicha Mobile Logo" 
+                width={40} 
+                height={40} 
+                className="rounded-full object-cover shadow-lg md:w-[45px] md:h-[45px]"
+              />
               <h1 className="text-lg md:text-2xl font-bold text-amber-600 dark:text-amber-500">CHICHA MOBILE</h1>
             </Link>
 
@@ -135,42 +140,42 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-amber-500/20 bg-slate-900/50 mt-20">
+      <footer className="border-t border-amber-500/20 bg-slate-100 dark:bg-slate-900/50 mt-20">
         <div className="container mx-auto px-4 py-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-amber-500 font-bold text-lg mb-4">CHICHA MOBILE</h3>
-              <p className="text-slate-400 text-sm">
+              <h3 className="text-amber-600 dark:text-amber-500 font-bold text-lg mb-4">CHICHA MOBILE</h3>
+              <p className="text-slate-700 dark:text-slate-400 text-sm">
                 Sparepart dan service handphone terpercaya dengan sistem reward pembelanjaan.
               </p>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Menu</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="/client/produk" className="hover:text-amber-500">Produk</Link></li>
-                <li><Link href="/client/booking" className="hover:text-amber-500">Booking Service</Link></li>
-                <li><Link href="/client/track" className="hover:text-amber-500">Track Service</Link></li>
-                <li><Link href="/client/akun" className="hover:text-amber-500">Akun Saya</Link></li>
+              <h4 className="text-slate-900 dark:text-white font-semibold mb-4">Menu</h4>
+              <ul className="space-y-2 text-slate-700 dark:text-slate-400 text-sm">
+                <li><Link href="/client/produk" className="hover:text-amber-600 dark:hover:text-amber-500 transition-colors">Produk</Link></li>
+                <li><Link href="/client/booking" className="hover:text-amber-600 dark:hover:text-amber-500 transition-colors">Booking Service</Link></li>
+                <li><Link href="/client/track" className="hover:text-amber-600 dark:hover:text-amber-500 transition-colors">Track Service</Link></li>
+                <li><Link href="/client/akun" className="hover:text-amber-600 dark:hover:text-amber-500 transition-colors">Akun Saya</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Kontak</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
+              <h4 className="text-slate-900 dark:text-white font-semibold mb-4">Kontak</h4>
+              <ul className="space-y-2 text-slate-700 dark:text-slate-400 text-sm">
                 <li>Email: info@chichamobile.com</li>
                 <li>Phone: +62 812-3456-7890</li>
                 <li>WhatsApp: +62 812-3456-7890</li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold mb-4">Jam Operasional</h4>
-              <ul className="space-y-2 text-slate-400 text-sm">
+              <h4 className="text-slate-900 dark:text-white font-semibold mb-4">Jam Operasional</h4>
+              <ul className="space-y-2 text-slate-700 dark:text-slate-400 text-sm">
                 <li>Senin - Jumat: 09:00 - 21:00</li>
                 <li>Sabtu: 09:00 - 18:00</li>
                 <li>Minggu: 10:00 - 16:00</li>
               </ul>
             </div>
           </div>
-          <div className="text-center text-slate-500 text-sm mt-8 pt-8 border-t border-slate-700">
+          <div className="text-center text-slate-600 dark:text-slate-500 text-sm mt-8 pt-8 border-t border-slate-300 dark:border-slate-700">
             <p>&copy; 2025 Chicha Mobile. All rights reserved.</p>
           </div>
         </div>

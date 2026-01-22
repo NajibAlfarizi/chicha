@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import ClientLayout from '@/components/ClientLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -229,26 +230,73 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20">
+      {/* Hero Section with Branding */}
+      <section className="container mx-auto px-4 py-12 md:py-20">
         <div className="text-center max-w-4xl mx-auto">
-          <h2 className="text-5xl font-bold mb-6">
-            Sparepart & Service HP<br />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-500 to-amber-600">
-              Terpercaya & Berkualitas
+          {/* Logo Besar */}
+          <div className="flex justify-center mb-8">
+            <div className="relative">
+              <Image 
+                src="/logo-chicha.jpg" 
+                alt="Chicha Mobile Logo" 
+                width={180} 
+                height={180} 
+                className="rounded-full shadow-2xl border-4 border-amber-500/30 object-cover"
+              />
+              <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg">
+                Terpercaya
+              </div>
+            </div>
+          </div>
+
+          {/* Brand Name & Tagline */}
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 text-amber-600 dark:text-amber-500">
+            Chicha Mobile
+          </h1>
+          <div className="inline-block bg-amber-500/10 border-2 border-amber-500/30 rounded-full px-6 py-2 mb-6">
+            <p className="text-base md:text-lg font-semibold text-amber-700 dark:text-amber-400">
+              🏆 Pusat Sparepart & Service HP Terlengkap & Terpercaya
+            </p>
+          </div>
+          
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+            Solusi Lengkap untuk<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-700">
+              Kebutuhan HP Anda
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            Dapatkan sparepart original dan layanan service handphone professional dengan sistem reward pembelanjaan
+          
+          <p className="text-lg md:text-xl text-muted-foreground mb-4 leading-relaxed">
+            Kami menyediakan <strong className="text-amber-600 dark:text-amber-500">sparepart original berkualitas</strong>, 
+            <strong className="text-amber-600 dark:text-amber-500"> layanan service profesional</strong> dengan teknisi berpengalaman, 
+            dan <strong className="text-amber-600 dark:text-amber-500">sistem reward</strong> untuk setiap pembelian Anda.
           </p>
-          <div className="flex gap-4 justify-center">
+          
+          <div className="flex flex-wrap gap-3 justify-center mb-8 text-sm md:text-base">
+            <div className="flex items-center gap-2 bg-green-500/10 text-green-700 dark:text-green-400 px-4 py-2 rounded-full border border-green-500/30">
+              ✓ Sparepart Original
+            </div>
+            <div className="flex items-center gap-2 bg-blue-500/10 text-blue-700 dark:text-blue-400 px-4 py-2 rounded-full border border-blue-500/30">
+              ✓ Teknisi Profesional
+            </div>
+            <div className="flex items-center gap-2 bg-purple-500/10 text-purple-700 dark:text-purple-400 px-4 py-2 rounded-full border border-purple-500/30">
+              ✓ Garansi Service
+            </div>
+            <div className="flex items-center gap-2 bg-amber-500/10 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-full border border-amber-500/30">
+              ✓ Sistem Reward
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/client/produk">
-              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white">
+              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl transition-all w-full sm:w-auto">
+                <ShoppingCart className="mr-2 h-5 w-5" />
                 Belanja Sekarang <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="/client/booking">
-              <Button size="lg" variant="outline" className="border-amber-500 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10">
+              <Button size="lg" variant="outline" className="border-2 border-amber-500 text-amber-600 dark:text-amber-500 hover:bg-amber-500/10 shadow-lg hover:shadow-xl transition-all w-full sm:w-auto">
+                <Wrench className="mr-2 h-5 w-5" />
                 Booking Service
               </Button>
             </Link>

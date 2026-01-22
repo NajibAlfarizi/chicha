@@ -120,17 +120,11 @@ export default function AdminDashboard() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold bg-linear-to-r from-amber-600 via-orange-600 to-amber-700 dark:from-amber-400 dark:via-orange-400 dark:to-amber-500 bg-clip-text text-transparent">
-              Dashboard Overview
-            </h2>
-            <p className="text-muted-foreground mt-1">Welcome back! Here&apos;s what&apos;s happening today.</p>
-          </div>
-          <Button className="bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Generate Report
-          </Button>
+        <div>
+          <h2 className="text-3xl font-bold bg-linear-to-r from-amber-600 via-orange-600 to-amber-700 dark:from-amber-400 dark:via-orange-400 dark:to-amber-500 bg-clip-text text-transparent">
+            Dashboard Overview
+          </h2>
+          <p className="text-muted-foreground mt-1">Welcome back! Here&apos;s what&apos;s happening today.</p>
         </div>
 
         {loading ? (

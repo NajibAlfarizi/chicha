@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -99,9 +100,13 @@ function RegisterForm() {
             <div className="backdrop-blur-xl bg-white/80 rounded-3xl shadow-2xl border border-white/60 p-6 lg:p-8">
               {/* Mobile Logo */}
               <div className="lg:hidden flex justify-center mb-3">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg">
-                  <Smartphone className="h-6 w-6 text-white" />
-                </div>
+                <Image 
+                  src="/logo-chicha.jpg" 
+                  alt="Chicha Mobile Logo" 
+                  width={56} 
+                  height={56} 
+                  className="rounded-full shadow-lg object-cover"
+                />
               </div>
 
               {/* Header */}
@@ -226,14 +231,23 @@ function RegisterForm() {
           <div className="max-w-md space-y-6">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full blur-3xl opacity-20 animate-pulse" />
-              <div className="relative h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-2xl">
-                <ShoppingBag className="h-12 w-12 text-white" />
+              <div className="relative mx-auto">
+                <Image 
+                  src="/logo-chicha.jpg" 
+                  alt="Chicha Mobile Logo" 
+                  width={128} 
+                  height={128} 
+                  className="rounded-full shadow-2xl border-4 border-orange-500/30 object-cover mx-auto"
+                />
               </div>
             </div>
             <div className="text-center space-y-2">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Bergabung Sekarang!
+              <h1 className="text-3xl font-bold text-orange-600">
+                Chicha Mobile
               </h1>
+              <h2 className="text-2xl font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                Bergabung Sekarang!
+              </h2>
               <p className="text-base text-gray-600">
                 Dapatkan akses ke produk berkualitas dan layanan service terbaik
               </p>

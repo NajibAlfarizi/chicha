@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -99,8 +100,14 @@ function LoginForm() {
           <div className="max-w-md space-y-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full blur-3xl opacity-20 animate-pulse" />
-              <div className="relative h-32 w-32 mx-auto rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-2xl">
-                <Smartphone className="h-16 w-16 text-white" />
+              <div className="relative mx-auto">
+                <Image 
+                  src="/logo-chicha.jpg" 
+                  alt="Chicha Mobile Logo" 
+                  width={160} 
+                  height={160} 
+                  className="rounded-full shadow-2xl border-4 border-amber-500/30 object-cover mx-auto"
+                />
               </div>
             </div>
             <div className="text-center space-y-4">
@@ -131,9 +138,13 @@ function LoginForm() {
             <div className="backdrop-blur-xl bg-white/80 rounded-3xl shadow-2xl border border-white/60 p-8 lg:p-10">
               {/* Mobile Logo */}
               <div className="lg:hidden flex justify-center mb-6">
-                <div className="h-16 w-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
-                  <Smartphone className="h-8 w-8 text-white" />
-                </div>
+                <Image 
+                  src="/logo-chicha.jpg" 
+                  alt="Chicha Mobile Logo" 
+                  width={64} 
+                  height={64} 
+                  className="rounded-full shadow-lg object-cover"
+                />
               </div>
 
               {/* Header */}

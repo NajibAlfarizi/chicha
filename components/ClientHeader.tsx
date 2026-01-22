@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShoppingCart, User, Search, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,9 +18,18 @@ export function ClientHeader() {
     <header className="border-b bg-background sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-amber-600 dark:text-amber-500">
-            Chicha Mobile
+          {/* Logo with Image */}
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <Image 
+              src="/logo-chicha.jpg" 
+              alt="Chicha Mobile Logo" 
+              width={45} 
+              height={45} 
+              className="rounded-full object-cover"
+            />
+            <span className="text-xl font-bold text-amber-600 dark:text-amber-500 hidden sm:inline">
+              Chicha Mobile
+            </span>
           </Link>
 
           {/* Search Bar - Desktop */}

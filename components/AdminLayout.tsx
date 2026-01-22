@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +52,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<typeof menuItems>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated and is admin
@@ -94,6 +98,45 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    
+    if (query.trim() === '') {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    // Filter menu items based on search query
+    const filtered = menuItems.filter(item => 
+      item.label.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    setSearchResults(filtered);
+    setShowSearchResults(true);
+  };
+
+  // Navigate to selected menu
+  const handleSelectMenu = (href: string) => {
+    router.push(href);
+    setSearchQuery('');
+    setShowSearchResults(false);
+  };
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.search-container')) {
+        setShowSearchResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-amber-50/30 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Modern Header with Glassmorphism */}
@@ -113,10 +156,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </Button>
               
               {/* Logo */}
-              <Link href="/admin/dashboard" className="flex items-center gap-3 group">
-                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-amber-500 via-amber-600 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:shadow-amber-500/50 transition-all group-hover:scale-105">
-                  <Zap className="h-5 w-5 text-white" />
-                </div>
+              <Link href="/admin/dashboard" className="flex items-center gap-3 group hover:opacity-80 transition-opacity">
+                <Image 
+                  src="/logo-chicha.jpg" 
+                  alt="Chicha Mobile Logo" 
+                  width={40} 
+                  height={40} 
+                  className="rounded-full object-cover shadow-lg"
+                />
                 <div className="hidden sm:block">
                   <h1 className="text-lg font-bold bg-linear-to-r from-amber-600 via-orange-600 to-amber-700 dark:from-amber-400 dark:via-orange-400 dark:to-amber-500 bg-clip-text text-transparent">
                     CHICHA ADMIN
@@ -127,13 +174,54 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
 
             {/* Center - Search Bar (Desktop) */}
-            <div className="hidden md:flex flex-1 max-w-md mx-4">
+            <div className="hidden md:flex flex-1 max-w-md mx-4 search-container">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search anything..."
+                  placeholder="Search menu..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onFocus={() => searchQuery && setShowSearchResults(true)}
                   className="pl-10 bg-white/50 dark:bg-slate-800/50 border-amber-200/50 dark:border-amber-900/30 focus:border-amber-500 dark:focus:border-amber-500"
                 />
+                
+                {/* Search Results Dropdown */}
+                {showSearchResults && searchResults.length > 0 && (
+                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border border-amber-200/50 dark:border-amber-900/30 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                    <div className="p-2">
+                      <p className="text-xs text-muted-foreground px-3 py-2">
+                        Ditemukan {searchResults.length} hasil
+                      </p>
+                      {searchResults.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.href}
+                            onClick={() => handleSelectMenu(item.href)}
+                            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors text-left"
+                          >
+                            <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                              <Icon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{item.label}</p>
+                              <p className="text-xs text-muted-foreground">{item.href}</p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* No Results */}
+                {showSearchResults && searchQuery && searchResults.length === 0 && (
+                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border border-amber-200/50 dark:border-amber-900/30 rounded-lg shadow-lg z-50 p-4">
+                    <p className="text-sm text-muted-foreground text-center">
+                      Tidak ada hasil untuk &quot;{searchQuery}&quot;
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -66,14 +67,23 @@ export default function TeknisiLoginPage() {
           <div className="max-w-md space-y-6">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse" />
-              <div className="relative h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-2xl">
-                <Wrench className="h-12 w-12 text-white" />
+              <div className="relative mx-auto">
+                <Image 
+                  src="/logo-chicha.jpg" 
+                  alt="Chicha Mobile Logo" 
+                  width={128} 
+                  height={128} 
+                  className="rounded-full shadow-2xl border-4 border-blue-500/30 object-cover mx-auto"
+                />
               </div>
             </div>
             <div className="text-center space-y-2">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Panel Teknisi
+              <h1 className="text-3xl font-bold text-blue-600">
+                Chicha Mobile
               </h1>
+              <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Panel Teknisi
+              </h2>
               <p className="text-base text-gray-600">
                 Kelola booking dan layanan service dengan mudah
               </p>
