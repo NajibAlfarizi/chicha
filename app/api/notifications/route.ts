@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, supabaseAdmin } from '@/lib/supabaseClient';
 
 // GET user notifications
 export async function GET(request: NextRequest) {
@@ -12,7 +12,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    let query = supabase
+    console.log('📥 Fetching notifications for user:', userId);
+
+    // Use admin client to bypass RLS
+    let query = supabaseAdmin
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
@@ -25,12 +28,16 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
+      console.error('❌ Error fetching notifications:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ notifications: data }, { status: 200 });
+    console.log('✅ Notifications fetched:', data?.length || 0);
 
-  } catch (_error) {
+    return NextResponse.json({ notifications: data || [] }, { status: 200 });
+
+  } catch (error) {
+    console.error('❌ Server error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -45,7 +52,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Notification ID is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    console.log('📝 Marking notification as read:', notification_id);
+
+    const { data, error } = await supabaseAdmin
       .from('notifications')
       .update({ is_read: true })
       .eq('id', notification_id)
@@ -53,15 +62,19 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
+      console.error('❌ Error marking notification as read:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    console.log('✅ Notification marked as read');
 
     return NextResponse.json({ 
       message: 'Notification marked as read',
       notification: data 
     }, { status: 200 });
 
-  } catch (_error) {
+  } catch (error) {
+    console.error('❌ Server error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -76,21 +89,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabase
+    console.log('📝 Marking all notifications as read for user:', user_id);
+
+    const { error } = await supabaseAdmin
       .from('notifications')
       .update({ is_read: true })
       .eq('user_id', user_id)
       .eq('is_read', false);
 
     if (error) {
+      console.error('❌ Error marking all notifications as read:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    console.log('✅ All notifications marked as read');
 
     return NextResponse.json({ 
       message: 'All notifications marked as read'
     }, { status: 200 });
 
-  } catch (_error) {
+  } catch (error) {
+    console.error('❌ Server error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

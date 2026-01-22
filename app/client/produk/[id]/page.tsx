@@ -473,7 +473,8 @@ export default function ProductDetailPage() {
               ) : (
                 reviews.map((review) => (
                   <Card key={review.id} className="border shadow-sm">
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 space-y-4">
+                      {/* Customer Review */}
                       <div className="flex items-start gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
@@ -503,6 +504,22 @@ export default function ProductDetailPage() {
                           </p>
                         </div>
                       </div>
+
+                      {/* Admin Reply */}
+                      {review.reply && (
+                        <div className="ml-8 pl-4 border-l-2 border-amber-500/30 bg-amber-500/5 p-4 rounded-r-lg">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge className="bg-amber-500/20 text-amber-600 dark:text-amber-500 border-amber-500/30 text-xs">
+                                  Admin Chicha Mobile
+                                </Badge>
+                              </div>
+                              <p className="text-muted-foreground text-sm">{review.reply}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))

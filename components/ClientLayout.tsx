@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
+import { NotificationBell } from './NotificationBell';
 import { ShoppingCart, Package, Wrench, User, Home, LogOut, LogIn, Search } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import MobileDockbar from './MobileDockbar';
@@ -90,6 +91,11 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
             <div className="flex items-center gap-2">
               {/* Theme Toggle */}
               <ThemeToggle />
+
+              {/* Notification Bell - Desktop */}
+              <div className="hidden md:block">
+                <NotificationBell />
+              </div>
 
               {/* Auth Buttons - Desktop */}
               {!isAuthenticated ? (

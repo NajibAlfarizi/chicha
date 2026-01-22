@@ -4,11 +4,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Package, User, ShoppingCart, Grid2x2, Search, X, Bell, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { useNotifications } from '@/lib/useNotifications';
 
 export default function MobileDockbar() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [cartCount, setCartCount] = useState(0);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const { unreadCount } = useNotifications(user?.id);
 
   const isActive = (path: string) => pathname === path;
 
@@ -35,7 +39,7 @@ export default function MobileDockbar() {
   // Menu tambahan yang ada di More menu
   const moreMenuItems = [
     { href: '/client/chat', icon: MessageSquare, label: 'Chat' },
-    { href: '/client/notifications', icon: Bell, label: 'Notifikasi' },
+    { href: '/client/notifications', icon: Bell, label: 'Notifikasi', badge: unreadCount },
     { href: '/client/booking', icon: Package, label: 'Booking' },
     { href: '/client/track', icon: Search, label: 'Track' },
     { href: '/client/akun', icon: User, label: 'Akun' },
@@ -156,7 +160,7 @@ export default function MobileDockbar() {
                       className="flex flex-col items-center gap-2 p-4 rounded-2xl transition-all hover:scale-105 active:scale-95"
                     >
                       <div className={`
-                        w-16 h-16 rounded-2xl flex items-center justify-center
+                        relative w-16 h-16 rounded-2xl flex items-center justify-center
                         transition-all
                         ${active 
                           ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/50' 
@@ -164,6 +168,12 @@ export default function MobileDockbar() {
                         }
                       `}>
                         <Icon className="w-8 h-8" />
+                        {/* Badge for notifications */}
+                        {item.badge && item.badge > 0 && (
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                            {item.badge > 9 ? '9+' : item.badge}
+                          </div>
+                        )}
                       </div>
                       <span className={`text-sm font-medium text-center ${
                         active ? 'text-amber-600 dark:text-amber-500' : 'text-foreground'

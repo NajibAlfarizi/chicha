@@ -20,6 +20,12 @@ export function NotificationBell() {
   const router = useRouter();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(user?.id);
 
+  console.log('🔔 NotificationBell render:', { 
+    user: user?.id, 
+    notificationsCount: notifications.length, 
+    unreadCount 
+  });
+
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
     
