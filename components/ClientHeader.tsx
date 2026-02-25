@@ -10,6 +10,7 @@ import { NotificationBell } from './NotificationBell';
 import { useChatRooms } from '@/lib/useChat';
 import { useAuth } from '@/lib/auth-context';
 
+
 export function ClientHeader() {
   const { user } = useAuth();
   const { totalUnread } = useChatRooms(user?.id, 'customer');

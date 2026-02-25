@@ -59,7 +59,7 @@ export interface VoucherUsage {
 }
 
 // Order Types
-export type OrderStatus = 'pending' | 'dikirim' | 'selesai' | 'dibatalkan';
+export type OrderStatus = 'menunggu pembayaran' | 'pending' | 'dikirim' | 'selesai' | 'dibatalkan';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired';
 
 export interface CustomerInfo {
@@ -90,6 +90,7 @@ export interface Order {
   voucher_code?: string;
   payment_method: string;
   payment_status?: PaymentStatus;
+  payment_expired_at?: string;
   status: OrderStatus;
   created_at: string;
   customer_info?: CustomerInfo;

@@ -243,11 +243,11 @@ export default function CheckoutPage() {
       },
       onClose: function() {
         console.log('❌ Payment popup closed');
-        toast.warning('Pembayaran dibatalkan', {
-          description: 'Anda menutup halaman pembayaran. Pesanan masih tersimpan.',
+        toast.warning('Pembayaran belum diselesaikan', {
+          description: 'Anda dapat melanjutkan pembayaran nanti.',
         });
-        // Redirect to orders page instead of staying on checkout
-        router.push(`/client/akun?tab=orders`);
+        // Redirect to pending payment page
+        router.push(`/client/checkout/pending?order_id=${orderId}`);
       }
     });
   };
@@ -323,13 +323,19 @@ export default function CheckoutPage() {
       if (paymentMethod === 'midtrans') {
         console.log('💳 Step 1: Creating order in database first...');
         
+        // Set payment expiry time (24 hours from now)
+        const paymentExpiredAt = new Date();
+        paymentExpiredAt.setHours(paymentExpiredAt.getHours() + 24);
+        
         // Create order first with pending payment status
         const orderResponse = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...orderData,
+            status: 'menunggu pembayaran',
             payment_status: 'pending',
+            payment_expired_at: paymentExpiredAt.toISOString(),
           }),
         });
 

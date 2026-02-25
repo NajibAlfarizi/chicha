@@ -25,7 +25,9 @@ import {
   LogOut,
   Lock,
   TrendingUp,
-  CheckCircle
+  CheckCircle,
+  CreditCard,
+  AlertCircle
 } from 'lucide-react';
 import { Order, Booking, Target as TargetType } from '@/lib/types';
 import { toast } from 'sonner';
@@ -95,7 +97,21 @@ function AccountContent() {
         const ordersRes = await fetch(`/api/orders?user_id=${user.id}`);
         if (ordersRes.ok) {
           const ordersData = await ordersRes.json();
-          setOrders(ordersData.orders || []);
+          // Sort orders: pending payment first, then by created_at desc
+          const sortedOrders = (ordersData.orders || []).sort((a: Order, b: Order) => {
+            const aPending = a.payment_status === 'pending' || 
+              (a.status === 'menunggu pembayaran' && a.payment_method === 'midtrans');
+            const bPending = b.payment_status === 'pending' || 
+              (b.status === 'menunggu pembayaran' && b.payment_method === 'midtrans');
+            
+            // Pending payments first
+            if (aPending && !bPending) return -1;
+            if (!aPending && bPending) return 1;
+            
+            // Then sort by date
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+          setOrders(sortedOrders);
         }
 
         // Fetch bookings
@@ -288,12 +304,22 @@ function AccountContent() {
 
   const getOrderStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
+      'menunggu pembayaran': 'bg-amber-500/20 text-amber-600 dark:text-amber-500 font-semibold',
       pending: 'bg-yellow-500/20 text-yellow-500',
       dikirim: 'bg-blue-500/20 text-blue-500',
       selesai: 'bg-green-500/20 text-green-500',
       dibatalkan: 'bg-red-500/20 text-red-500',
     };
-    return <Badge className={colors[status]}>{status}</Badge>;
+    
+    const labels: Record<string, string> = {
+      'menunggu pembayaran': 'Menunggu Pembayaran',
+      pending: 'Pending',
+      dikirim: 'Dikirim',
+      selesai: 'Selesai',
+      dibatalkan: 'Dibatalkan',
+    };
+    
+    return <Badge className={colors[status]}>{labels[status] || status}</Badge>;
   };
 
   const getBookingStatusBadge = (status: string) => {
@@ -307,6 +333,44 @@ function AccountContent() {
 
   const getProgressPercentage = (current: number, targetAmount: number) => {
     return Math.min((current / targetAmount) * 100, 100);
+  };
+
+  const isPaymentExpired = (order: Order) => {
+    if (!order.payment_expired_at) {
+      // Fallback: jika tidak ada payment_expired_at, cek apakah sudah lebih dari 24 jam
+      const createdAt = new Date(order.created_at);
+      const now = new Date();
+      const hoursDiff = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+      return hoursDiff > 24;
+    }
+    
+    const expiredAt = new Date(order.payment_expired_at);
+    return new Date() > expiredAt;
+  };
+
+  const getRemainingPaymentTime = (order: Order) => {
+    if (!order.payment_expired_at) {
+      const createdAt = new Date(order.created_at);
+      const expiredAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+      const remaining = expiredAt.getTime() - new Date().getTime();
+      return remaining;
+    }
+    
+    const expiredAt = new Date(order.payment_expired_at);
+    const remaining = expiredAt.getTime() - new Date().getTime();
+    return remaining;
+  };
+
+  const formatRemainingTime = (milliseconds: number) => {
+    if (milliseconds <= 0) return 'Expired';
+    
+    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours} jam ${minutes} menit`;
+    }
+    return `${minutes} menit`;
   };
 
   return (
@@ -493,50 +557,93 @@ function AccountContent() {
                     </div>
                   ) : (
                     <div className="space-y-3 md:space-y-4">
-                      {orders.map((order) => (
-                        <div key={order.id} className="bg-muted/30 rounded-lg p-3 md:p-4 border">
-                          <div className="flex justify-between items-start mb-2 md:mb-3">
-                            <div className="flex-1 min-w-0 pr-2">
-                              <p className="text-muted-foreground text-[10px] md:text-xs">Order ID: {order.id.slice(0, 8)}...</p>
-                              <p className="font-semibold mt-1 text-sm md:text-base">
-                                Rp {order.total_amount.toLocaleString('id-ID')}
-                              </p>
+                      {orders.map((order) => {
+                        const isPendingPayment = order.payment_status === 'pending' || 
+                          (order.status === 'menunggu pembayaran' && order.payment_method === 'midtrans');
+                        const expired = isPendingPayment && isPaymentExpired(order);
+                        const remainingTime = isPendingPayment && !expired ? getRemainingPaymentTime(order) : 0;
+                        
+                        return (
+                          <div 
+                            key={order.id} 
+                            className={`rounded-lg p-3 md:p-4 border ${
+                              isPendingPayment && !expired
+                                ? 'bg-amber-500/10 border-amber-500/50 ring-2 ring-amber-500/30' 
+                                : expired
+                                ? 'bg-red-500/5 border-red-500/30'
+                                : 'bg-muted/30 border'
+                            }`}
+                          >
+                            {isPendingPayment && !expired && (
+                              <div className="mb-3">
+                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500 mb-1">
+                                  <AlertCircle className="h-4 w-4" />
+                                  <span className="text-xs font-semibold">Pembayaran Belum Diselesaikan</span>
+                                </div>
+                                <p className="text-xs text-muted-foreground ml-6">
+                                  Sisa waktu: {formatRemainingTime(remainingTime)}
+                                </p>
+                              </div>
+                            )}
+                            {expired && (
+                              <div className="mb-3 flex items-center gap-2 text-red-600 dark:text-red-500">
+                                <AlertCircle className="h-4 w-4" />
+                                <span className="text-xs font-semibold">Pembayaran Kadaluarsa</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between items-start mb-2 md:mb-3">
+                              <div className="flex-1 min-w-0 pr-2">
+                                <p className="text-muted-foreground text-[10px] md:text-xs">Order ID: {order.id.slice(0, 8)}...</p>
+                                <p className="font-semibold mt-1 text-sm md:text-base">
+                                  Rp {order.total_amount.toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                              {getOrderStatusBadge(expired && isPendingPayment ? 'dibatalkan' : order.status)}
                             </div>
-                            {getOrderStatusBadge(order.status)}
-                          </div>
-                          <div className="flex justify-between items-center text-xs md:text-sm gap-2">
-                            <span className="text-muted-foreground">
-                              {new Date(order.created_at).toLocaleDateString('id-ID', { 
-                                day: 'numeric', 
-                                month: 'short',
-                                year: 'numeric'
-                              })}
-                            </span>
-                            <div className="flex gap-1 md:gap-2">
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="border-green-500 text-green-500 hover:bg-green-500/10 h-7 md:h-8 text-xs px-2"
-                                onClick={() => handleChatOrder(order)}
-                              >
-                                <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="border-amber-500 text-amber-500 hover:bg-amber-500/10 h-7 md:h-8 text-xs px-2 md:px-3"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setShowOrderDetail(true);
-                                }}
-                              >
-                                <Eye className="h-3 w-3 md:h-4 md:w-4 md:mr-1" />
-                                <span className="hidden md:inline">Detail</span>
-                              </Button>
+                            <div className="flex justify-between items-center text-xs md:text-sm gap-2">
+                              <span className="text-muted-foreground">
+                                {new Date(order.created_at).toLocaleDateString('id-ID', { 
+                                  day: 'numeric', 
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </span>
+                              <div className="flex gap-1 md:gap-2 flex-wrap justify-end">
+                                {isPendingPayment && !expired && order.midtrans_order_id && (
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-amber-500 hover:bg-amber-600 text-white h-7 md:h-8 text-xs px-2 md:px-3"
+                                    onClick={() => router.push(`/client/checkout/pending?order_id=${order.id}`)}
+                                  >
+                                    <CreditCard className="h-3 w-3 md:h-4 md:w-4 md:mr-1" />
+                                    <span className="hidden md:inline">Bayar</span>
+                                  </Button>
+                                )}
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="border-green-500 text-green-500 hover:bg-green-500/10 h-7 md:h-8 text-xs px-2"
+                                  onClick={() => handleChatOrder(order)}
+                                >
+                                  <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="border-amber-500 text-amber-500 hover:bg-amber-500/10 h-7 md:h-8 text-xs px-2 md:px-3"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setShowOrderDetail(true);
+                                  }}
+                                >
+                                  <Eye className="h-3 w-3 md:h-4 md:w-4 md:mr-1" />
+                                  <span className="hidden md:inline">Detail</span>
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </CardContent>
@@ -822,6 +929,67 @@ function AccountContent() {
           
           {selectedOrder && (
             <div className="space-y-6">
+              {/* Pending Payment Alert */}
+              {(selectedOrder.payment_status === 'pending' || 
+                (selectedOrder.status === 'menunggu pembayaran' && selectedOrder.payment_method === 'midtrans')) && 
+                selectedOrder.midtrans_order_id && (
+                <>
+                  {!isPaymentExpired(selectedOrder) ? (
+                    <div className="bg-amber-500/10 border-2 border-amber-500/50 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-amber-600 dark:text-amber-500 mb-1">
+                            Pembayaran Belum Diselesaikan
+                          </h4>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Pesanan Anda telah dibuat, silakan selesaikan pembayaran untuk memproses pesanan.
+                          </p>
+                          <p className="text-sm font-semibold text-amber-600 dark:text-amber-500 mb-3">
+                            Sisa waktu: {formatRemainingTime(getRemainingPaymentTime(selectedOrder))}
+                          </p>
+                          <Button
+                            onClick={() => {
+                              setShowOrderDetail(false);
+                              router.push(`/client/checkout/pending?order_id=${selectedOrder.id}`);
+                            }}
+                            className="bg-amber-500 hover:bg-amber-600 text-white"
+                          >
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Lanjutkan Pembayaran
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-red-500/10 border-2 border-red-500/50 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="h-6 w-6 text-red-500 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-red-600 dark:text-red-500 mb-1">
+                            Pembayaran Kadaluarsa
+                          </h4>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Batas waktu pembayaran telah habis. Pesanan ini akan dibatalkan secara otomatis.
+                            Silakan buat pesanan baru jika masih ingin melakukan pembelian.
+                          </p>
+                          <Button
+                            onClick={() => {
+                              setShowOrderDetail(false);
+                              router.push('/client/produk');
+                            }}
+                            variant="outline"
+                            className="border-red-500 text-red-500 hover:bg-red-500/10"
+                          >
+                            Belanja Lagi
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* Timeline Status */}
               <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900/50 dark:to-slate-900/50 rounded-xl p-6 border border-amber-200 dark:border-transparent">
                 <h3 className="font-semibold text-amber-900 dark:text-amber-500 mb-6 flex items-center gap-2">
@@ -837,7 +1005,7 @@ function AccountContent() {
                     {/* Step 1: Pending */}
                     <div className="flex items-start gap-4">
                       <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
-                        ['pending', 'dikirim', 'selesai'].includes(selectedOrder.status)
+                        ['menunggu pembayaran', 'pending', 'dikirim', 'selesai'].includes(selectedOrder.status)
                           ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
                           : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
                       }`}>
@@ -854,8 +1022,9 @@ function AccountContent() {
                             minute: '2-digit'
                           })}
                         </p>
-                        {selectedOrder.status === 'pending' && selectedOrder.payment_status !== 'paid' && (
-                          <Badge className="mt-2 bg-yellow-500 text-white">Menunggu Pembayaran</Badge>
+                        {(selectedOrder.status === 'menunggu pembayaran' || 
+                          (selectedOrder.status === 'pending' && selectedOrder.payment_status !== 'paid')) && (
+                          <Badge className="mt-2 bg-amber-500 text-white">Menunggu Pembayaran</Badge>
                         )}
                       </div>
                     </div>
