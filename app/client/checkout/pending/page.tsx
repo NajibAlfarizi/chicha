@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ClientLayout from '@/components/ClientLayout';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, ShoppingBag, CreditCard, Clock } from 'lucide-react';
 import { Order } from '@/lib/types';
 
-export default function PendingPaymentPage() {
+function PendingPaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams?.get('order_id');
@@ -320,5 +320,20 @@ export default function PendingPaymentPage() {
         </Card>
       </div>
     </ClientLayout>
+  );
+}
+
+export default function PendingPaymentPage() {
+  return (
+    <Suspense fallback={
+      <ClientLayout>
+        <div className="container mx-auto px-4 py-16 text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent"></div>
+          <p className="text-muted-foreground mt-4">Loading...</p>
+        </div>
+      </ClientLayout>
+    }>
+      <PendingPaymentContent />
+    </Suspense>
   );
 }
