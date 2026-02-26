@@ -83,10 +83,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Call logout API to clear cookies
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Logout API error:', error);
+    }
+    
+    // Clear local state and storage
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('cart');
+    
     toast.success('Logout berhasil', {
       description: 'Anda telah keluar dari akun',
     });

@@ -39,10 +39,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ 
+    // Create response with user data
+    const response = NextResponse.json({ 
       message: 'Registration successful',
       user: authData.user 
     }, { status: 201 });
+
+    // Set cookies for new user
+    const cookieOptions = {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    };
+
+    if (authData.user) {
+      // Set user_id cookie (httpOnly for security)
+      response.cookies.set('user_id', authData.user.id, {
+        ...cookieOptions,
+        httpOnly: true,
+      });
+
+      // Set user cookie with role info (readable by middleware)
+      response.cookies.set('user', JSON.stringify({
+        id: authData.user.id,
+        role: 'user',
+        email: authData.user.email,
+      }), {
+        ...cookieOptions,
+        httpOnly: false,
+      });
+    }
+
+    return response;
 
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Registration failed';

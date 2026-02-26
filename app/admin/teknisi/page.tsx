@@ -8,6 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,6 +37,8 @@ export default function AdminTeknisiPage() {
   const [currentTeknisi, setCurrentTeknisi] = useState<TeknisiForm>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [teknisiToDelete, setTeknisiToDelete] = useState<Teknisi | null>(null);
 
   useEffect(() => {
     fetchTeknisi();
@@ -121,8 +133,6 @@ export default function AdminTeknisiPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus teknisi ini?')) return;
-
     try {
       const response = await fetch(`/api/teknisi?id=${id}`, {
         method: 'DELETE',
@@ -137,6 +147,20 @@ export default function AdminTeknisiPage() {
     } catch (error) {
       console.error('Delete error:', error);
       toast.error('Terjadi kesalahan');
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setTeknisiToDelete(null);
+    }
+  };
+
+  const openDeleteDialog = (item: Teknisi) => {
+    setTeknisiToDelete(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (teknisiToDelete) {
+      handleDelete(teknisiToDelete.id);
     }
   };
 
@@ -338,7 +362,7 @@ export default function AdminTeknisiPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDelete(item.id)}
+                              onClick={() => openDeleteDialog(item)}
                               className="border-red-500 text-red-500 hover:bg-red-500/10"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -502,6 +526,27 @@ export default function AdminTeknisiPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tindakan ini tidak dapat dibatalkan. Teknisi <span className="font-semibold text-foreground">{teknisiToDelete?.name}</span> akan dihapus secara permanen dari database.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                Hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

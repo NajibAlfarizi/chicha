@@ -19,6 +19,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +44,8 @@ export default function AdminVoucherPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentVoucher, setCurrentVoucher] = useState<Voucher | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [voucherToDelete, setVoucherToDelete] = useState<Voucher | null>(null);
   
   const [formData, setFormData] = useState({
     code: '',
@@ -137,8 +149,6 @@ export default function AdminVoucherPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus voucher ini?')) return;
-
     try {
       const response = await fetch(`/api/vouchers/${id}`, {
         method: 'DELETE',
@@ -154,6 +164,20 @@ export default function AdminVoucherPage() {
       }
     } catch (error) {
       toast.error('Terjadi kesalahan');
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setVoucherToDelete(null);
+    }
+  };
+
+  const openDeleteDialog = (voucher: Voucher) => {
+    setVoucherToDelete(voucher);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (voucherToDelete) {
+      handleDelete(voucherToDelete.id);
     }
   };
 
@@ -289,7 +313,7 @@ export default function AdminVoucherPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDelete(voucher.id)}
+                              onClick={() => openDeleteDialog(voucher)}
                               className="border-red-500 text-red-500 hover:bg-red-500/10 h-8 w-8 p-0"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -397,7 +421,7 @@ export default function AdminVoucherPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDelete(voucher.id)}
+                        onClick={() => openDeleteDialog(voucher)}
                         className="flex-1 border-red-500 text-red-500 hover:bg-red-500/10"
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
@@ -590,6 +614,27 @@ export default function AdminVoucherPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tindakan ini tidak dapat dibatalkan. Voucher <span className="font-semibold text-foreground">{voucherToDelete?.code}</span> akan dihapus secara permanen dari database.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                Hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

@@ -32,14 +32,30 @@ export async function POST(request: NextRequest) {
       session: data.session,
     }, { status: 200 });
 
-    // Set httpOnly cookie for auth verification
+    // Set cookies for auth verification
     // Expires in 7 days (same as Supabase default)
-    response.cookies.set('user_id', userProfile.id, {
-      httpOnly: true,
+    const cookieOptions = {
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
+    };
+
+    // Set user_id cookie (httpOnly for security)
+    response.cookies.set('user_id', userProfile.id, {
+      ...cookieOptions,
+      httpOnly: true,
+    });
+
+    // Set user cookie with role info (readable by middleware)
+    // Only include necessary info for role checking
+    response.cookies.set('user', JSON.stringify({
+      id: userProfile.id,
+      role: userProfile.role,
+      email: userProfile.email,
+    }), {
+      ...cookieOptions,
+      httpOnly: false, // Middleware needs to read this
     });
 
     return response;

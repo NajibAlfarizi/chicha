@@ -12,8 +12,9 @@ export async function POST() {
     // Create response
     const response = NextResponse.json({ message: 'Logout successful' }, { status: 200 });
 
-    // Delete the user_id cookie
+    // Delete all auth cookies
     response.cookies.delete('user_id');
+    response.cookies.delete('user');
 
     return response;
 

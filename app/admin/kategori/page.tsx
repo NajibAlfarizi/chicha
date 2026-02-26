@@ -21,6 +21,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FolderTree, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Category } from '@/lib/types';
@@ -31,6 +41,8 @@ export default function AdminCategoriesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<Partial<Category>>({});
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -70,8 +82,6 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus kategori ini?')) return;
-
     try {
       const response = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
       if (response.ok) {
@@ -79,6 +89,20 @@ export default function AdminCategoriesPage() {
       }
     } catch (error) {
       console.error('Error deleting category:', error);
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setCategoryToDelete(null);
+    }
+  };
+
+  const openDeleteDialog = (category: Category) => {
+    setCategoryToDelete(category);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (categoryToDelete) {
+      handleDeleteCategory(categoryToDelete.id);
     }
   };
 
@@ -155,7 +179,7 @@ export default function AdminCategoriesPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDeleteCategory(category.id)}
+                            onClick={() => openDeleteDialog(category)}
                             className="border-red-500 text-red-500 hover:bg-red-500/10"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -203,6 +227,27 @@ export default function AdminCategoriesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tindakan ini tidak dapat dibatalkan. Kategori <span className="font-semibold text-foreground">{categoryToDelete?.name}</span> akan dihapus secara permanen dari database.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                Hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

@@ -53,7 +53,17 @@ export function TeknisiAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Call logout API to clear cookies
+    try {
+      await fetch('/api/teknisi/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Teknisi logout API error:', error);
+    }
+    
+    // Clear local state and storage
     setTeknisi(null);
     localStorage.removeItem('teknisi');
     router.push('/teknisi/login');

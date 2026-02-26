@@ -40,10 +40,6 @@ function LoginForm() {
       const data = await response.json();
 
       if (response.ok) {
-        // Debug: Log user data
-        console.log('Login response:', data);
-        console.log('User role:', data.user?.role);
-        
         // Save user data to localStorage & auth context
         localStorage.setItem('user', JSON.stringify(data.user));
         login(data.user);

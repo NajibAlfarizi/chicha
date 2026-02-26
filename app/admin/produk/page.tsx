@@ -23,6 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { Product, Category } from '@/lib/types';
@@ -36,6 +46,8 @@ export default function AdminProductsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({});
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -133,8 +145,6 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus produk ini?')) return;
-
     try {
       const response = await fetch(`/api/products/${id}`, { method: 'DELETE' });
       if (response.ok) {
@@ -153,6 +163,20 @@ export default function AdminProductsPage() {
       toast.error('Terjadi kesalahan', {
         description: 'Tidak dapat menghapus produk.',
       });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setProductToDelete(null);
+    }
+  };
+
+  const openDeleteDialog = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (productToDelete) {
+      handleDeleteProduct(productToDelete.id);
     }
   };
 
@@ -263,7 +287,7 @@ export default function AdminProductsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDeleteProduct(product.id)}
+                            onClick={() => openDeleteDialog(product)}
                             className="border-red-500 text-red-500 hover:bg-red-500/10"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -413,6 +437,27 @@ export default function AdminProductsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tindakan ini tidak dapat dibatalkan. Produk <span className="font-semibold text-foreground">{productToDelete?.name}</span> akan dihapus secara permanen dari database.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                Hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
