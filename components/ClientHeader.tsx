@@ -7,13 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
-import { useChatRooms } from '@/lib/useChat';
+// DISABLED: Chat feature temporarily disabled
+// import { useChatRooms } from '@/lib/useChat';
 import { useAuth } from '@/lib/auth-context';
 
 
 export function ClientHeader() {
   const { user } = useAuth();
-  const { totalUnread } = useChatRooms(user?.id, 'customer');
+  // DISABLED: Chat feature temporarily disabled
+  // const { totalUnread } = useChatRooms(user?.id, 'customer');
 
   return (
     <header className="border-b bg-background sticky top-0 z-50 shadow-sm">
@@ -58,7 +60,8 @@ export function ClientHeader() {
             </Link>
             <ThemeToggle />
             <NotificationBell />
-            <Link href="/client/chat">
+            {/* DISABLED: Chat feature temporarily disabled */}
+            {/* <Link href="/client/chat">
               <Button variant="ghost" size="icon" className="relative">
                 <MessageSquare className="w-5 h-5" />
                 {totalUnread > 0 && (
@@ -67,7 +70,7 @@ export function ClientHeader() {
                   </div>
                 )}
               </Button>
-            </Link>
+            </Link> */}
             <Link href="/client/keranjang">
               <Button variant="ghost" size="icon">
                 <ShoppingCart className="w-5 h-5" />

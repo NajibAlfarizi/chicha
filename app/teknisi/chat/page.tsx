@@ -1,23 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import TeknisiLayout from '@/components/TeknisiLayout';
-import { ChatList } from '@/components/ChatList';
-import { ChatRoom } from '@/components/ChatRoom';
-import { MessageSquare } from 'lucide-react';
-import { type ChatRoom as ChatRoomType } from '@/lib/useChat';
+import { MessageSquare, AlertCircle } from 'lucide-react';
 
 export default function TeknisiChatPage() {
-  const [selectedRoom, setSelectedRoom] = useState<ChatRoomType | null>(null);
-
-  const handleSelectRoom = (room: ChatRoomType) => {
-    setSelectedRoom(room);
-  };
-
-  const handleBack = () => {
-    setSelectedRoom(null);
-  };
-
   return (
     <TeknisiLayout>
       <div className="space-y-6">
@@ -33,36 +19,23 @@ export default function TeknisiChatPage() {
           </p>
         </div>
 
-        <div className="h-[calc(100vh-16rem)] rounded-xl border border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur shadow-xl overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-3 h-full">
-            {/* Chat List */}
-            <div className="lg:col-span-1 border-r border-amber-200/50 dark:border-amber-900/30">
-              <ChatList
-                onSelectRoom={handleSelectRoom}
-                onCreateRoom={() => {}}
-                selectedRoomId={selectedRoom?.id}
-                userType="teknisi"
-              />
+        <div className="h-[calc(100vh-16rem)] rounded-xl border border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur shadow-xl overflow-hidden flex items-center justify-center">
+          <div className="text-center p-8 max-w-md">
+            <div className="relative inline-block mb-6">
+              <MessageSquare className="h-24 w-24 text-muted-foreground" />
+              <div className="absolute -top-2 -right-2 bg-amber-500 rounded-full p-2">
+                <AlertCircle className="h-6 w-6 text-white" />
+              </div>
             </div>
-
-            {/* Chat Room */}
-            <div className="lg:col-span-2">
-              {selectedRoom ? (
-                <ChatRoom room={selectedRoom} onBack={handleBack} />
-              ) : (
-                <div className="h-full flex items-center justify-center bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10">
-                  <div className="text-center p-8">
-                    <div className="h-24 w-24 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mx-auto mb-6">
-                      <MessageSquare className="h-12 w-12 text-amber-500" />
-                    </div>
-                    <h3 className="text-xl font-bold mb-2">Pilih Chat</h3>
-                    <p className="text-muted-foreground">
-                      Pilih percakapan dari daftar untuk chat dengan customer
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <h3 className="text-2xl font-bold mb-3 text-amber-600 dark:text-amber-500">
+              Fitur Chat Dinonaktifkan Sementara
+            </h3>
+            <p className="text-muted-foreground mb-2">
+              Fitur chat teknisi sedang dalam pemeliharaan sistem dan akan diaktifkan kembali dalam waktu dekat.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Untuk komunikasi dengan customer, silakan koordinasi melalui admin.
+            </p>
           </div>
         </div>
       </div>

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "check-midtrans": "node scripts/check-midtrans-setup.js"
+    "check-midtrans": "node scripts/check-midtrans-setup.js",
+    "cleanup-expired": "node scripts/cleanup-expired-orders.js"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.15",

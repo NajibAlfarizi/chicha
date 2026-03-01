@@ -1,0 +1,402 @@
+@startuml System Integration Flowchart - Chicha Mobile
+
+title Flowchart Integrasi Sistem - Chicha Mobile (All Roles)
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  BackgroundColor Lavender
+  BorderColor Purple
+  StartColor Gold
+  EndColor Crimson
+}
+
+|#LightBlue|Client|
+|#LightCyan|System|
+|#LightGreen|Admin|
+|#LightSalmon|Teknisi|
+
+start
+
+partition "Authentication Flow" {
+  |Client|
+  :Open Landing Page;
+  
+  if (Authenticated?) then (tidak)
+    :Login/Register;
+    note right
+      **Register:**
+      - Name, Email, Password
+      - Role: customer (default)
+      - Auto-create target
+      
+      **Login:**
+      - Email + Password
+      - Validate credentials
+      - Check role
+    end note
+    
+    |System|
+    :Validate Credentials;
+    :Create Session;
+    :Generate Auth Token;
+    
+    if (Role?) then (customer)
+      |Client|
+      :Redirect to Client Dashboard;
+    else if (admin)
+      |Admin|
+      :Redirect to Admin Dashboard;
+    else (teknisi)
+      |Teknisi|
+      :Redirect to Teknisi Dashboard;
+    endif
+  else (ya)
+    :Load Dashboard by Role;
+  endif
+}
+
+partition "E-Commerce Flow (Client ↔ Admin)" {
+  |Client|
+  :Browse Products;
+  :Add to Cart;
+  :Checkout;
+  
+  |System|
+  :Validate Cart Items;
+  :Check Stock;
+  :Apply Voucher (optional);
+  :Calculate Total;
+  
+  if (Payment Method?) then (Midtrans)
+    |System|
+    :Create Midtrans Transaction;
+    :Get Payment Token;
+    
+    |Client|
+    :Snap Payment Page;
+    :Select Payment Method;
+    :Complete Payment;
+    
+    |System|
+    :Midtrans Webhook;
+    :Update Payment Status;
+    
+    if (Payment Success?) then (ya)
+      :payment_status = paid;
+      :Update Stock (-);
+      :Update Target Progress;
+      :Send Notification;
+      
+      |Client|
+      :Success Page;
+    else (tidak)
+      :payment_status = pending;
+      :Set payment_expired_at;
+      
+      |Client|
+      :Pending Payment Page;
+      :Show Countdown;
+      
+      |System|
+      if (Expired?) then (ya)
+        :Auto-Cancel Order;
+        :payment_status = expired;
+        :status = dibatalkan;
+        :Restore Stock (+);
+        :Send Notification;
+      endif
+    endif
+  else (COD)
+    |System|
+    :Create Order;
+    :status = pending;
+    :payment_status = pending;
+    :Update Stock (-);
+    
+    |Client|
+    :Success Page;
+  endif
+  
+  |Admin|
+  :Monitor Orders;
+  :View Order Detail;
+  
+  fork
+    :Update Order Status;
+    note right
+      - pending → dikirim → selesai
+    end note
+    
+    |System|
+    :Send Notification to Client;
+    
+    |Client|
+    :Receive Notification;
+    :View Order Status;
+  fork again
+    |Admin|
+    :Cancel Order (if needed);
+    :Input Cancel Reason;
+    
+    |System|
+    :Restore Stock (+);
+    :Update Status;
+    :Send Notification;
+  end fork
+}
+
+partition "Service Booking Flow (Client → Admin → Teknisi)" {
+  |Client|
+  :Create Booking;
+  note right
+    - Device name
+    - Issue description
+    - Booking date
+    - Select teknisi (optional)
+  end note
+  
+  |System|
+  :Validate Booking;
+  :Generate Service Code;
+  :Create Booking Record;
+  
+  if (Teknisi Selected?) then (ya)
+    :Assign to Selected Teknisi;
+  else (tidak - Auto Assign)
+    :Auto-Assign to Available Teknisi;
+  endif
+  
+  :Send Notification;
+  
+  |Admin|
+  :View New Booking;
+  :Can Re-assign Teknisi;
+  
+  |Teknisi|
+  :Receive Notification;
+  :View Booking Detail;
+  
+  repeat
+    :Update Service Progress;
+    note right
+      **Progress Status:**
+      - pending
+      - diagnosed
+      - waiting_parts
+      - in_progress
+      - completed
+      
+      **Update Info:**
+      - Progress notes
+      - Estimated completion
+    end note
+    
+    |System|
+    :Save Progress Update;
+    :Create Notification;
+    
+    |Client|
+    :Receive Progress Notification;
+    :Track Service Progress;
+  repeat while (Service Completed?) is (tidak)
+  
+  |Teknisi|
+  :Mark as Completed;
+  :Set completed_at;
+  
+  |System|
+  :Update Booking Status;
+  :Send Completion Notification;
+  
+  |Client|
+  :View Completed Service;
+  :Can Chat for Follow-up;
+}
+
+partition "Chat System Flow" {
+  |Client|
+  :Initiate Chat;
+  
+  if (Chat Type?) then (Order)
+    :Create Order Chat Room;
+    |System|
+    :Connect Client ↔ Admin;
+  else (Booking)
+    :Create Booking Chat Room;
+    |System|
+    :Connect Client ↔ Teknisi;
+  endif
+  
+  fork
+    |Client|
+    :Send Message;
+  fork again
+    |Admin|
+    :Send Reply;
+  fork again
+    |Teknisi|
+    :Send Reply;
+  end fork
+  
+  |System|
+  :Real-time Sync;
+  :Store Messages;
+  :Update Unread Count;
+  :Send Notification (if offline);
+}
+
+partition "Voucher & Target System" {
+  |Admin|
+  :Create Voucher;
+  note right
+    **Manual Voucher:**
+    - Set by admin
+    - For promotions
+    
+    **Auto-Generated:**
+    - From target achievement
+  end note
+  
+  |System|
+  :Save Voucher;
+  :Set Validity Period;
+  
+  |Client|
+  :View Available Vouchers;
+  :Apply Voucher at Checkout;
+  
+  |System|
+  :Validate Voucher;
+  note right
+    **Validasi:**
+    - Is active?
+    - Valid date?
+    - Quota available?
+    - Min purchase met?
+    - Not used by user?
+  end note
+  
+  :Calculate Discount;
+  :Reduce Quota;
+  :Mark as Used;
+  
+  partition "Target Achievement" {
+    |System|
+    :Monitor Order Payments;
+    
+    if (Payment Status = paid?) then (ya)
+      :Update Target Progress;
+      :current_amount += order amount;
+      
+      if (current_amount >= target_amount?) then (ya)
+        :Mark Target as Achieved;
+        :Auto-Generate Reward Voucher;
+        :Send Achievement Notification;
+        
+        |Client|
+        :View Achievement;
+        :Claim Reward;
+        :Receive Voucher;
+      endif
+    endif
+  }
+}
+
+partition "Notification System" {
+  |System|
+  :Event Triggered;
+  note right
+    **Events:**
+    - Order created
+    - Payment status change
+    - Order status change
+    - Booking created
+    - Booking assigned
+    - Progress updated
+    - Service completed
+    - Target achieved
+    - Voucher generated
+    - New chat message
+  end note
+  
+  :Create Notification Record;
+  :Set Type & Related ID;
+  
+  fork
+    |Client|
+    :Receive Notification;
+  fork again
+    |Admin|
+    :Receive Notification;
+  fork again
+    |Teknisi|
+    :Receive Notification;
+  end fork
+  
+  :Click Notification;
+  |System|
+  :Mark as Read;
+  :Redirect to Related Page;
+}
+
+partition "Auto-Cleanup System" {
+  |System|
+  :Scheduled Check;
+  note right
+    **Triggers:**
+    - Admin loads orders page
+    - Client loads orders
+    - Manual cleanup button
+    - Scheduled cron job
+  end note
+  
+  :Scan Pending Orders;
+  :Check payment_expired_at;
+  
+  if (Expired > 24 hours?) then (ya)
+    repeat
+      :Auto-Cancel Order;
+      :payment_status = expired;
+      :status = dibatalkan;
+      :Restore Product Stock;
+      :Set cancel_reason;
+      :Set cancelled_at;
+    repeat while (More expired orders?)
+    
+    :Send Notifications;
+    :Log Cleanup Result;
+  endif
+}
+
+|Client|
+:View Updated Status;
+
+|Admin|
+:Monitor All Activities;
+
+|Teknisi|
+:Complete Services;
+
+stop
+
+note bottom
+  **System Integration Summary:**
+  
+  1. **Authentication:** Role-based access control
+  2. **E-Commerce:** Client orders → Admin manages → Payment gateway
+  3. **Service Booking:** Client books → Admin assigns → Teknisi handles
+  4. **Chat:** Real-time communication between roles
+  5. **Notifications:** Event-driven notification system
+  6. **Vouchers & Targets:** CRM & loyalty system
+  7. **Auto-Cleanup:** Background process untuk data integrity
+  
+  **Key Integrations:**
+  - Midtrans Payment Gateway
+  - Supabase Database & Auth
+  - Real-time Chat System
+  - Notification System
+  - Auto-Cancel Expired Orders
+  - Target & Reward System
+end note
+
+@enduml

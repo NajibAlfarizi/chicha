@@ -1,0 +1,488 @@
+@startuml Admin Flowchart - Chicha Mobile
+
+title Flowchart Sistem Admin - Chicha Mobile
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+  StartColor Gold
+  EndColor Crimson
+  BarColor SaddleBrown
+  DiamondBackgroundColor Wheat
+  DiamondBorderColor Chocolate
+}
+
+|Admin|
+start
+
+:Login Admin;
+note right
+  - Username/Email + Password
+  - Role: admin
+  - Redirect sesuai role
+end note
+
+:Dashboard Admin;
+note right
+  **Statistics:**
+  - Total Users
+  - Total Orders
+  - Total Bookings
+  - Total Revenue
+  - Pending Orders
+  - Active Bookings
+  - Charts & Graphs
+end note
+
+partition "Manajemen Produk" {
+  :Halaman Produk;
+  note right
+    - List semua produk
+    - Search produk
+    - Filter by kategori
+  end note
+  
+  fork
+    :Tambah Produk;
+    note right
+      **Form Input:**
+      - Nama produk
+      - Kategori
+      - Harga
+      - Stok
+      - Image URL
+      - Deskripsi
+      
+      **Validation:**
+      - Nama wajib diisi
+      - Kategori wajib dipilih
+      - Harga > 0
+    end note
+    
+    :Create Product;
+    :Notifikasi Success;
+  fork again
+    :Edit Produk;
+    note right
+      - Load data produk
+      - Update fields
+      - Validation sama
+    end note
+    
+    :Update Product;
+    :Notifikasi Success;
+  fork again
+    :Hapus Produk;
+    note right
+      **Konfirmasi Dialog:**
+      - Tampilkan nama produk
+      - Warning tidak bisa undo
+      - Button Cancel/Hapus
+    end note
+    
+    if (Konfirmasi?) then (ya)
+      :Delete Product;
+      :Notifikasi Success;
+    else (tidak)
+      :Batal Hapus;
+    endif
+  end fork
+}
+
+partition "Manajemen Kategori" {
+  :Halaman Kategori;
+  note right
+    - List semua kategori
+    - Total kategori
+  end note
+  
+  fork
+    :Tambah Kategori;
+    note right
+      **Form Input:**
+      - Nama kategori
+    end note
+    
+    :Create Category;
+    :Notifikasi Success;
+  fork again
+    :Edit Kategori;
+    :Update Category;
+    :Notifikasi Success;
+  fork again
+    :Hapus Kategori;
+    note right
+      **Konfirmasi Dialog:**
+      - Tampilkan nama kategori
+      - Warning tidak bisa undo
+    end note
+    
+    if (Konfirmasi?) then (ya)
+      :Delete Category;
+      :Notifikasi Success;
+    else (tidak)
+      :Batal Hapus;
+    endif
+  end fork
+}
+
+partition "Manajemen Pesanan" {
+  :Halaman Pesanan;
+  note right
+    - List semua orders
+    - Filter status
+    - Total pesanan
+    - Tombol "Bersihkan Expired"
+  end note
+  
+  :Auto-Scan Expired Orders;
+  note right
+    **Auto Process:**
+    - Saat load halaman
+    - Cek pending orders
+    - payment_expired_at
+    - Auto-cancel jika expired
+    - Restore stok produk
+    - Update status
+  end note
+  
+  if (Klik Bersihkan Expired?) then (ya)
+    :Trigger Manual Cleanup;
+    note right
+      **Cleanup All:**
+      - Scan ALL expired orders
+      - Batch cancel
+      - Restore stok
+      - Show summary
+      - Refresh list
+    end note
+    
+    :Notifikasi Cleanup Result;
+  endif
+  
+  :Lihat Detail Order;
+  note right
+    **Detail Tampilan:**
+    - Customer info
+    - Order items dengan gambar
+    - Voucher used (jika ada)
+    - Discount amount
+    - Payment method
+    - Order status
+    - Payment status
+    - Total amount
+    - Cancel reason (jika dibatalkan)
+    - Cancelled_at timestamp
+  end note
+  
+  :Update Status Order;
+  note right
+    **Status Options:**
+    - Pending
+    - Dikirim
+    - Selesai
+    - Batalkan (with reason)
+    
+    **Saat Batalkan:**
+    - Input alasan wajib
+    - Restore stok produk
+    - Set cancelled_at
+  end note
+  
+  :Notifikasi ke Customer;
+}
+
+partition "Manajemen Booking Service" {
+  :Halaman Booking;
+  note right
+    - List semua bookings
+    - Filter status
+    - Total booking
+  end note
+  
+  :Lihat Detail Booking;
+  note right
+    **Detail Tampilan:**
+    - Customer info
+    - Device info
+    - Issue description
+    - Booking date
+    - Service code
+    - Status
+    - Progress status
+    - Progress notes
+    - Estimated completion
+    - Teknisi assigned
+  end note
+  
+  fork
+    :Assign Teknisi;
+    note right
+      - List teknisi aktif
+      - Select teknisi
+      - Update booking
+    end note
+    
+    :Notifikasi ke Teknisi;
+  fork again
+    :Update Status Booking;
+    note right
+      **Status Options:**
+      - Pending
+      - Sedang Dikerjakan
+      - Selesai
+      - Dibatalkan
+    end note
+    
+    :Notifikasi ke Customer;
+  end fork
+}
+
+partition "Manajemen Teknisi" {
+  :Halaman Teknisi;
+  note right
+    - List semua teknisi
+    - Filter status (active/inactive)
+    - Search teknisi
+    - Statistics
+  end note
+  
+  fork
+    :Tambah Teknisi;
+    note right
+      **Form Input:**
+      - Nama
+      - Username (unique)
+      - Password
+      - Email
+      - Phone
+      - Specialization
+      - Status (active/inactive)
+      
+      **System Action:**
+      - Create user di table users
+      - role: teknisi
+      - Create teknisi record
+      - Sync teknisi_id ke users
+    end note
+    
+    :Create Teknisi;
+    :Notifikasi Success;
+  fork again
+    :Edit Teknisi;
+    note right
+      - Update info teknisi
+      - Update password (optional)
+      - Update status
+    end note
+    
+    :Update Teknisi;
+    :Notifikasi Success;
+  fork again
+    :Hapus Teknisi;
+    note right
+      **Konfirmasi Dialog:**
+      - Tampilkan nama teknisi
+      - Warning tidak bisa undo
+    end note
+    
+    if (Konfirmasi?) then (ya)
+      :Delete Teknisi;
+      note right
+        - Delete from teknisi table
+        - Delete from users table
+      end note
+      :Notifikasi Success;
+    else (tidak)
+      :Batal Hapus;
+    endif
+  end fork
+}
+
+partition "Manajemen Voucher" {
+  :Halaman Voucher;
+  note right
+    - List semua vouchers
+    - Filter by tipe
+    - Active/Inactive status
+  end note
+  
+  fork
+    :Tambah Voucher;
+    note right
+      **Form Input:**
+      - Code (unique)
+      - Name
+      - Description
+      - Type (percentage/fixed)
+      - Value (% atau Rp)
+      - Min purchase
+      - Max discount (optional)
+      - Quota
+      - Valid from
+      - Valid until
+      - Is active
+      
+      **Validation:**
+      - Code unique
+      - Value sesuai type
+      - Date range valid
+    end note
+    
+    :Create Voucher;
+    :Notifikasi Success;
+  fork again
+    :Edit Voucher;
+    :Update Voucher;
+    :Notifikasi Success;
+  fork again
+    :Hapus Voucher;
+    note right
+      **Konfirmasi Dialog:**
+      - Tampilkan kode voucher
+      - Warning tidak bisa undo
+    end note
+    
+    if (Konfirmasi?) then (ya)
+      :Delete Voucher;
+      :Notifikasi Success;
+    else (tidak)
+      :Batal Hapus;
+    endif
+  end fork
+}
+
+partition "Manajemen Target" {
+  :Halaman Target;
+  note right
+    - List all user targets
+    - Filter status
+    - Statistics
+  end note
+  
+  :Lihat Detail Target;
+  note right
+    **Info Target:**
+    - User info
+    - Target amount
+    - Current amount
+    - Progress percentage
+    - Status (active/achieved)
+    - Rewards claimed
+  end note
+  
+  fork
+    :Set/Update Target;
+    note right
+      - Input target amount
+      - Set deadline (optional)
+      - Update target
+    end note
+  fork again
+    :Monitor Progress;
+    note right
+      **Auto Update:**
+      - Saat order paid
+      - Calculate total spending
+      - Update current_amount
+      - Check if achieved
+      - Auto-claim reward
+    end note
+  end fork
+}
+
+partition "Manajemen Keluhan (Complaints)" {
+  :Halaman Keluhan;
+  note right
+    **List Complaints:**
+    - All customer complaints
+    - Filter by status
+    - Total complaints count
+    - Search functionality
+  end note
+  
+  :Lihat Detail Keluhan;
+  note right
+    **Info Keluhan:**
+    - User info
+    - Subject
+    - Message content
+    - Status (belum dibaca/dibaca/dibalas)
+    - Created at
+    - Reply (if any)
+  end note
+  
+  fork
+    :Mark as Read;
+    note right
+      - Update status to "dibaca"
+      - Timestamp update
+    end note
+    
+    :Notifikasi Success;
+  fork again
+    :Reply to Complaint;
+    note right
+      **Reply Form:**
+      - Text area for reply
+      - Update status to "dibalas"
+      - Send notification to user
+      
+      **System Action:**
+      - Save reply text
+      - Set status = dibalas
+      - Create notification
+      - Update timestamp
+    end note
+    
+    :Save Reply;
+    :Notifikasi Customer;
+    :Notifikasi Success;
+  end fork
+}
+
+partition "Chat Management" {
+  :Monitor Chat Rooms;
+  note right
+    - View all chat rooms
+    - Order chats
+    - Booking chats
+    - Admin can join any room
+  end note
+  
+  :Reply Messages;
+  :Handle Customer Inquiries;
+}
+
+:Logout Admin;
+
+stop
+
+note bottom
+  **Admin Flow Summary:**
+  
+  **Pages Implemented:**
+  1. /admin/dashboard - Statistics & overview
+  2. /admin/produk - Product CRUD
+  3. /admin/kategori - Category CRUD
+  4. /admin/pesanan - Orders management + cleanup
+  5. /admin/booking - Bookings management
+  6. /admin/teknisi - Teknisi CRUD
+  7. /admin/voucher - Voucher CRUD
+  8. /admin/target - Target monitoring & rewards
+  9. /admin/keluhan - Complaints handling
+  10. /admin/chat - Chat room monitoring
+  11. /admin/user - User management (if exists)
+  
+  **Key Features:**
+  ✅ Confirmation dialogs for delete actions
+  ✅ Auto-cancel expired orders
+  ✅ Manual cleanup button
+  ✅ Real-time notifications
+  ✅ Complaint response system
+  ✅ Target & reward management
+  ✅ Chat monitoring
+end note
+
+@enduml

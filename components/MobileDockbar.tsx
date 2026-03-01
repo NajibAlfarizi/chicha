@@ -38,7 +38,8 @@ export default function MobileDockbar() {
 
   // Menu tambahan yang ada di More menu
   const moreMenuItems = [
-    { href: '/client/chat', icon: MessageSquare, label: 'Chat' },
+    // DISABLED: Chat feature temporarily disabled
+    // { href: '/client/chat', icon: MessageSquare, label: 'Chat' },
     { href: '/client/notifications', icon: Bell, label: 'Notifikasi', badge: unreadCount },
     { href: '/client/booking', icon: Package, label: 'Booking' },
     { href: '/client/track', icon: Search, label: 'Track' },

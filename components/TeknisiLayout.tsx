@@ -36,7 +36,8 @@ export default function TeknisiLayout({ children }: TeknisiLayoutProps) {
   const navigation = [
     { name: 'Dashboard', href: '/teknisi/dashboard', icon: LayoutDashboard },
     { name: 'Services', href: '/teknisi/service', icon: Wrench },
-    { name: 'Chat', href: '/teknisi/chat', icon: MessageSquare },
+    // DISABLED: Chat feature temporarily disabled
+    // { name: 'Chat', href: '/teknisi/chat', icon: MessageSquare },
   ];
 
   return (

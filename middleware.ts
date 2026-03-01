@@ -62,8 +62,9 @@ export async function middleware(request: NextRequest) {
   } else if (pathname.startsWith('/client/checkout') || 
              pathname.startsWith('/client/booking') || 
              pathname.startsWith('/client/progress') ||
-             pathname.startsWith('/client/akun') ||
-             pathname.startsWith('/client/chat')) {
+             pathname.startsWith('/client/akun')) {
+             // DISABLED: Chat feature temporarily disabled
+             // pathname.startsWith('/client/chat')) {
     // Protected client routes - only authenticated clients can access
     if (userRole !== 'client' && userRole !== 'user') {
       return NextResponse.redirect(new URL('/auth/login?redirect=' + pathname, request.url));

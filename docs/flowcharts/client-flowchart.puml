@@ -1,0 +1,493 @@
+@startuml Client Flowchart - Chicha Mobile
+
+title Flowchart Sistem Client (Pelanggan) - Chicha Mobile
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  BackgroundColor PaleGreen
+  BorderColor DarkGreen
+  StartColor Gold
+  EndColor Crimson
+  BarColor SaddleBrown
+  DiamondBackgroundColor Wheat
+  DiamondBorderColor Chocolate
+}
+
+|Client|
+start
+
+:Landing Page (Home);
+note right
+  **Page:** / (root)
+  **Access:** Public
+  
+  **Carousel Promo:**
+  - Dynamic voucher slides
+  - Auto-slide setiap 5 detik
+  - Tampilkan voucher code
+  - Static promo slides
+  
+  **Featured Products:**
+  - Show 6 products
+  - Quick view
+  - Add to cart
+  
+  **Services Section:**
+  - Info booking service
+  - CTA button
+  
+  **Footer:**
+  - Company info
+  - Social media
+end note
+
+if (Sudah Login?) then (ya)
+  :Access Full Features;
+else (tidak)
+  :Login / Register;
+  note right
+    **Pages:**
+    - /auth/login
+    - /auth/register
+    - /auth/reset-password
+    
+    **Register:**
+    - Name, Email, Password
+    - Role: customer (default)
+    - Auto-generate user target
+    
+    **Login:**
+    - Email + Password
+    - Validate credentials
+    - Create session
+  end note
+  :Set Auth Session;
+endif
+
+partition "Manajemen Produk" {
+  :Browse Produk;
+  note right
+    **Page:** /client/produk
+    
+    **Features:**
+    - Filter by kategori (dropdown)
+    - Search produk (input)
+    - Sort by harga (coming soon)
+    - Grid display produk
+    - Show: image, name, price, stock
+  end note
+  
+  :Lihat Detail Produk;
+  note right
+    **Page:** /client/produk/[id]
+    
+    - Nama, harga, stok
+    - Gambar produk (carousel)
+    - Deskripsi lengkap
+    - Kategori badge
+    - Quantity selector
+    - Add to cart button
+  end note
+  
+  :Tambah ke Keranjang;
+  note right
+    **Storage:** localStorage
+    
+    - Pilih quantity
+    - Validasi stok
+    - Update cart array
+    - Dispatch cartUpdated event
+    - Toast notification
+    
+    **If exists in cart:**
+    - Increment quantity
+    - Show updated message
+  end note
+  
+  :Lihat Keranjang;
+  note right
+    **Page:** /client/keranjang
+    
+    - List cart items
+    - Show product image
+    - Update quantity (+/-)
+    - Remove item button
+    - Calculate subtotal
+    - Checkout button
+  end note
+  
+  if (Lanjut Checkout?) then (ya)
+    :Proses Checkout;
+    note right
+      **Input Data:**
+      - Customer name
+      - Email
+      - Phone
+      - Address
+      
+      **Voucher:**
+      - Input kode voucher
+      - Atau pilih dari available
+      - Validasi voucher
+      - Hitung diskon
+      
+      **Payment Method:**
+      - COD
+      - Midtrans (Virtual Account,
+        E-Wallet, Credit Card)
+      
+      **Set Payment Expiry:**
+      - 24 jam dari order
+    end note
+    
+    if (Payment Method?) then (Midtrans)
+      :Snap Midtrans;
+      note right
+        - Pilih metode pembayaran
+        - Scan QR / Input VA
+        - Konfirmasi pembayaran
+      end note
+      
+      if (Payment Success?) then (ya)
+        :Payment Paid;
+        :Update Order Status;
+        note right
+          - payment_status: paid
+          - Update stok produk (-)
+          - Create notification
+          - Update target progress
+        end note
+        :Halaman Success;
+      else (tidak)
+        :Payment Pending/Failed;
+        :Redirect ke Pending Payment;
+        note right
+          - Tampilkan countdown
+          - Option lanjutkan bayar
+          - Auto-cancel jika expired
+        end note
+      endif
+    else (COD)
+      :Create Order;
+      note right
+        - status: pending
+        - payment_status: pending
+        - Update stok produk (-)
+      end note
+      :Halaman Success;
+    endif
+    
+    :Notifikasi Order Created;
+  else (tidak)
+    :Kembali ke Dashboard;
+  endif
+}
+
+partition "Booking Service" {
+  :Halaman Booking;
+  note right
+    **Form Input:**
+    - Nama pelanggan
+    - Phone
+    - Device name
+    - Issue/Keluhan
+    - Booking date
+    - Pilih teknisi (optional)
+  end note
+  
+  :Submit Booking;
+  note right
+    - Validasi form
+    - Create booking
+    - status: pending
+    - Assign teknisi (auto/manual)
+    - Generate service code
+  end note
+  
+  :Notifikasi Booking Created;
+  :Redirect ke Riwayat Booking;
+}
+
+partition "Track Service" {
+  :Halaman Track Service;
+  note right
+    **Page:** /client/track
+    
+    **Search by Service Code:**
+    - Input service code
+    - Example: SRV-20251105-A3F9
+    - Cari booking by code
+    - Public access (no login required)
+  end note
+  
+  if (Service Code Found?) then (ya)
+    :Lihat Progress Service;
+    note right
+      **Info Ditampilkan:**
+      - Service code
+      - Device name
+      - Issue description
+      - Customer name
+      - Booking date
+      - Status booking
+      - Progress status
+      - Progress notes (if any)
+      - Estimated completion
+      - Completed_at (if completed)
+      - Teknisi info
+    end note
+  else (tidak)
+    :Error: Booking not found;
+  endif
+}
+
+partition "My Service Progress" {
+  :Halaman Progress (My Bookings);
+  note right
+    **Page:** /client/progress
+    **Requires:** Login
+    
+    **Functionality:**
+    - List all my bookings
+    - Real-time updates via Supabase
+    - View detailed progress
+    - See service timeline
+    - Track multiple bookings
+    
+    **Real-time Features:**
+    - Subscribe to booking updates
+    - Auto-refresh on progress change
+    - Live status updates
+  end note
+  
+  :Select Booking;
+  :View Progress Timeline;
+  note right
+    **Timeline Shows:**
+    - All progress updates
+    - Timestamp each update
+    - Teknisi notes
+    - Status changes
+    - Real-time sync
+  end note
+  
+  if (Ada Update Progress?) then (ya)
+    :Notifikasi Progress Update;
+    :Auto Refresh Timeline;
+  endif
+}
+
+partition "Chat" {
+  :Buka Chat;
+  note right
+    **2 Tipe Chat:**
+    1. Order Chat
+       - Chat dengan admin
+       - Terkait order
+    2. Booking Chat
+       - Chat dengan teknisi
+       - Terkait service
+  end note
+  
+  :List Chat Rooms;
+  :Pilih Room;
+  :Send/Receive Messages;
+  note right
+    - Real-time messaging
+    - Mark as read
+    - Chat history
+  end note
+}
+
+partition "Notifikasi" {
+  :Halaman Notifikasi;
+  note right
+    **Tipe Notifikasi:**
+    - Order Status Update
+    - Payment Update
+    - Booking Update
+    - Service Progress
+    - Target Achievement
+    - Voucher Created
+  end note
+  
+  :Mark as Read;
+  :Mark All as Read;
+  
+  if (Klik Notifikasi?) then (ya)
+    :Redirect ke Halaman Terkait;
+  endif
+}
+
+partition "Manajemen Akun" {
+  :Halaman Akun;
+  note right
+    **Tabs:**
+    1. Profile
+    2. Riwayat Pesanan
+    3. Riwayat Booking
+    4. Target Saya
+  end note
+  
+  fork
+    :Tab Profile;
+    note right
+      **View & Edit:**
+      - Nama
+      - Email
+      - Phone
+      - Address
+      - Total pesanan
+      - Total booking
+    end note
+    
+    :Update Profile;
+  fork again
+    :Tab Riwayat Pesanan;
+    note right
+      **List Orders:**
+      - Filter status
+      - Order ID
+      - Total amount
+      - Payment status
+      - Order status
+      - Payment countdown
+        (jika pending)
+    end note
+    
+    if (Pilih Order?) then (ya)
+      :Lihat Detail Order;
+      note right
+        - Order items
+        - Customer info
+        - Voucher used
+        - Discount
+        - Total
+        - Cancel reason
+          (jika dibatalkan)
+      end note
+      
+      :Chat Order (optional);
+    endif
+    
+    if (Order Selesai?) then (ya)
+      :Berikan Review;
+      note right
+        - Rating produk
+        - Comment
+      end note
+    endif
+  fork again
+    :Tab Riwayat Booking;
+    note right
+      **List Bookings:**
+      - Service code
+      - Device name
+      - Booking date
+      - Status
+      - Teknisi
+    end note
+    
+    if (Pilih Booking?) then (ya)
+      :Track Progress;
+      :Chat Teknisi (optional);
+    endif
+  fork again
+    :Tab Target Saya;
+    note right
+      **View Target:**
+      - Target amount
+      - Current amount
+      - Progress bar
+      - Status (active/achieved)
+      - Rewards list
+    end note
+    
+    if (Target Achieved?) then (ya)
+      :Klaim Reward;
+      note right
+        - Auto-generate voucher
+        - Update target status
+        - Notifikasi voucher
+      end note
+    endif
+  end fork
+  
+  :Logout (optional);
+}
+
+partition "Auto Background Process" {
+  note right
+    **Sistem Otomatis:**
+    
+    1. **Auto-Cancel Expired Orders:**
+       - Cek payment_expired_at
+       - Auto-cancel jika >24 jam
+       - payment_status: expired
+       - status: dibatalkan
+       - Restore stok produk
+    
+    2. **Target Progress Update:**
+       - Update saat payment paid
+       - Calculate current_amount
+       - Check if achieved
+       - Send notification
+    
+    3. **Notification System:**
+       - Create notif otomatis
+       - Update unread count
+       - Real-time update
+  end note
+}
+
+stop
+
+note bottom
+  **Client Flow Summary - Actual Implementation:**
+  
+  **Pages Implemented:**
+  1. / (root) - Landing page with carousel & featured products
+  2. /auth/login - Login page
+  3. /auth/register - Register page
+  4. /auth/reset-password - Reset password
+  5. /client/produk - Browse products with filter & search
+  6. /client/produk/[id] - Product detail page
+  7. /client/keranjang - Shopping cart
+  8. /client/checkout - Checkout with voucher & Midtrans
+  9. /client/checkout/success - Payment success page
+  10. /client/checkout/pending - Payment pending page
+  11. /client/checkout/error - Payment error page
+  12. /client/booking - Create service booking
+  13. /client/track - Track service by code (public)
+  14. /client/progress - My bookings with real-time updates
+  15. /client/chat - Chat rooms (order & booking)
+  16. /client/notifications - Notification center
+  17. /client/akun - Account with 4 tabs:
+      - Profile (edit)
+      - Riwayat Pesanan (orders history)
+      - Riwayat Booking (booking history)
+      - Target Saya (my target & rewards)
+  
+  **Key Features:**
+  ✅ E-commerce with cart & checkout
+  ✅ Midtrans payment integration
+  ✅ Voucher system (manual input & dropdown)
+  ✅ Service booking with teknisi selection
+  ✅ Real-time chat (order & booking)
+  ✅ Real-time progress tracking
+  ✅ Track by service code (public)
+  ✅ Target & reward system
+  ✅ Auto-cancel expired orders
+  ✅ Payment countdown (24 hours)
+  ✅ Notification bell with real-time updates
+  
+  **Components Used:**
+  - ClientLayout (with header, footer, mobile dock)
+  - NotificationBell (real-time)
+  - ChatList & ChatRoom
+  - MobileDockbar (bottom navigation)
+  - Toast notifications (sonner)
+  - Radix UI components
+end note
+
+@enduml

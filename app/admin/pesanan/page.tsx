@@ -22,8 +22,9 @@ import {
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingBag, Eye } from 'lucide-react';
+import { ShoppingBag, Eye, Trash2 } from 'lucide-react';
 import { Order, OrderItem } from '@/lib/types';
+import { toast } from 'sonner';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -33,6 +34,7 @@ export default function AdminOrdersPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -92,6 +94,39 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleCleanupExpired = async () => {
+    if (!confirm('Apakah Anda yakin ingin membatalkan semua pesanan yang sudah melewati batas waktu pembayaran? Stok produk akan dikembalikan otomatis.')) {
+      return;
+    }
+
+    setIsCleaningUp(true);
+    try {
+      const response = await fetch('/api/orders/cleanup-expired', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Cleanup berhasil!', {
+          description: `${data.cancelled} pesanan expired telah dibatalkan dan stok dikembalikan.`,
+        });
+        fetchOrders(); // Refresh list
+      } else {
+        toast.error('Cleanup gagal', {
+          description: data.error || 'Terjadi kesalahan saat cleanup.',
+        });
+      }
+    } catch (error) {
+      console.error('Error cleaning up expired orders:', error);
+      toast.error('Terjadi kesalahan', {
+        description: 'Tidak dapat terhubung ke server.',
+      });
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
       pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50',
@@ -119,12 +154,14 @@ export default function AdminOrdersPage() {
       pending: 'bg-orange-500/20 text-orange-500 border-orange-500/50',
       paid: 'bg-green-500/20 text-green-500 border-green-500/50',
       failed: 'bg-red-500/20 text-red-500 border-red-500/50',
+      expired: 'bg-gray-500/20 text-gray-500 border-gray-500/50',
     };
     
     const labels: Record<string, string> = {
       pending: 'Belum Bayar',
       paid: 'Lunas',
       failed: 'Gagal',
+      expired: 'Kadaluarsa',
     };
 
     return (
@@ -150,6 +187,15 @@ export default function AdminOrdersPage() {
             </h2>
             <p className="text-muted-foreground mt-2">Kelola dan pantau semua pesanan pelanggan</p>
           </div>
+          <Button 
+            onClick={handleCleanupExpired} 
+            disabled={isCleaningUp}
+            variant="outline"
+            className="border-red-500 text-red-500 hover:bg-red-500/10"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {isCleaningUp ? 'Membersihkan...' : 'Bersihkan Expired'}
+          </Button>
         </div>
 
         {/* Filter */}

@@ -42,7 +42,8 @@ const menuItems = [
   { icon: Wrench, label: 'Booking', href: '/admin/booking', badge: null },
   { icon: UserCog, label: 'Teknisi', href: '/admin/teknisi', badge: null },
   { icon: Target, label: 'Target CRM', href: '/admin/target', badge: null },
-  { icon: MessageSquare, label: 'Chat', href: '/admin/chat', badge: '3' },
+  // DISABLED: Chat feature temporarily disabled
+  // { icon: MessageSquare, label: 'Chat', href: '/admin/chat', badge: '3' },
   { icon: MessageSquare, label: 'Keluhan', href: '/admin/keluhan', badge: null },
   { icon: Users, label: 'User', href: '/admin/user', badge: null },
 ];

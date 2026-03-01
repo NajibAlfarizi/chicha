@@ -1,0 +1,330 @@
+@startuml Teknisi Flowchart - Chicha Mobile
+
+title Flowchart Sistem Teknisi - Chicha Mobile
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  BackgroundColor LightSalmon
+  BorderColor DarkRed
+  StartColor Gold
+  EndColor Crimson
+  BarColor SaddleBrown
+  DiamondBackgroundColor Wheat
+  DiamondBorderColor Chocolate
+}
+
+|Teknisi|
+start
+
+:Login Teknisi;
+note right
+  **Page:** /teknisi/login
+  - Username + Password
+  - Role: teknisi
+  - Validasi credentials
+  - Set teknisi auth session
+end note
+
+:Dashboard Teknisi;
+note right
+  **Page:** /teknisi/dashboard
+  
+  **Welcome Card:**
+  - Nama teknisi
+  - Jumlah pending services
+  
+  **4 Stats Cards:**
+  1. Total Services
+     - Total bookings assigned
+  2. Pending
+     - Bookings belum dikerjakan
+  3. In Progress
+     - diagnosed, in_progress, waiting_parts
+  4. Selesai Hari Ini
+     - completed bookings today
+  
+  **Aktivitas Terbaru:**
+  - 5 bookings terbaru
+  - Device name, customer name
+  - Booking date, service code
+  - Progress status badge
+  - Link ke detail service
+  
+  **Action Button:**
+  - "Lihat Semua" → /teknisi/service
+end note
+
+while (Navigasi?) is (Dashboard)
+  :Lihat Dashboard;
+endwhile (Service List)
+
+partition "Manajemen Service" {
+  :List All Bookings;
+  note right
+    **Page:** /teknisi/service
+    
+    **Header Stats:**
+    - Total bookings
+    - Pending count
+    - In Progress count
+    - Completed count
+    
+    **Search Bar:**
+    - Search by device name
+    - Search by service code
+    - Search by issue description
+    
+    **Filter Dropdown:**
+    - All (default)
+    - Pending
+    - Diagnosed
+    - In Progress
+    - Waiting Parts
+    - Completed
+    - Cancelled
+    
+    **Booking Cards:**
+    - Service code (badge)
+    - Device name
+    - Customer name & phone
+    - Issue description
+    - Booking date
+    - Progress status badge
+    - Action button → Detail
+  end note
+  
+  if (Pilih Booking?) then (ya)
+    :Lihat Detail Service;
+    note right
+      **Page:** /teknisi/service/[id]
+      
+      **Customer Info Card:**
+      - Customer name
+      - Email
+      - Phone
+      
+      **Device Info Card:**
+      - Device name
+      - Issue description
+      
+      **Booking Info Card:**
+      - Service code
+      - Booking date
+      - Created at
+      
+      **Progress Info Card:**
+      - Current progress status (badge)
+      - Progress notes (jika ada)
+      - Estimated completion (jika ada)
+      - Completed at (jika completed)
+    end note
+    
+    partition "Update Progress" {
+      :Form Update Progress;
+      note right
+        **Form Fields:**
+        
+        1. **Progress Status** (Select)
+           Options:
+           - Pending (default)
+           - Diagnosed
+           - In Progress
+           - Waiting Parts
+           - Completed
+           - Cancelled
+        
+        2. **Progress Notes** (Textarea)
+           - Deskripsi update
+           - Findings/diagnosis
+           - Actions taken
+           - Parts needed
+           - Required placeholder
+        
+        3. **Estimated Completion** (Date)
+           - Date picker
+           - Optional field
+           - Estimasi kapan selesai
+      end note
+      
+      :Isi Form Update;
+      
+      :Click Save Button;
+      
+      if (Form Valid?) then (ya)
+        :Submit Update via API;
+        note right
+          **API:** PUT /api/bookings/[id]
+          
+          **Payload:**
+          - progress_status
+          - progress_notes
+          - estimated_completion (optional)
+          
+          **System Action:**
+          - Update booking record
+          - Set timestamp
+          - Trigger notification
+            to customer
+        end note
+        
+        :Toast Success;
+        :Refresh Detail Page;
+        
+        if (Status = Completed?) then (ya)
+          :Auto Update completed_at;
+          note right
+            - Set completed_at timestamp
+            - Customer dapat notifikasi
+            - Status booking updated
+          end note
+        endif
+      else (tidak)
+        :Tampilkan Error Toast;
+      endif
+    }
+    
+    :Kembali ke List;
+  else (tidak)
+    :Tetap di List;
+  endif
+}
+
+while (Navigasi?) is (Service)
+  :Manage Services;
+endwhile (Chat)
+
+partition "Chat dengan Customer" {
+  :Chat Page;
+  note right
+    **Page:** /teknisi/chat
+    
+    **Layout:** Grid 2 Kolom
+    - Kiri: ChatList
+    - Kanan: ChatRoom / Empty State
+    
+    **Empty State:**
+    - Icon MessageSquare
+    - Text "Pilih Chat"
+    - Prompt pilih dari list
+  end note
+  
+  :ChatList Component;
+  note right
+    **Component:** @/components/ChatList
+    **Props:** userType="teknisi"
+    
+    **Functionality:**
+    - Load chat rooms
+    - Filter by teknisi
+    - Show customer names
+    - Show last message
+    - Unread count indicator
+    - Click to open chat
+  end note
+  
+  if (Pilih Chat Room?) then (ya)
+    :Open ChatRoom;
+    note right
+      **Component:** @/components/ChatRoom
+      
+      **Features:**
+      - Load chat history
+      - Real-time messaging
+      - Send messages
+      - Receive messages
+      - Auto scroll to bottom
+      - Timestamp per message
+      - Back button (mobile)
+      
+      **Data:**
+      - Chat with specific customer
+      - Related to booking
+      - Supabase realtime
+    end note
+    
+    :Kirim/Terima Pesan;
+    note right
+      **Typical Messages:**
+      - Progress update info
+      - Pertanyaan tentang device
+      - Konfirmasi parts/biaya
+      - Pemberitahuan selesai
+      - Koordinasi pickup
+    end note
+    
+    :Continue Conversation;
+  else (tidak)
+    :Tampilkan Empty State;
+  endif
+}
+
+while (Navigasi?) is (Chat)
+  :Chat dengan Customer;
+endwhile (Logout)
+
+partition "Notifications" {
+  :NotificationBell Component;
+  note right
+    **Component:** @/components/NotificationBell
+    **Location:** TeknisiLayout header
+    
+    **Features:**
+    - Real-time notification
+    - Badge counter unread
+    - Dropdown notification list
+    - Click to view detail
+    
+    **Tipe Notifikasi:**
+    - New booking assigned
+    - Customer kirim pesan
+    - Booking dibatalkan
+    - Admin message
+    
+    **Action:**
+    - Mark as read
+    - Redirect sesuai type
+  end note
+}
+
+:Logout Teknisi;
+note right
+  - Clear session
+  - Redirect to /teknisi/login
+end note
+
+stop
+
+note bottom
+  **Teknisi Flow Summary - Actual Implementation:**
+  
+  **Pages:**
+  1. /teknisi/login - Authentication
+  2. /teknisi/dashboard - Overview + stats
+  3. /teknisi/service - List & filter bookings
+  4. /teknisi/service/[id] - Detail & update form
+  5. /teknisi/chat - Real-time chat with customers
+  
+  **Key Features:**
+  ✅ Real-time progress update
+  ✅ Search & filter bookings
+  ✅ Statistics dashboard (4 metrics)
+  ✅ Direct customer communication
+  ✅ Notification bell (real-time)
+  ✅ Recent activity preview
+  
+  **NOT Implemented:**
+  ❌ Dedicated profile management page
+  ❌ Edit profile form for teknisi
+  ❌ Separate statistics page
+  ❌ Service history page (filtered view)
+  ❌ Export report functionality
+  
+  **Components Used:**
+  - TeknisiLayout (with NotificationBell)
+  - ChatList & ChatRoom
+  - Card, Button, Input, Select, Textarea
+  - Badge for status indicators
+  - Toast notifications (sonner)
+end note
+
+@enduml
