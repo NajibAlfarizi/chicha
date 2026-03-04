@@ -47,14 +47,12 @@ export default function TeknisiServicePage() {
 
   const getProgressBadge = (status?: string) => {
     const config: Record<string, { color: string; label: string }> = {
-      pending: { color: 'bg-yellow-500/20 text-yellow-500', label: 'Pending' },
-      diagnosed: { color: 'bg-blue-500/20 text-blue-500', label: 'Diagnosed' },
-      in_progress: { color: 'bg-purple-500/20 text-purple-500', label: 'In Progress' },
-      waiting_parts: { color: 'bg-orange-500/20 text-orange-500', label: 'Waiting Parts' },
-      completed: { color: 'bg-green-500/20 text-green-500', label: 'Completed' },
-      cancelled: { color: 'bg-red-500/20 text-red-500', label: 'Cancelled' },
+      menunggu: { color: 'bg-yellow-500/20 text-yellow-500', label: 'Menunggu' },
+      diproses: { color: 'bg-blue-500/20 text-blue-500', label: 'Diproses' },
+      selesai: { color: 'bg-green-500/20 text-green-500', label: 'Selesai' },
+      dibatalkan: { color: 'bg-red-500/20 text-red-500', label: 'Dibatalkan' },
     };
-    const { color, label } = config[status || 'pending'] || config.pending;
+    const { color, label } = config[status || 'menunggu'] || config.menunggu;
     return <Badge className={color}>{label}</Badge>;
   };
 
@@ -71,11 +69,11 @@ export default function TeknisiServicePage() {
 
   const stats = {
     total: bookings.length,
-    pending: bookings.filter((b) => b.progress_status === 'pending').length,
+    pending: bookings.filter((b) => b.progress_status === 'menunggu').length,
     in_progress: bookings.filter((b) =>
-      ['diagnosed', 'in_progress', 'waiting_parts'].includes(b.progress_status || '')
+      b.progress_status === 'diproses'
     ).length,
-    completed: bookings.filter((b) => b.progress_status === 'completed').length,
+    completed: bookings.filter((b) => b.progress_status === 'selesai').length,
   };
 
   if (authLoading || !isAuthenticated) {
@@ -135,35 +133,35 @@ export default function TeknisiServicePage() {
           <button
             onClick={() => setStatusFilter('pending')}
             className={`text-left p-4 rounded-xl transition-all duration-300 border-2 ${
-              statusFilter === 'pending'
+              statusFilter === 'menunggu'
                 ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white border-yellow-600 shadow-lg shadow-yellow-500/30 scale-105'
                 : 'bg-white dark:bg-slate-900 border-yellow-200 dark:border-yellow-900/30 hover:border-yellow-400 hover:shadow-md'
             }`}
           >
-            <p className={`text-xs mb-1 ${statusFilter === 'pending' ? 'text-white/80' : 'text-muted-foreground'}`}>Pending</p>
-            <p className={`text-2xl font-bold ${statusFilter === 'pending' ? 'text-white' : 'text-yellow-600 dark:text-yellow-400'}`}>{stats.pending}</p>
+            <p className={`text-xs mb-1 ${statusFilter === 'menunggu' ? 'text-white/80' : 'text-muted-foreground'}`}>Menunggu</p>
+            <p className={`text-2xl font-bold ${statusFilter === 'menunggu' ? 'text-white' : 'text-yellow-600 dark:text-yellow-400'}`}>{stats.pending}</p>
           </button>
           <button
-            onClick={() => setStatusFilter('in_progress')}
+            onClick={() => setStatusFilter('diproses')}
             className={`text-left p-4 rounded-xl transition-all duration-300 border-2 ${
-              ['diagnosed', 'in_progress', 'waiting_parts'].includes(statusFilter)
-                ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white border-purple-600 shadow-lg shadow-purple-500/30 scale-105'
-                : 'bg-white dark:bg-slate-900 border-purple-200 dark:border-purple-900/30 hover:border-purple-400 hover:shadow-md'
+              statusFilter === 'diproses'
+                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30 scale-105'
+                : 'bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-900/30 hover:border-blue-400 hover:shadow-md'
             }`}
           >
-            <p className={`text-xs mb-1 ${['diagnosed', 'in_progress', 'waiting_parts'].includes(statusFilter) ? 'text-white/80' : 'text-muted-foreground'}`}>Dalam Proses</p>
-            <p className={`text-2xl font-bold ${['diagnosed', 'in_progress', 'waiting_parts'].includes(statusFilter) ? 'text-white' : 'text-purple-600 dark:text-purple-400'}`}>{stats.in_progress}</p>
+            <p className={`text-xs mb-1 ${statusFilter === 'diproses' ? 'text-white/80' : 'text-muted-foreground'}`}>Diproses</p>
+            <p className={`text-2xl font-bold ${statusFilter === 'diproses' ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`}>{stats.in_progress}</p>
           </button>
           <button
-            onClick={() => setStatusFilter('completed')}
+            onClick={() => setStatusFilter('selesai')}
             className={`text-left p-4 rounded-xl transition-all duration-300 border-2 ${
-              statusFilter === 'completed'
+              statusFilter === 'selesai'
                 ? 'bg-gradient-to-br from-green-500 to-green-600 text-white border-green-600 shadow-lg shadow-green-500/30 scale-105'
                 : 'bg-white dark:bg-slate-900 border-green-200 dark:border-green-900/30 hover:border-green-400 hover:shadow-md'
             }`}
           >
-            <p className={`text-xs mb-1 ${statusFilter === 'completed' ? 'text-white/80' : 'text-muted-foreground'}`}>Selesai</p>
-            <p className={`text-2xl font-bold ${statusFilter === 'completed' ? 'text-white' : 'text-green-600 dark:text-green-400'}`}>{stats.completed}</p>
+            <p className={`text-xs mb-1 ${statusFilter === 'selesai' ? 'text-white/80' : 'text-muted-foreground'}`}>Selesai</p>
+            <p className={`text-2xl font-bold ${statusFilter === 'selesai' ? 'text-white' : 'text-green-600 dark:text-green-400'}`}>{stats.completed}</p>
           </button>
         </div>
 
@@ -202,12 +200,10 @@ export default function TeknisiServicePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">✓ Semua Status</SelectItem>
-                    <SelectItem value="pending">⏱ Pending</SelectItem>
-                    <SelectItem value="diagnosed">🔍 Diagnosed</SelectItem>
-                    <SelectItem value="in_progress">⚙️ In Progress</SelectItem>
-                    <SelectItem value="waiting_parts">📦 Waiting Parts</SelectItem>
-                    <SelectItem value="completed">✅ Completed</SelectItem>
-                    <SelectItem value="cancelled">❌ Cancelled</SelectItem>
+                    <SelectItem value="menunggu">⏱ Menunggu</SelectItem>
+                    <SelectItem value="diproses">⚙️ Diproses</SelectItem>
+                    <SelectItem value="selesai">✅ Selesai</SelectItem>
+                    <SelectItem value="dibatalkan">❌ Dibatalkan</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

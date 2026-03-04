@@ -179,7 +179,15 @@ function LoginForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
+                  <Link 
+                    href="/auth/forgot-password"
+                    className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400 font-medium hover:underline"
+                  >
+                    Lupa Password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500" />
                   <Input

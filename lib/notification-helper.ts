@@ -93,23 +93,19 @@ export async function notifyBookingStatusChange(
   status: string
 ) {
   const statusMessages: Record<string, { title: string; message: string }> = {
-    pending: {
+    menunggu: {
       title: 'Booking Menunggu',
-      message: 'Permintaan booking Anda sedang menunggu teknisi.',
+      message: 'Permintaan booking Anda sedang menunggu pemeriksaan.',
     },
-    confirmed: {
-      title: 'Booking Dikonfirmasi',
-      message: 'Booking Anda telah dikonfirmasi oleh teknisi.',
+    diproses: {
+      title: 'Servis Sedang Diproses',
+      message: 'HP Anda sedang dalam proses perbaikan.',
     },
-    in_progress: {
-      title: 'Servis Sedang Dikerjakan',
-      message: 'Teknisi sedang mengerjakan servis Anda.',
-    },
-    completed: {
+    selesai: {
       title: 'Servis Selesai',
-      message: 'Servis Anda telah selesai. Terima kasih!',
+      message: 'Perbaikan HP Anda telah selesai dan siap diambil!',
     },
-    cancelled: {
+    dibatalkan: {
       title: 'Booking Dibatalkan',
       message: 'Booking Anda telah dibatalkan.',
     },

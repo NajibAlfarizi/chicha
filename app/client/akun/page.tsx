@@ -665,47 +665,136 @@ function AccountContent() {
                   ) : (
                     <div className="space-y-3 md:space-y-4">
                       {bookings.map((booking) => (
-                        <div key={booking.id} className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-700/30 dark:to-slate-700/30 rounded-lg p-3 md:p-4 border border-amber-200 dark:border-transparent">
-                          <div className="flex justify-between items-start mb-2 md:mb-3">
+                        <div key={booking.id} className="bg-white dark:from-slate-700/30 dark:to-slate-700/30 rounded-lg p-4 md:p-5 border-2 border-amber-100 dark:border-amber-900/30 hover:border-amber-300 dark:hover:border-amber-700/50 transition-all shadow-sm hover:shadow-md">
+                          {/* Header with Device and Status */}
+                          <div className="flex justify-between items-start mb-3">
                             <div className="flex-1 min-w-0 pr-2">
-                              <p className="text-gray-900 dark:text-white font-semibold text-sm md:text-base">{booking.device_name}</p>
-                              <p className="text-gray-600 dark:text-slate-400 text-xs md:text-sm mt-1 line-clamp-2">{booking.issue}</p>
-                              {booking.teknisi && (
-                                <p className="text-amber-600 dark:text-slate-500 text-[10px] md:text-xs mt-1 md:mt-2">
-                                  Teknisi: {booking.teknisi.name}
+                              <div className="flex items-center gap-2 mb-1">
+                                <Wrench className="h-4 w-4 md:h-5 md:w-5 text-amber-600 dark:text-amber-500 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500 dark:text-slate-400 text-sm font-normal">Device: </span>
+                                  <span className="text-gray-900 dark:text-white font-bold text-base md:text-lg">
+                                    {booking.device_name}
+                                  </span>
+                                </div>
+                              </div>
+                              {booking.service_code && (
+                                <p className="text-amber-600 dark:text-amber-400 text-xs font-mono mb-2">
+                                  #{booking.service_code}
                                 </p>
                               )}
                             </div>
-                            {getBookingStatusBadge(booking.status)}
+                            <div className="flex flex-col items-end gap-1">
+                              {getBookingStatusBadge(booking.status)}
+                              {booking.progress_status && booking.progress_status !== 'menunggu' && (
+                                <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-700 dark:border-blue-700 dark:text-blue-400">
+                                  {booking.progress_status === 'diproses' && 'Diproses'}
+                                  {booking.progress_status === 'selesai' && 'Selesai'}
+                                  {booking.progress_status === 'dibatalkan' && 'Dibatalkan'}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex justify-between items-center text-xs md:text-sm gap-2">
-                            <span className="text-gray-600 dark:text-slate-400">
-                              {new Date(booking.booking_date).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                              })}
-                            </span>
-                            <div className="flex gap-1 md:gap-2">
+                          
+                          {/* Issue Description */}
+                          <div className="bg-amber-50 dark:bg-slate-800/50 rounded-md p-3 mb-3">
+                            <p className="text-xs text-gray-500 dark:text-slate-400 mb-1 font-medium">Keluhan:</p>
+                            <p className="text-gray-700 dark:text-slate-300 text-sm leading-relaxed">
+                              {booking.issue}
+                            </p>
+                          </div>
+                          
+                          {/* Info Grid */}
+                          <div className="grid grid-cols-2 gap-3 mb-3 text-xs md:text-sm">
+                            {/* Booking Date */}
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-500 dark:text-slate-400 text-xs">Tanggal Booking</p>
+                                <p className="text-gray-900 dark:text-white font-medium">
+                                  {new Date(booking.booking_date).toLocaleDateString('id-ID', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {/* Estimated Completion */}
+                            {booking.estimated_completion && (
+                              <div className="flex items-start gap-2">
+                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="text-gray-500 dark:text-slate-400 text-xs">Estimasi Selesai</p>
+                                  <p className="text-gray-900 dark:text-white font-medium">
+                                    {new Date(booking.estimated_completion).toLocaleDateString('id-ID', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric'
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Teknisi Info */}
+                          {booking.teknisi && (
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-md p-2 md:p-3 mb-3 border border-blue-100 dark:border-blue-900/30">
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                                  {booking.teknisi.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs text-gray-500 dark:text-slate-400">Ditangani oleh</p>
+                                  <p className="text-gray-900 dark:text-white font-semibold text-sm truncate">
+                                    {booking.teknisi.name}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Progress Notes */}
+                          {booking.progress_notes && (
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-md p-3 mb-3 border border-yellow-200 dark:border-yellow-800/30">
+                              <p className="text-xs text-yellow-700 dark:text-yellow-400 mb-1 font-medium">Catatan Progress:</p>
+                              <p className="text-yellow-900 dark:text-yellow-200 text-sm">
+                                {booking.progress_notes}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* Action Buttons */}
+                          <div className="flex justify-between items-center pt-3 border-t border-gray-200 dark:border-slate-700">
+                            <div className="text-xs text-gray-500 dark:text-slate-400">
+                              {booking.completed_at ? (
+                                <span>Selesai: {new Date(booking.completed_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                              ) : (
+                                <span>Dibuat: {new Date(booking.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
                               <Button 
                                 size="sm" 
                                 variant="outline" 
-                                className="border-green-500 text-green-500 hover:bg-green-500/10 h-7 md:h-8 text-xs px-2"
+                                className="border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 h-8 text-xs px-3"
                                 onClick={() => handleChatBooking(booking)}
                               >
-                                <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
+                                <MessageSquare className="h-4 w-4 mr-1" />
+                                <span>Chat</span>
                               </Button>
                               <Button 
                                 size="sm" 
-                                variant="outline" 
-                                className="border-amber-500 text-amber-500 hover:bg-amber-500/10 h-7 md:h-8 text-xs px-2 md:px-3"
+                                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white h-8 text-xs px-3"
                                 onClick={() => {
                                   setSelectedBooking(booking);
                                   setShowBookingTrack(true);
                                 }}
                               >
-                                <Eye className="h-3 w-3 md:h-4 md:w-4 md:mr-1" />
-                                <span className="hidden md:inline">Track</span>
+                                <Eye className="h-4 w-4 mr-1" />
+                                <span>Track</span>
                               </Button>
                             </div>
                           </div>
@@ -1285,71 +1374,46 @@ function AccountContent() {
                             minute: '2-digit'
                           })}
                         </p>
-                        {selectedBooking.status === 'baru' && selectedBooking.progress_status === 'pending' && (
+                        {selectedBooking.status === 'baru' && selectedBooking.progress_status === 'menunggu' && (
                           <Badge className="mt-2 bg-yellow-500 text-white">Menunggu Teknisi</Badge>
                         )}
                       </div>
                     </div>
 
-                    {/* Step 2: Diagnosa */}
+                    {/* Step 2: Dalam Perbaikan */}
                     <div className="flex items-start gap-4">
                       <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
-                        ['diagnosed', 'in_progress', 'waiting_parts', 'completed'].includes(selectedBooking.progress_status || 'pending') || ['proses', 'selesai'].includes(selectedBooking.status)
-                          ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
+                        ['diproses', 'selesai'].includes(selectedBooking.progress_status || 'menunggu') || ['proses', 'selesai'].includes(selectedBooking.status)
+                          ? 'bg-blue-500 border-blue-300 shadow-lg shadow-blue-500/50'
                           : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
-                      }`}>
-                        <Eye className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="flex-1 pt-2">
-                        <p className="font-semibold text-gray-900 dark:text-white">Diagnosa</p>
-                        <p className="text-sm text-gray-600 dark:text-slate-400">
-                          {['diagnosed', 'in_progress', 'waiting_parts', 'completed'].includes(selectedBooking.progress_status || 'pending')
-                            ? 'Device telah didiagnosa'
-                            : 'Menunggu diagnosa'}
-                        </p>
-                        {selectedBooking.progress_status === 'diagnosed' && (
-                          <Badge className="mt-2 bg-blue-500 text-white">Diagnosa Selesai</Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Step 3: Dalam Perbaikan */}
-                    <div className="flex items-start gap-4">
-                      <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
-                        ['in_progress', 'waiting_parts', 'completed'].includes(selectedBooking.progress_status || 'pending') || selectedBooking.status === 'selesai'
-                          ? 'bg-amber-500 border-amber-300 shadow-lg shadow-amber-500/50'
-                          : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
-                      } ${selectedBooking.progress_status === 'in_progress' ? 'animate-pulse' : ''}`}>
+                      } ${selectedBooking.progress_status === 'diproses' ? 'animate-pulse' : ''}`}>
                         <Wrench className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1 pt-2">
                         <p className="font-semibold text-gray-900 dark:text-white">Dalam Perbaikan</p>
                         <p className="text-sm text-gray-600 dark:text-slate-400">
-                          {['in_progress', 'waiting_parts', 'completed'].includes(selectedBooking.progress_status || 'pending')
+                          {['diproses', 'selesai'].includes(selectedBooking.progress_status || 'menunggu')
                             ? 'Device sedang diperbaiki'
                             : 'Menunggu perbaikan'}
                         </p>
-                        {selectedBooking.progress_status === 'in_progress' && (
-                          <Badge className="mt-2 bg-purple-500 text-white animate-pulse">Sedang Dikerjakan</Badge>
-                        )}
-                        {selectedBooking.progress_status === 'waiting_parts' && (
-                          <Badge className="mt-2 bg-orange-500 text-white">Menunggu Sparepart</Badge>
+                        {selectedBooking.progress_status === 'diproses' && (
+                          <Badge className="mt-2 bg-blue-500 text-white animate-pulse">Sedang Diproses</Badge>
                         )}
                       </div>
                     </div>
 
-                    {/* Step 4: Selesai or Dibatalkan */}
+                    {/* Step 3: Selesai or Dibatalkan */}
                     <div className="flex items-start gap-4">
                       <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-4 transition-all duration-300 ${
-                        selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai'
+                        selectedBooking.progress_status === 'selesai' || selectedBooking.status === 'selesai'
                           ? 'bg-green-500 border-green-300 shadow-lg shadow-green-500/50'
-                          : selectedBooking.progress_status === 'cancelled'
+                          : selectedBooking.progress_status === 'dibatalkan'
                           ? 'bg-red-500 border-red-300 shadow-lg shadow-red-500/50'
                           : 'bg-slate-300 dark:bg-slate-700 border-slate-200 dark:border-slate-600'
                       }`}>
-                        {selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai' ? (
+                        {selectedBooking.progress_status === 'selesai' || selectedBooking.status === 'selesai' ? (
                           <CheckCircle className="h-5 w-5 text-white" />
-                        ) : selectedBooking.progress_status === 'cancelled' ? (
+                        ) : selectedBooking.progress_status === 'dibatalkan' ? (
                           <span className="text-white font-bold text-xl">✕</span>
                         ) : (
                           <Gift className="h-5 w-5 text-white" />
@@ -1357,11 +1421,11 @@ function AccountContent() {
                       </div>
                       <div className="flex-1 pt-2">
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          {selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai' ? 'Perbaikan Selesai' : 
-                           selectedBooking.progress_status === 'cancelled' ? 'Perbaikan Dibatalkan' : 'Selesai'}
+                          {selectedBooking.progress_status === 'selesai' || selectedBooking.status === 'selesai' ? 'Perbaikan Selesai' : 
+                           selectedBooking.progress_status === 'dibatalkan' ? 'Perbaikan Dibatalkan' : 'Selesai'}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-slate-400">
-                          {selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai'
+                          {selectedBooking.progress_status === 'selesai' || selectedBooking.status === 'selesai'
                             ? selectedBooking.completed_at 
                               ? new Date(selectedBooking.completed_at).toLocaleDateString('id-ID', {
                                   day: 'numeric',
@@ -1371,14 +1435,14 @@ function AccountContent() {
                                   minute: '2-digit'
                                 })
                               : 'Perbaikan telah selesai'
-                            : selectedBooking.progress_status === 'cancelled'
+                            : selectedBooking.progress_status === 'dibatalkan'
                             ? 'Booking telah dibatalkan'
                             : 'Menunggu penyelesaian'}
                         </p>
-                        {(selectedBooking.progress_status === 'completed' || selectedBooking.status === 'selesai') && (
+                        {(selectedBooking.progress_status === 'selesai' || selectedBooking.status === 'selesai') && (
                           <Badge className="mt-2 bg-green-500 text-white">Selesai</Badge>
                         )}
-                        {selectedBooking.progress_status === 'cancelled' && (
+                        {selectedBooking.progress_status === 'dibatalkan' && (
                           <Badge className="mt-2 bg-red-500 text-white">Dibatalkan</Badge>
                         )}
                       </div>

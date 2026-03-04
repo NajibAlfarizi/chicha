@@ -56,12 +56,12 @@ export default function TeknisiDashboardPage() {
       const today = new Date().toDateString();
       setStats({
         total: myBookings.length,
-        pending: myBookings.filter((b: Booking) => b.progress_status === 'pending').length,
+        pending: myBookings.filter((b: Booking) => b.progress_status === 'menunggu').length,
         in_progress: myBookings.filter((b: Booking) => 
-          ['diagnosed', 'in_progress', 'waiting_parts'].includes(b.progress_status || '')
+          b.progress_status === 'diproses'
         ).length,
         completed_today: myBookings.filter((b: Booking) => 
-          b.progress_status === 'completed' && 
+          b.progress_status === 'selesai' && 
           b.completed_at && 
           new Date(b.completed_at).toDateString() === today
         ).length,
@@ -75,14 +75,12 @@ export default function TeknisiDashboardPage() {
 
   const getProgressBadge = (status?: string) => {
     const colors: Record<string, string> = {
-      pending: 'bg-yellow-500/20 text-yellow-500',
-      diagnosed: 'bg-blue-500/20 text-blue-500',
-      in_progress: 'bg-purple-500/20 text-purple-500',
-      waiting_parts: 'bg-orange-500/20 text-orange-500',
-      completed: 'bg-green-500/20 text-green-500',
-      cancelled: 'bg-red-500/20 text-red-500',
+      menunggu: 'bg-yellow-500/20 text-yellow-500',
+      diproses: 'bg-blue-500/20 text-blue-500',
+      selesai: 'bg-green-500/20 text-green-500',
+      dibatalkan: 'bg-red-500/20 text-red-500',
     };
-    return <Badge className={colors[status || 'pending']}>{status || 'pending'}</Badge>;
+    return <Badge className={colors[status || 'menunggu']}>{status || 'menunggu'}</Badge>;
   };
 
   if (authLoading || !isAuthenticated) {
@@ -208,13 +206,13 @@ export default function TeknisiDashboardPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg ${
-                        booking.progress_status === 'completed' ? 'bg-green-100 dark:bg-green-900/30' :
-                        ['diagnosed', 'in_progress', 'waiting_parts'].includes(booking.progress_status || '') ? 'bg-purple-100 dark:bg-purple-900/30' :
+                        booking.progress_status === 'selesai' ? 'bg-green-100 dark:bg-green-900/30' :
+                        booking.progress_status === 'diproses' ? 'bg-blue-100 dark:bg-blue-900/30' :
                         'bg-yellow-100 dark:bg-yellow-900/30'
                       }`}>
                         <Wrench className={`h-5 w-5 ${
-                          booking.progress_status === 'completed' ? 'text-green-600 dark:text-green-400' :
-                          ['diagnosed', 'in_progress', 'waiting_parts'].includes(booking.progress_status || '') ? 'text-purple-600 dark:text-purple-400' :
+                          booking.progress_status === 'selesai' ? 'text-green-600 dark:text-green-400' :
+                          booking.progress_status === 'diproses' ? 'text-blue-600 dark:text-blue-400' :
                           'text-yellow-600 dark:text-yellow-400'
                         }`} />
                       </div>

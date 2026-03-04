@@ -121,14 +121,12 @@ export default function TeknisiServiceDetailPage() {
 
   const getProgressBadge = (status?: string) => {
     const config: Record<string, { color: string; label: string }> = {
-      pending: { color: 'bg-yellow-500/20 text-yellow-500', label: 'Pending' },
-      diagnosed: { color: 'bg-blue-500/20 text-blue-500', label: 'Diagnosed' },
-      in_progress: { color: 'bg-purple-500/20 text-purple-500', label: 'In Progress' },
-      waiting_parts: { color: 'bg-orange-500/20 text-orange-500', label: 'Waiting Parts' },
-      completed: { color: 'bg-green-500/20 text-green-500', label: 'Completed' },
-      cancelled: { color: 'bg-red-500/20 text-red-500', label: 'Cancelled' },
+      menunggu: { color: 'bg-yellow-500/20 text-yellow-500', label: 'Menunggu' },
+      diproses: { color: 'bg-blue-500/20 text-blue-500', label: 'Diproses' },
+      selesai: { color: 'bg-green-500/20 text-green-500', label: 'Selesai' },
+      dibatalkan: { color: 'bg-red-500/20 text-red-500', label: 'Dibatalkan' },
     };
-    const { color, label } = config[status || 'pending'] || config.pending;
+    const { color, label } = config[status || 'menunggu'] || config.menunggu;
     return <Badge className={color}>{label}</Badge>;
   };
 
@@ -247,12 +245,10 @@ export default function TeknisiServiceDetailPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="diagnosed">Diagnosed</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="waiting_parts">Waiting Parts</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="menunggu">Menunggu</SelectItem>
+                      <SelectItem value="diproses">Diproses</SelectItem>
+                      <SelectItem value="selesai">Selesai</SelectItem>
+                      <SelectItem value="dibatalkan">Dibatalkan</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

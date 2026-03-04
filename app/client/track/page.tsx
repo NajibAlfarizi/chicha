@@ -46,18 +46,14 @@ export default function TrackPage() {
 
   const statusBadge = (status?: string) => {
     switch (status) {
-      case 'pending':
-        return <Badge className="bg-yellow-500/20 text-yellow-500">Pending</Badge>;
-      case 'diagnosed':
-        return <Badge className="bg-blue-500/20 text-blue-500">Diagnosed</Badge>;
-      case 'in_progress':
-        return <Badge className="bg-purple-500/20 text-purple-500">In Progress</Badge>;
-      case 'waiting_parts':
-        return <Badge className="bg-orange-500/20 text-orange-500">Waiting Parts</Badge>;
-      case 'completed':
-        return <Badge className="bg-green-500/20 text-green-500">Completed</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500/20 text-red-500">Cancelled</Badge>;
+      case 'menunggu':
+        return <Badge className="bg-yellow-500/20 text-yellow-500">Menunggu</Badge>;
+      case 'diproses':
+        return <Badge className="bg-blue-500/20 text-blue-500">Diproses</Badge>;
+      case 'selesai':
+        return <Badge className="bg-green-500/20 text-green-500">Selesai</Badge>;
+      case 'dibatalkan':
+        return <Badge className="bg-red-500/20 text-red-500">Dibatalkan</Badge>;
       default:
         return <Badge>Unknown</Badge>;
     }

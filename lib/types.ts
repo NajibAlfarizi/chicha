@@ -147,7 +147,7 @@ export interface Teknisi {
 
 // Booking Types
 export type BookingStatus = 'baru' | 'proses' | 'selesai';
-export type ProgressStatus = 'pending' | 'diagnosed' | 'in_progress' | 'waiting_parts' | 'completed' | 'cancelled';
+export type ProgressStatus = 'menunggu' | 'diproses' | 'selesai' | 'dibatalkan';
 
 export interface Booking {
   id: string;
