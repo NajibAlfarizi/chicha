@@ -60,26 +60,22 @@ export default function AdminBookingsPage() {
 
   const getProgressBadge = (status?: string) => {
     const colors: Record<string, string> = {
-      pending: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50',
-      diagnosed: 'bg-blue-500/20 text-blue-500 border-blue-500/50',
-      in_progress: 'bg-purple-500/20 text-purple-500 border-purple-500/50',
-      waiting_parts: 'bg-orange-500/20 text-orange-500 border-orange-500/50',
-      completed: 'bg-green-500/20 text-green-500 border-green-500/50',
-      cancelled: 'bg-red-500/20 text-red-500 border-red-500/50',
+      menunggu: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50',
+      diproses: 'bg-blue-500/20 text-blue-500 border-blue-500/50',
+      selesai: 'bg-green-500/20 text-green-500 border-green-500/50',
+      dibatalkan: 'bg-red-500/20 text-red-500 border-red-500/50',
     };
 
     const labels: Record<string, string> = {
-      pending: 'Pending',
-      diagnosed: 'Diagnosed',
-      in_progress: 'In Progress',
-      waiting_parts: 'Waiting Parts',
-      completed: 'Completed',
-      cancelled: 'Cancelled',
+      menunggu: 'Menunggu',
+      diproses: 'Diproses',
+      selesai: 'Selesai',
+      dibatalkan: 'Dibatalkan',
     };
 
-    const currentStatus = status || 'pending';
+    const currentStatus = status || 'menunggu';
     return (
-      <Badge className={colors[currentStatus] || colors.pending}>
+      <Badge className={colors[currentStatus] || colors.menunggu}>
         {labels[currentStatus] || currentStatus}
       </Badge>
     );
@@ -114,12 +110,10 @@ export default function AdminBookingsPage() {
                 </SelectTrigger>
                 <SelectContent >
                   <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="diagnosed">Diagnosed</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="waiting_parts">Waiting Parts</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="menunggu">Menunggu</SelectItem>
+                    <SelectItem value="diproses">Diproses</SelectItem>
+                    <SelectItem value="selesai">Selesai</SelectItem>
+                    <SelectItem value="dibatalkan">Dibatalkan</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -282,89 +276,48 @@ export default function AdminBookingsPage() {
                       </div>
                     </div>
 
-                    {/* Step 2: Diagnosed */}
+                    {/* Step 2: Diproses */}
                     <div className="relative mb-8">
                       <div className="flex items-start gap-4">
                         <div className={`absolute -left-[29px] w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 ${
-                          selectedBooking.progress_status === 'diagnosed' || 
-                          selectedBooking.progress_status === 'in_progress' || 
-                          selectedBooking.progress_status === 'waiting_parts' || 
-                          selectedBooking.progress_status === 'completed'
+                          selectedBooking.progress_status === 'diproses' || 
+                          selectedBooking.progress_status === 'selesai'
                             ? 'bg-blue-500 border-blue-500'
                             : 'bg-white dark:bg-slate-900 border-muted'
                         }`}>
-                          {(selectedBooking.progress_status === 'diagnosed' || 
-                            selectedBooking.progress_status === 'in_progress' || 
-                            selectedBooking.progress_status === 'waiting_parts' || 
-                            selectedBooking.progress_status === 'completed') && (
+                          {(selectedBooking.progress_status === 'diproses' || 
+                            selectedBooking.progress_status === 'selesai') && (
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           )}
                         </div>
                         <div className="flex-1 -mt-1">
-                          <p className="font-semibold text-base mb-1">Diagnosed</p>
+                          <p className="font-semibold text-base mb-1">Sedang Diproses</p>
                           <p className="text-sm text-muted-foreground">
-                            {selectedBooking.progress_status === 'diagnosed' || 
-                             selectedBooking.progress_status === 'in_progress' || 
-                             selectedBooking.progress_status === 'waiting_parts' || 
-                             selectedBooking.progress_status === 'completed'
-                              ? 'Teknisi sudah mendiagnosa masalah'
-                              : 'Menunggu diagnosa'}
+                            {selectedBooking.progress_status === 'diproses' || 
+                             selectedBooking.progress_status === 'selesai'
+                              ? 'HP sedang dalam proses perbaikan (termasuk tunggu spare part)'
+                              : 'Belum diproses'}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Step 3: In Progress / Waiting Parts */}
-                    <div className="relative mb-8">
-                      <div className="flex items-start gap-4">
-                        <div className={`absolute -left-[29px] w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 ${
-                          selectedBooking.progress_status === 'in_progress' || 
-                          selectedBooking.progress_status === 'waiting_parts' || 
-                          selectedBooking.progress_status === 'completed'
-                            ? 'bg-purple-500 border-purple-500'
-                            : 'bg-white dark:bg-slate-900 border-muted'
-                        }`}>
-                          {(selectedBooking.progress_status === 'in_progress' || 
-                            selectedBooking.progress_status === 'waiting_parts' || 
-                            selectedBooking.progress_status === 'completed') && (
-                            <div className="w-2 h-2 bg-white rounded-full"></div>
-                          )}
-                        </div>
-                        <div className="flex-1 -mt-1">
-                          <p className="font-semibold text-base mb-1">
-                            {selectedBooking.progress_status === 'waiting_parts' 
-                              ? 'Menunggu Spare Part' 
-                              : 'Sedang Dikerjakan'}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {selectedBooking.progress_status === 'in_progress'
-                              ? 'Teknisi sedang mengerjakan perbaikan'
-                              : selectedBooking.progress_status === 'waiting_parts'
-                              ? 'Menunggu spare part tersedia'
-                              : selectedBooking.progress_status === 'completed'
-                              ? 'Perbaikan sudah selesai dikerjakan'
-                              : 'Belum dimulai'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Step 4: Completed */}
+                    {/* Step 3: Selesai */}
                     <div className="relative">
                       <div className="flex items-start gap-4">
                         <div className={`absolute -left-[29px] w-8 h-8 rounded-full flex items-center justify-center z-10 border-4 ${
-                          selectedBooking.progress_status === 'completed'
+                          selectedBooking.progress_status === 'selesai'
                             ? 'bg-green-500 border-green-500'
                             : 'bg-white dark:bg-slate-900 border-muted'
                         }`}>
-                          {selectedBooking.progress_status === 'completed' && (
+                          {selectedBooking.progress_status === 'selesai' && (
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           )}
                         </div>
                         <div className="flex-1 -mt-1">
                           <p className="font-semibold text-base mb-1">Selesai</p>
                           <p className="text-sm text-muted-foreground">
-                            {selectedBooking.progress_status === 'completed'
+                            {selectedBooking.progress_status === 'selesai'
                               ? 'Perbaikan telah diselesaikan'
                               : 'Menunggu penyelesaian'}
                           </p>
@@ -406,19 +359,15 @@ export default function AdminBookingsPage() {
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Status Saat Ini:</span>
                     <Badge className={
-                      selectedBooking.progress_status === 'completed' ? 'bg-green-500/20 text-green-500' :
-                      selectedBooking.progress_status === 'in_progress' ? 'bg-purple-500/20 text-purple-500' :
-                      selectedBooking.progress_status === 'waiting_parts' ? 'bg-orange-500/20 text-orange-500' :
-                      selectedBooking.progress_status === 'diagnosed' ? 'bg-blue-500/20 text-blue-500' :
-                      selectedBooking.progress_status === 'cancelled' ? 'bg-red-500/20 text-red-500' :
+                      selectedBooking.progress_status === 'selesai' ? 'bg-green-500/20 text-green-500' :
+                      selectedBooking.progress_status === 'diproses' ? 'bg-blue-500/20 text-blue-500' :
+                      selectedBooking.progress_status === 'dibatalkan' ? 'bg-red-500/20 text-red-500' :
                       'bg-yellow-500/20 text-yellow-500'
                     }>
-                      {selectedBooking.progress_status === 'completed' ? 'Completed' :
-                       selectedBooking.progress_status === 'in_progress' ? 'In Progress' :
-                       selectedBooking.progress_status === 'waiting_parts' ? 'Waiting Parts' :
-                       selectedBooking.progress_status === 'diagnosed' ? 'Diagnosed' :
-                       selectedBooking.progress_status === 'cancelled' ? 'Cancelled' :
-                       'Pending'}
+                      {selectedBooking.progress_status === 'selesai' ? 'Selesai' :
+                       selectedBooking.progress_status === 'diproses' ? 'Diproses' :
+                       selectedBooking.progress_status === 'dibatalkan' ? 'Dibatalkan' :
+                       'Menunggu'}
                     </Badge>
                   </div>
                 </div>
