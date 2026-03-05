@@ -130,34 +130,32 @@ export default function TeknisiServiceDetailPage() {
     return <Badge className={color}>{label}</Badge>;
   };
 
-  if (authLoading || !isAuthenticated || loading) {
-    return (
-      <TeknisiLayout>
-        <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent mb-4"></div>
-          <p className="text-slate-400">Loading...</p>
-        </div>
-      </TeknisiLayout>
-    );
-  }
-
-  if (!booking) {
-    return (
-      <TeknisiLayout>
-        <div className="text-center py-12">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <p className="text-slate-400">Booking tidak ditemukan</p>
-        </div>
-      </TeknisiLayout>
-    );
-  }
-
   return (
     <TeknisiLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
+      <div className="space-y-6" suppressHydrationWarning>
+        {(authLoading || !isAuthenticated || loading) ? (
+          <Card className="shadow-md border-amber-200/50 dark:border-amber-900/30">
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent mb-4"></div>
+                <p className="text-muted-foreground">Loading...</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : !booking ? (
+          <Card className="shadow-md border-amber-200/50 dark:border-amber-900/30">
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                <p className="text-muted-foreground">Booking tidak ditemukan</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
             <div className="flex items-center gap-3 mb-2">
               <Link href="/teknisi/service">
                 <Button
@@ -402,6 +400,8 @@ export default function TeknisiServiceDetailPage() {
             </Card>
           </div>
         </div>
+          </>
+        )}
       </div>
     </TeknisiLayout>
   );

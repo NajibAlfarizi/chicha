@@ -12,20 +12,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Wrench, Calendar, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth-context';
-import { Teknisi } from '@/lib/types';
 
 export default function BookingPage() {
   const router = useRouter();
   const { isAuthenticated, user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [teknisiList, setTeknisiList] = useState<Teknisi[]>([]);
   const [bookingData, setBookingData] = useState({
     device_name: '',
     issue: '',
     booking_date: '',
     customer_name: '',
     customer_phone: '',
-    teknisi_id: '',
   });
 
   useEffect(() => {
@@ -57,24 +54,7 @@ export default function BookingPage() {
       }
     };
 
-    // Fetch active teknisi list
-    const fetchTeknisi = async () => {
-      try {
-        const response = await fetch('/api/teknisi?status=active');
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Teknisi list fetched:', data.teknisi);
-          setTeknisiList(data.teknisi || []);
-        } else {
-          console.error('Failed to fetch teknisi:', response.status);
-        }
-      } catch (error) {
-        console.error('Error fetching teknisi:', error);
-      }
-    };
-
     fetchProfile();
-    fetchTeknisi();
   }, [isAuthenticated, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,7 +78,6 @@ export default function BookingPage() {
         booking_date: string;
         customer_name: string;
         customer_phone: string;
-        teknisi_id?: string;
       }
 
       const payload: BookingPayload = {
@@ -109,11 +88,6 @@ export default function BookingPage() {
         customer_name: bookingData.customer_name,
         customer_phone: bookingData.customer_phone,
       };
-
-      // Include teknisi_id only if explicitly selected (not empty or 'auto')
-      if (bookingData.teknisi_id && bookingData.teknisi_id !== '' && bookingData.teknisi_id !== 'auto') {
-        payload.teknisi_id = bookingData.teknisi_id;
-      }
 
       console.log('Sending booking payload:', payload);
 
@@ -287,37 +261,14 @@ export default function BookingPage() {
                       required
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="teknisi_id">
-                      Pilih Teknisi <span className="text-muted-foreground">(Opsional)</span>
-                    </Label>
-                    <Select
-                      value={bookingData.teknisi_id || 'auto'}
-                      onValueChange={(value) => setBookingData({...bookingData, teknisi_id: value === 'auto' ? '' : value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih teknisi (opsional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto">Tidak ada preferensi (Otomatis)</SelectItem>
-                        {teknisiList.map((teknisi) => (
-                          <SelectItem key={teknisi.id} value={teknisi.id}>
-                            {teknisi.name} {teknisi.specialization ? `- ${teknisi.specialization}` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      Anda dapat memilih teknisi spesifik atau biarkan kosong untuk assignment otomatis
-                    </p>
-                  </div>
                 </div>
 
                 {/* Info Box */}
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 md:p-4">
                   <h4 className="text-amber-600 dark:text-amber-500 font-semibold mb-2 text-sm md:text-base">ℹ️ Informasi Penting</h4>
                   <ul className="text-sm space-y-1">
+                    <li>• Admin kami akan menugaskan teknisi terbaik untuk Anda</li>
+                    <li>• Anda akan menerima notifikasi saat teknisi ditugaskan</li>
                     <li>• Tim kami akan menghubungi Anda untuk konfirmasi jadwal</li>
                     <li>• Anda akan mendapat update progress perbaikan secara realtime</li>
                     <li>• Estimasi waktu perbaikan: 1-3 hari kerja (tergantung kerusakan)</li>

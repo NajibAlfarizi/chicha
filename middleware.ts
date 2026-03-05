@@ -59,6 +59,11 @@ export async function middleware(request: NextRequest) {
     if (userRole !== 'admin') {
       return NextResponse.redirect(new URL('/auth/login?redirect=' + pathname, request.url));
     }
+  } else if (pathname.startsWith('/client/checkout/success')) {
+    // Success page is accessible without strict auth check
+    // Payment status is updated via Midtrans webhook notification
+    console.log('Middleware: allowing access to success page');
+    return NextResponse.next();
   } else if (pathname.startsWith('/client/checkout') || 
              pathname.startsWith('/client/booking') || 
              pathname.startsWith('/client/progress') ||

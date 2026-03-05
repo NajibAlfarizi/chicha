@@ -41,6 +41,9 @@ export async function POST(request: NextRequest) {
       callbacks: {
         finish: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://chicha-mobile.me'}/client/checkout/success?order_id=${order_id}`,
       },
+      // Add notification URL for webhook
+      // Midtrans will call this URL when payment status changes
+      enabled_payments: ['credit_card', 'bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'permata_va', 'other_va', 'gopay', 'shopeepay', 'qris'],
     };
 
     console.log('Midtrans parameter:', JSON.stringify(parameter, null, 2));

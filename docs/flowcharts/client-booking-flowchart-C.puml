@@ -1,0 +1,57 @@
+@startuml Flowchart Booking Service - Chicha Mobile
+
+title Flowchart Detail: Booking Service (Breakpoint C)
+
+start
+
+:(C)\nBuka halaman booking service;
+
+:Tampilkan form booking;
+
+label input
+:Input data booking;
+
+if (Data valid?) then (tidak)
+  :Tampilkan error validasi;
+  goto input
+else (ya)
+  :Validasi data lengkap;
+endif
+
+if (Pilih teknisi manual?) then (ya)
+  :Tampilkan daftar teknisi;
+  :Pilih teknisi tertentu;
+else (tidak)
+  :Auto-assign teknisi\n(sistem pilih otomatis);
+endif
+
+:Submit booking;
+
+:Create booking di database;
+
+:Generate service code;
+
+:Assign teknisi ke booking;
+
+:Create notification\n(untuk user & teknisi);
+
+:Tampilkan booking berhasil\n+ service code;
+
+if (Pilih aksi selanjutnya?) then (Track progress)
+  :Redirect ke halaman track;
+  :Tampilkan progress service;
+  stop
+elseif (Lihat riwayat) then (ya)
+  :Redirect ke riwayat booking;
+  :Tampilkan daftar booking;
+  stop
+elseif (Chat teknisi) then (ya)
+  :Buka chat room;
+  :Chat dengan teknisi;
+  stop
+else (Kembali)
+  :Kembali ke dashboard;
+  stop
+endif
+
+@enduml

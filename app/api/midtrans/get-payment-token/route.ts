@@ -15,65 +15,104 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 Getting payment token for order:', order_id);
 
-    // Get transaction status from Midtrans
-    const statusResponse = await fetch(
-      `${MIDTRANS_APP_URL.replace('/snap/v1', '/v2')}/${order_id}/status`,
-      {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Basic ' + Buffer.from(MIDTRANS_SERVER_KEY + ':').toString('base64'),
-        },
-      }
-    );
-
-    if (!statusResponse.ok) {
-      const errorText = await statusResponse.text();
-      console.error('❌ Midtrans status error:', errorText);
-      return NextResponse.json({ 
-        error: 'Failed to get transaction status',
-        details: errorText 
-      }, { status: 500 });
-    }
-
-    const statusData = await statusResponse.json();
-    console.log('📊 Transaction status:', statusData);
-
-    // If payment is already success or settlement, redirect to success
-    if (statusData.transaction_status === 'settlement' || statusData.transaction_status === 'capture') {
-      return NextResponse.json({ 
-        redirect: true,
-        redirect_url: '/client/checkout/success',
-        status: statusData.transaction_status
-      }, { status: 200 });
-    }
-
-    // Get the snap token (it should be in the transaction data)
-    // For pending transactions, we need to get the order from our database
+    // First, try to get the order from our database
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
-      .select('*')
+      .select(`
+        id,
+        midtrans_order_id,
+        snap_token,
+        total_amount,
+        customer_info,
+        order_items:order_items(
+          quantity,
+          price,
+          product:products(id, name)
+        )
+      `)
       .eq('midtrans_order_id', order_id)
       .single();
 
     if (orderError || !order) {
-      console.error('❌ Order not found:', orderError);
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      console.error('❌ Order not found in database:', {
+        midtrans_order_id: order_id,
+        error: orderError
+      });
+      return NextResponse.json({ 
+        error: 'Order not found',
+        details: 'Order dengan ID Midtrans ini tidak ditemukan di database'
+      }, { status: 404 });
     }
 
-    // For sandbox/testing, we can use the redirect_url from Midtrans status
-    // In production, you might need to store the snap_token in your database
-    if (statusData.redirect_url) {
+    console.log('✅ Order found:', {
+      order_id: order.id,
+      midtrans_order_id: order.midtrans_order_id,
+      has_snap_token: !!order.snap_token,
+      total_amount: order.total_amount
+    });
+
+    // Return stored snap_token if available
+    if (order.snap_token) {
+      console.log('✅ Snap token retrieved from database');
       return NextResponse.json({ 
-        token: statusData.redirect_url.split('?')[0].split('/').pop(),
-        redirect_url: statusData.redirect_url
+        token: order.snap_token
       }, { status: 200 });
     }
 
-    // If no redirect_url, return error
-    return NextResponse.json({ 
-      error: 'Payment token not available. Please create a new order.' 
-    }, { status: 400 });
+    // If no snap_token stored, create new transaction with Midtrans
+    console.log('⚠️ No snap_token found, creating new Midtrans transaction...');
+    
+    try {
+      // Import midtrans client
+      const midtransClient = require('midtrans-client');
+      const snap = new midtransClient.Snap({
+        isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
+        serverKey: MIDTRANS_SERVER_KEY,
+      });
+
+      // Prepare item details from order
+      const itemDetails = order.order_items?.map((item: any) => ({
+        id: item.product.id,
+        name: item.product.name,
+        price: item.price,
+        quantity: item.quantity,
+      })) || [];
+
+      const parameter = {
+        transaction_details: {
+          order_id: order_id,
+          gross_amount: order.total_amount,
+        },
+        customer_details: {
+          first_name: order.customer_info?.name || order.customer_info?.recipient_name || 'Customer',
+          email: order.customer_info?.email || order.customer_info?.recipient_email || '',
+          phone: order.customer_info?.phone || order.customer_info?.recipient_phone || '',
+        },
+        item_details: itemDetails,
+      };
+
+      const transaction = await snap.createTransaction(parameter);
+      console.log('✅ New Midtrans transaction created');
+
+      // Save snap_token to database
+      await supabaseAdmin
+        .from('orders')
+        .update({ snap_token: transaction.token })
+        .eq('id', order.id);
+
+      console.log('✅ Snap token saved to database');
+
+      return NextResponse.json({ 
+        token: transaction.token
+      }, { status: 200 });
+
+    } catch (midtransError) {
+      console.error('❌ Failed to create new Midtrans transaction:', midtransError);
+      return NextResponse.json({ 
+        error: 'Failed to create payment token. Please create a new order.',
+        details: midtransError instanceof Error ? midtransError.message : 'Unknown error'
+      }, { status: 500 });
+    }
 
   } catch (error) {
     console.error('❌ Get payment token error:', error);

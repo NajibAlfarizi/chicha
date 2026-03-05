@@ -76,48 +76,48 @@ export default function TeknisiServicePage() {
     completed: bookings.filter((b) => b.progress_status === 'selesai').length,
   };
 
-  if (authLoading || !isAuthenticated) {
-    return (
-      <TeknisiLayout>
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </TeknisiLayout>
-    );
-  }
-
   return (
     <TeknisiLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <Card className="shadow-md border-amber-200/50 dark:border-amber-900/30">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                  <Wrench className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-amber-700 dark:text-amber-400">
-                    Manajemen Service
-                  </h1>
-                  <p className="text-muted-foreground mt-1">Kelola, filter, dan pantau semua service secara detail</p>
-                </div>
-              </div>
-              <div className="hidden md:flex items-center gap-3 bg-amber-50 dark:bg-amber-950/30 px-5 py-3 rounded-xl border border-amber-200 dark:border-amber-800">
+      <div className="space-y-6" suppressHydrationWarning>
+        {(authLoading || !isAuthenticated) ? (
+          <Card className="shadow-md border-amber-200/50 dark:border-amber-900/30">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-center py-20">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.total}</p>
-                  <p className="text-xs text-muted-foreground">Total Service</p>
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Header */}
+            <Card className="shadow-md border-amber-200/50 dark:border-amber-900/30">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                      <Wrench className="h-7 w-7 text-white" />
+                    </div>
+                    <div>
+                      <h1 className="text-3xl font-bold text-amber-700 dark:text-amber-400">
+                        Manajemen Service
+                      </h1>
+                      <p className="text-muted-foreground mt-1">Kelola, filter, dan pantau semua service secara detail</p>
+                    </div>
+                  </div>
+                  <div className="hidden md:flex items-center gap-3 bg-amber-50 dark:bg-amber-950/30 px-5 py-3 rounded-xl border border-amber-200 dark:border-amber-800">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.total}</p>
+                      <p className="text-xs text-muted-foreground">Total Service</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Interactive Filter Stats */}
+            {/* Interactive Filter Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <button
             onClick={() => setStatusFilter('all')}
@@ -306,6 +306,8 @@ export default function TeknisiServicePage() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
     </TeknisiLayout>
   );

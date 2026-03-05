@@ -1,0 +1,119 @@
+@startuml Flowchart Katalog Produk & Checkout - Chicha Mobile
+
+title Flowchart Detail: Buka Halaman Produk (Breakpoint B)
+
+start
+
+:(B)\nBuka halaman produk;
+
+label browse
+:Tampilkan katalog produk;
+
+if (Filter kategori?) then (ya)
+  :Pilih kategori;
+  :Tampilkan produk\nsesuai kategori;
+endif
+
+if (Search produk?) then (ya)
+  :Input kata kunci;
+  if (Produk ditemukan?) then (ya)
+    :Tampilkan hasil pencarian;
+  else (tidak)
+    :Tampilkan\n"Tidak ditemukan";
+  endif
+endif
+
+:Tampilkan grid produk;
+
+:Klik produk;
+
+:Tampilkan detail produk;
+
+if (Stok tersedia?) then (ya)
+  :Pilih quantity;
+  :Tambah ke keranjang;
+  
+  if (Lanjut belanja?) then (ya)
+    goto browse
+  else (tidak)
+    :Lihat keranjang;
+  endif
+else (tidak)
+  :Tampilkan "Stok habis";
+  goto browse
+endif
+
+if (Keranjang kosong?) then (ya)
+  :Tampilkan\n"Keranjang kosong";
+  goto browse
+else (tidak)
+  :Tampilkan isi keranjang;
+  
+  fork
+    :Update quantity;
+  fork again
+    :Hapus item;
+  end fork
+  
+  :Hitung subtotal;
+  
+  if (Lanjut checkout?) then (tidak)
+    :Tetap di keranjang;
+    stop
+  else (ya)
+    :Buka halaman checkout;
+  endif
+endif
+
+:Input data pelanggan;
+
+if (Pakai voucher?) then (ya)
+  :Input/pilih voucher;
+  :Validasi voucher;
+  
+  if (Voucher valid?) then (ya)
+    :Apply diskon;
+    :Hitung total belanja;
+  else (tidak)
+    :Tampilkan error voucher;
+  endif
+else (tidak)
+  :Total = Subtotal;
+endif
+
+:Pilih metode pembayaran;
+
+if (Pilih metode?) then (COD)
+  :Create order (COD);
+  :Insert order items;
+  :Update stok produk (-);
+  :Create notification;
+  :Clear cart;
+  :Redirect halaman success;
+else (Midtrans)
+  :Create order (Midtrans);
+  :Request snap token;
+  :Simpan snap token;
+  :Open Midtrans Snap;
+  
+  if (Payment success?) then (ya)
+    :Update payment status: paid;
+    :Update stok produk (-);
+    :Update target progress;
+    :Create notification;
+    :Clear cart;
+    :Redirect halaman success;
+  else (tidak)
+    if (Status?) then (pending)
+      :Redirect halaman pending;
+    else (failed)
+      :Redirect halaman error;
+    endif
+  endif
+endif
+
+:Tampilkan summary transaksi;
+
+stop
+
+@enduml

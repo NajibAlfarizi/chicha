@@ -1,11 +1,13 @@
-import { supabase } from './supabaseClient';
+import { supabase, supabaseAdmin } from './supabaseClient';
 
 export interface CreateNotificationParams {
   user_id: string;
   title: string;
   message: string;
-  type: 'order' | 'booking' | 'target' | 'general';
+  type: 'order' | 'booking' | 'target' | 'general' | 'booking_assignment' | 'order_status';
   related_id?: string;
+  order_id?: string;
+  booking_id?: string;
 }
 
 /**
@@ -18,18 +20,26 @@ export async function createNotification({
   message,
   type,
   related_id,
+  order_id,
+  booking_id,
 }: CreateNotificationParams) {
   try {
-    const { data, error } = await supabase
+    const insertData: any = {
+      user_id,
+      title,
+      message,
+      type,
+      is_read: false,
+    };
+
+    // Add optional fields if provided
+    if (related_id) insertData.related_id = related_id;
+    if (order_id) insertData.order_id = order_id;
+    if (booking_id) insertData.booking_id = booking_id;
+
+    const { data, error } = await supabaseAdmin
       .from('notifications')
-      .insert({
-        user_id,
-        title,
-        message,
-        type,
-        related_id,
-        is_read: false,
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -155,5 +165,144 @@ export async function notifyTargetUpdate(
     message: actionInfo.message,
     type: 'target',
     related_id: targetId,
+  });
+}
+
+/**
+ * Get all admin user IDs
+ */
+async function getAdminUserIds(): Promise<string[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('role', 'admin');
+
+    if (error) {
+      console.error('Failed to fetch admin users:', error);
+      return [];
+    }
+
+    return data.map(admin => admin.id);
+  } catch (error) {
+    console.error('Error fetching admin users:', error);
+    return [];
+  }
+}
+
+/**
+ * Notify all admins about new order
+ */
+export async function notifyAdminsNewOrder(orderId: string, orderDetails: {
+  customerName?: string;
+  totalAmount: number;
+  itemCount: number;
+}) {
+  try {
+    const adminIds = await getAdminUserIds();
+    
+    if (adminIds.length === 0) {
+      console.warn('No admin users found to notify');
+      return [];
+    }
+
+    const notifications = await Promise.all(
+      adminIds.map(adminId =>
+        createNotification({
+          user_id: adminId,
+          title: '🛒 Pesanan Baru Masuk',
+          message: `Pesanan baru dari ${orderDetails.customerName || 'Pelanggan'} dengan ${orderDetails.itemCount} item (Rp ${orderDetails.totalAmount.toLocaleString('id-ID')})`,
+          type: 'order',
+          order_id: orderId,
+          related_id: orderId,
+        })
+      )
+    );
+
+    console.log(`✅ Notified ${adminIds.length} admins about new order`);
+    return notifications;
+  } catch (error) {
+    console.error('Error notifying admins about new order:', error);
+    return [];
+  }
+}
+
+/**
+ * Notify all admins about new booking
+ */
+export async function notifyAdminsNewBooking(bookingId: string, bookingDetails: {
+  customerName?: string;
+  deviceName: string;
+  issue: string;
+  serviceCode?: string;
+}) {
+  try {
+    const adminIds = await getAdminUserIds();
+    
+    if (adminIds.length === 0) {
+      console.warn('No admin users found to notify');
+      return [];
+    }
+
+    const notifications = await Promise.all(
+      adminIds.map(adminId =>
+        createNotification({
+          user_id: adminId,
+          title: '🔧 Booking Service Baru',
+          message: `Booking baru dari ${bookingDetails.customerName || 'Pelanggan'} untuk ${bookingDetails.deviceName}${bookingDetails.serviceCode ? ` (${bookingDetails.serviceCode})` : ''}`,
+          type: 'booking',
+          booking_id: bookingId,
+          related_id: bookingId,
+        })
+      )
+    );
+
+    console.log(`✅ Notified ${adminIds.length} admins about new booking`);
+    return notifications;
+  } catch (error) {
+    console.error('Error notifying admins about new booking:', error);
+    return [];
+  }
+}
+
+/**
+ * Notify customer about new order confirmation
+ */
+export async function notifyCustomerNewOrder(userId: string, orderId: string, orderDetails: {
+  totalAmount: number;
+  itemCount: number;
+  paymentMethod: string;
+}) {
+  return createNotification({
+    user_id: userId,
+    title: '✅ Pesanan Berhasil Dibuat',
+    message: `Pesanan Anda dengan ${orderDetails.itemCount} item (Total: Rp ${orderDetails.totalAmount.toLocaleString('id-ID')}) berhasil dibuat. Metode pembayaran: ${orderDetails.paymentMethod}`,
+    type: 'order',
+    order_id: orderId,
+    related_id: orderId,
+  });
+}
+
+/**
+ * Notify customer about new booking confirmation
+ */
+export async function notifyCustomerNewBooking(userId: string, bookingId: string, bookingDetails: {
+  deviceName: string;
+  bookingDate: string;
+  serviceCode?: string;
+}) {
+  const bookingDateFormatted = new Date(bookingDetails.bookingDate).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  return createNotification({
+    user_id: userId,
+    title: '✅ Booking Service Berhasil',
+    message: `Booking service untuk ${bookingDetails.deviceName} berhasil dibuat${bookingDetails.serviceCode ? ` (${bookingDetails.serviceCode})` : ''}. Tanggal: ${bookingDateFormatted}. Admin akan segera menugaskan teknisi untuk Anda.`,
+    type: 'booking',
+    booking_id: bookingId,
+    related_id: bookingId,
   });
 }

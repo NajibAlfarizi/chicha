@@ -1,0 +1,46 @@
+@startuml Flowchart Track Service - Chicha Mobile
+
+title Flowchart Detail: Buka Halaman Cari Service (Breakpoint D)
+
+start
+
+:(D)\nBuka halaman track service;
+
+:Tampilkan form pencarian\nservice code;
+
+label search
+:Input service code;
+
+if (Service code valid?) then (tidak)
+  :Tampilkan error\n"Booking tidak ditemukan";
+  goto search
+else (ya)
+  :Cari booking di database;
+endif
+
+:Tampilkan detail service;
+
+:Tampilkan progress timeline;
+
+if (Ada update progress?) then (ya)
+  :Notifikasi progress update;
+  :Auto refresh timeline;
+endif
+
+if (Pilih aksi?) then (Chat teknisi)
+  :Buka chat room;
+  :Chat dengan teknisi;
+  stop
+elseif (Lihat detail booking) then (ya)
+  :Tampilkan info lengkap;
+  :Detail device & teknisi;
+  stop
+elseif (Refresh) then (ya)
+  :Reload progress;
+  goto search
+else (Kembali)
+  :Kembali ke dashboard;
+  stop
+endif
+
+@enduml

@@ -83,24 +83,24 @@ export default function TeknisiDashboardPage() {
     return <Badge className={colors[status || 'menunggu']}>{status || 'menunggu'}</Badge>;
   };
 
-  if (authLoading || !isAuthenticated) {
-    return (
-      <TeknisiLayout>
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </TeknisiLayout>
-    );
-  }
-
   return (
     <TeknisiLayout>
-      <div className="space-y-6">
-        {/* Welcome Card */}
-        <Card className="border-amber-200/50 dark:border-amber-900/30 shadow-lg bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-amber-950/30 dark:via-orange-950/30 dark:to-amber-950/30 overflow-hidden relative">
+      <div className="space-y-6" suppressHydrationWarning>
+        {(authLoading || !isAuthenticated) ? (
+          <Card className="shadow-md border-amber-200/50 dark:border-amber-900/30">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent mb-4"></div>
+                  <p className="text-muted-foreground">Loading...</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Welcome Card */}
+            <Card className="border-amber-200/50 dark:border-amber-900/30 shadow-lg bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-amber-950/30 dark:via-orange-950/30 dark:to-amber-950/30 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-full -mr-32 -mt-32 blur-3xl"></div>
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-center justify-between">
@@ -247,6 +247,8 @@ export default function TeknisiDashboardPage() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
     </TeknisiLayout>
   );

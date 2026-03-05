@@ -21,8 +21,9 @@ import {
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wrench, Eye } from 'lucide-react';
-import { Booking, ServiceProgress } from '@/lib/types';
+import { Wrench, Eye, UserPlus } from 'lucide-react';
+import { Booking, ServiceProgress, Teknisi } from '@/lib/types';
+import { toast } from 'sonner';
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -30,9 +31,15 @@ export default function AdminBookingsPage() {
   const [selectedBooking, setSelectedBooking] = useState<Booking & { progress?: ServiceProgress[] } | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [teknisiList, setTeknisiList] = useState<Teknisi[]>([]);
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [selectedTeknisi, setSelectedTeknisi] = useState('');
+  const [assigningBookingId, setAssigningBookingId] = useState<string | null>(null);
+  const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
     fetchBookings();
+    fetchTeknisi();
   }, []);
 
   const fetchBookings = async () => {
@@ -47,6 +54,18 @@ export default function AdminBookingsPage() {
     }
   };
 
+  const fetchTeknisi = async () => {
+    try {
+      const response = await fetch('/api/teknisi?status=active');
+      if (response.ok) {
+        const data = await response.json();
+        setTeknisiList(data.teknisi || []);
+      }
+    } catch (error) {
+      console.error('Error fetching teknisi:', error);
+    }
+  };
+
   const fetchBookingDetail = async (bookingId: string) => {
     try {
       const response = await fetch(`/api/bookings/${bookingId}`);
@@ -55,6 +74,49 @@ export default function AdminBookingsPage() {
       setIsDetailOpen(true);
     } catch (error) {
       console.error('Error fetching booking detail:', error);
+    }
+  };
+
+  const openAssignDialog = (bookingId: string) => {
+    setAssigningBookingId(bookingId);
+    setSelectedTeknisi('');
+    setIsAssignOpen(true);
+  };
+
+  const handleAssignTeknisi = async () => {
+    if (!assigningBookingId || !selectedTeknisi) {
+      toast.error('Pilih teknisi terlebih dahulu');
+      return;
+    }
+
+    setIsAssigning(true);
+    try {
+      const response = await fetch(`/api/bookings/${assigningBookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teknisi_id: selectedTeknisi }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Teknisi berhasil ditugaskan!', {
+          description: 'Notifikasi telah dikirim ke teknisi dan pelanggan.',
+        });
+        setIsAssignOpen(false);
+        fetchBookings(); // Refresh list
+      } else {
+        toast.error('Gagal menugaskan teknisi', {
+          description: data.error || 'Silakan coba lagi.',
+        });
+      }
+    } catch (error) {
+      console.error('Error assigning teknisi:', error);
+      toast.error('Terjadi kesalahan', {
+        description: 'Silakan coba lagi.',
+      });
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -169,15 +231,28 @@ export default function AdminBookingsPage() {
                         {new Date(booking.booking_date).toLocaleDateString('id-ID')}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => fetchBookingDetail(booking.id)}
-                          className="border-amber-500 text-amber-500 hover:bg-amber-500/10"
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Detail
-                        </Button>
+                        <div className="flex gap-2 justify-end">
+                          {!booking.teknisi && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openAssignDialog(booking.id)}
+                              className="border-green-500 text-green-500 hover:bg-green-500/10"
+                            >
+                              <UserPlus className="h-4 w-4 mr-1" />
+                              Assign
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => fetchBookingDetail(booking.id)}
+                            className="border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Detail
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -373,6 +448,68 @@ export default function AdminBookingsPage() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Assign Teknisi Dialog */}
+        <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
+          <DialogContent className="border-amber-500/20 max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-amber-500">Tugaskan Teknisi</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                Pilih teknisi yang akan menangani service ini
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Pilih Teknisi</label>
+                <Select value={selectedTeknisi} onValueChange={setSelectedTeknisi}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih teknisi..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teknisiList.map((teknisi) => (
+                      <SelectItem key={teknisi.id} value={teknisi.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{teknisi.name}</span>
+                          {teknisi.specialization && (
+                            <span className="text-xs text-muted-foreground">{teknisi.specialization}</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 text-sm">
+                <p className="text-blue-700 dark:text-blue-400">
+                  ℹ️ Setelah ditugaskan, notifikasi akan dikirim ke:
+                </p>
+                <ul className="text-blue-600 dark:text-blue-300 mt-2 space-y-1 ml-4">
+                  <li>• Teknisi yang ditugaskan</li>
+                  <li>• Pelanggan yang booking</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAssignOpen(false)}
+                  disabled={isAssigning}
+                  className="flex-1"
+                >
+                  Batal
+                </Button>
+                <Button
+                  onClick={handleAssignTeknisi}
+                  disabled={!selectedTeknisi || isAssigning}
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  {isAssigning ? 'Menugaskan...' : 'Tugaskan'}
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
 

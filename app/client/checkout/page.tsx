@@ -402,17 +402,26 @@ export default function CheckoutPage() {
           return;
         }
 
-        // Update order with midtrans_order_id
-        console.log('💾 Step 3: Updating order with midtrans_order_id...');
-        await fetch(`/api/orders/${order.id}`, {
+        // Update order with midtrans_order_id and snap_token
+        console.log('💾 Step 3: Updating order with midtrans_order_id and snap_token...');
+        const updateResponse = await fetch(`/api/orders/${order.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             midtrans_order_id: paymentResult.order_id,
+            snap_token: paymentResult.token,
           }),
         });
 
+        if (!updateResponse.ok) {
+          console.error('❌ Failed to update order with midtrans data');
+        } else {
+          const updateData = await updateResponse.json();
+          console.log('✅ Order updated:', updateData);
+        }
+
         console.log('✅ Order updated with midtrans_order_id:', paymentResult.order_id);
+        console.log('✅ Order updated with snap_token:', paymentResult.token);
 
         // Verify pending_order is saved
         const savedPendingOrder = localStorage.getItem('pending_order');

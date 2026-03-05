@@ -1,0 +1,94 @@
+@startuml Status Transition Diagram - Chicha Mobile (Simplified)
+
+title Diagram Transisi Status Perbaikan HP (Simplified)
+
+skinparam state {
+  BackgroundColor<<Menunggu>> #FEF3C7
+  BorderColor<<Menunggu>> #F59E0B
+  BackgroundColor<<Diproses>> #DBEAFE
+  BorderColor<<Diproses>> #3B82F6
+  BackgroundColor<<Selesai>> #D1FAE5
+  BorderColor<<Selesai>> #10B981
+  BackgroundColor<<Dibatalkan>> #FEE2E2
+  BorderColor<<Dibatalkan>> #EF4444
+}
+
+[*] --> Menunggu : Customer\nmengantarkan HP
+
+state Menunggu <<Menunggu>> {
+  Menunggu : 🟡 MENUNGGU
+  Menunggu : ----------
+  Menunggu : Booking baru dibuat
+  Menunggu : HP menunggu pemeriksaan
+  Menunggu : Menunggu keputusan
+}
+
+state Diproses <<Diproses>> {
+  Diproses : 🔵 DIPROSES
+  Diproses : ----------
+  Diproses : HP diterima untuk perbaikan
+  Diproses : Sedang dalam proses perbaikan
+  Diproses : Termasuk menunggu spare part
+}
+
+state Selesai <<Selesai>> {
+  Selesai : 🟢 SELESAI
+  Selesai : ----------
+  Selesai : Perbaikan selesai
+  Selesai : HP siap diambil
+}
+
+state Dibatalkan <<Dibatalkan>> {
+  Dibatalkan : 🔴 DIBATALKAN
+  Dibatalkan : ----------
+  Dibatalkan : Customer batal
+  Dibatalkan : perbaikan
+}
+
+Menunggu --> Diproses : Teknisi periksa HP,\nCustomer SETUJU perbaikan
+Menunggu --> Dibatalkan : Customer TIDAK SETUJU\nperbaikan
+
+Diproses --> Selesai : Perbaikan selesai\ndan di-test normal
+
+Selesai --> [*] : Customer\nambil HP
+Dibatalkan --> [*] : HP dikembalikan\nke customer
+
+note top of Menunggu
+  <b>Actor:</b> Admin/Toko
+  <b>Action:</b> Buat booking
+  
+  HP baru diantar, menunggu
+  pemeriksaan dan keputusan
+end note
+
+note right of Diproses
+  <b>Actor:</b> Teknisi
+  <b>Action:</b> Perbaikan aktif
+  
+  Status ini mencakup:
+  - HP sedang dikerjakan
+  - Menunggu spare part
+  - Spare part datang, lanjut kerja
+  
+  Tidak perlu ganti status
+  saat tunggu spare part
+end note
+
+note right of Dibatalkan
+  <b>Actor:</b> Admin/Toko
+  <b>Alasan Batal:</b>
+  - Biaya terlalu mahal
+  - Tidak worth it
+  - Customer ganti HP baru
+  - Kerusakan terlalu parah
+end note
+
+note bottom of Selesai
+  <b>Actor:</b> Teknisi
+  <b>Action:</b> Update status selesai
+  
+  <b>Next:</b> Admin hubungi customer
+  untuk ambil HP
+end note
+
+@enduml

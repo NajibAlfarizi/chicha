@@ -77,7 +77,16 @@ function PendingPaymentContent() {
   };
 
   const handleContinuePayment = async () => {
-    if (!order?.midtrans_order_id) return;
+    if (!order?.midtrans_order_id) {
+      console.error('❌ No midtrans_order_id found in order:', order);
+      alert('Order tidak memiliki ID pembayaran Midtrans. Silakan buat order baru.');
+      return;
+    }
+
+    console.log('🔄 Continuing payment for order:', {
+      order_id: order.id,
+      midtrans_order_id: order.midtrans_order_id,
+    });
 
     setProcessingPayment(true);
     
@@ -90,7 +99,9 @@ function PendingPaymentContent() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get payment token');
+        const errorData = await response.json();
+        console.error('❌ Failed to get payment token:', errorData);
+        throw new Error(errorData.error || 'Failed to get payment token');
       }
 
       const data = await response.json();
@@ -127,6 +138,8 @@ function PendingPaymentContent() {
       }
     } catch (error) {
       console.error('Error continuing payment:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan';
+      alert(`Gagal melanjutkan pembayaran: ${errorMessage}`);
       setProcessingPayment(false);
     }
   };

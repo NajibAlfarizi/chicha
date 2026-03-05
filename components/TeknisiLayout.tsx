@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -25,6 +25,37 @@ export default function TeknisiLayout({ children }: TeknisiLayoutProps) {
   const router = useRouter();
   const { teknisi, logout } = useTeknisiAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [teknisiUserId, setTeknisiUserId] = useState<string | undefined>(undefined);
+
+  // Fetch teknisi user_id from users table
+  useEffect(() => {
+    const fetchTeknisiUserId = async () => {
+      if (!teknisi) return;
+      
+      try {
+        const teknisiEmail = teknisi.email || `${teknisi.username}@teknisi.local`;
+        console.log('🔍 Fetching user_id for teknisi email:', teknisiEmail);
+        
+        const response = await fetch(`/api/users/by-email?email=${encodeURIComponent(teknisiEmail)}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user?.id) {
+            console.log('✅ Teknisi user_id found:', data.user.id);
+            setTeknisiUserId(data.user.id);
+          } else {
+            console.warn('⚠️ Teknisi user not found in users table');
+          }
+        } else {
+          console.error('❌ Failed to fetch teknisi user_id:', response.status);
+        }
+      } catch (error) {
+        console.error('❌ Error fetching teknisi user_id:', error);
+      }
+    };
+
+    fetchTeknisiUserId();
+  }, [teknisi]);
 
   const isActive = (path: string) => pathname === path;
 
@@ -87,7 +118,7 @@ export default function TeknisiLayout({ children }: TeknisiLayoutProps) {
             <div className="hidden md:flex items-center gap-3">
               <TeknisiUserInfo />
               <ThemeToggle />
-              <NotificationBell />
+              <NotificationBell userId={teknisiUserId} userType="teknisi" />
               <Button
                 size="sm"
                 onClick={handleLogout}

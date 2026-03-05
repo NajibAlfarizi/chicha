@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, supabaseAdmin } from '@/lib/supabaseClient';
+import { notifyAdminsNewBooking, notifyCustomerNewBooking } from '@/lib/notification-helper';
 
 // GET bookings with filters
 export async function GET(request: NextRequest) {
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { user_id, device_name, issue, booking_date, teknisi_id, customer_name, customer_phone, customer_email } = body;
+    const { user_id, device_name, issue, booking_date, customer_name, customer_phone, customer_email } = body;
 
     if (!user_id || !device_name || !issue || !booking_date) {
       console.log('Missing fields validation failed:', { user_id, device_name, issue, booking_date });
@@ -66,7 +67,6 @@ export async function POST(request: NextRequest) {
       customer_name?: string;
       customer_phone?: string;
       customer_email?: string;
-      teknisi_id?: string;
     } = {
       user_id,
       device_name,
@@ -80,14 +80,12 @@ export async function POST(request: NextRequest) {
     if (customer_phone) insertData.customer_phone = customer_phone;
     if (customer_email) insertData.customer_email = customer_email;
 
-    // Add teknisi_id only if provided and not empty
-    if (teknisi_id && teknisi_id !== '' && teknisi_id !== 'auto') {
-      insertData.teknisi_id = teknisi_id;
-    }
+    // Note: teknisi_id will be assigned by admin later
+    // Customers can no longer select teknisi during booking
 
     console.log('Insert data to be sent:', insertData);
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('bookings')
       .insert(insertData)
       .select()
@@ -103,6 +101,37 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Booking created successfully:', data);
+
+    // =========================================
+    // SEND NOTIFICATIONS
+    // =========================================
+
+    // Get customer name for notifications
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('name')
+      .eq('id', user_id)
+      .single();
+
+    const customerNameForNotif = customer_name || userData?.name || 'Pelanggan';
+
+    // 1. Notify customer about new booking
+    await notifyCustomerNewBooking(user_id, data.id, {
+      deviceName: device_name,
+      bookingDate: booking_date,
+      serviceCode: data.service_code,
+    });
+    console.log('✅ Customer notified about new booking');
+
+    // 2. Notify all admins about new booking
+    await notifyAdminsNewBooking(data.id, {
+      customerName: customerNameForNotif,
+      deviceName: device_name,
+      issue: issue,
+      serviceCode: data.service_code,
+    });
+    console.log('✅ Admins notified about new booking');
+
     return NextResponse.json({ 
       message: 'Booking created successfully',
       booking: data 

@@ -1,0 +1,982 @@
+@startuml Client Account Management Flowchart - Chicha Mobile
+
+title Flowchart Detail Manajemen Akun Pelanggan - Chicha Mobile
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  BackgroundColor PaleGreen
+  BorderColor DarkGreen
+  StartColor Gold
+  EndColor Crimson
+  BarColor SaddleBrown
+  DiamondBackgroundColor Wheat
+  DiamondBorderColor Chocolate
+}
+
+|Client|
+start
+:<size:14>**( B )**</size>
+Dari Dashboard: Pilih Menu Produk;
+note right
+  **Breakpoint B:**
+  User membuka halaman katalog produk
+  untuk browsing dan belanja
+  
+  **From:** Dashboard / Landing Page
+  **Action:** Klik "Buka halaman produk"
+end note
+
+partition "Buka Halaman Produk" #LightBlue {
+  :Tampilkan Katalog Produk;
+  note right
+    **Page:** /client/produk
+    **Access:** Public (Guest & Logged In)
+    
+    **Tampilan:**
+    - Grid produk (responsive)
+    - Search bar (top)
+    - Filter kategori (dropdown)
+    - Sort options (coming soon)
+    
+    **Load Data:**
+    ```sql
+    SELECT * FROM products
+    WHERE is_active = true
+    ORDER BY created_at DESC
+    ```
+  end note
+  
+  partition "Filter & Search" #Wheat {
+    if (Filter by Kategori?) then (Ya)
+      :Pilih Kategori dari Dropdown;
+      note right
+        **Kategori:**
+        - Smartphone
+        - Aksesoris
+        - Sparepart
+        - Gadget
+        - (dynamic dari DB)
+        
+        **Filter Logic:**
+        - WHERE category_id = selected
+        - Update grid display
+        - Show filtered count
+      end note
+      
+      :Tampilkan Produk Berdasarkan Kategori;
+    endif
+    
+    if (Search Produk?) then (Ya)
+      :Input Kata Kunci;
+      note right
+        **Search:**
+        - Real-time search
+        - Search by: name, description
+        - Case-insensitive
+        - Min 2 characters
+        
+        **Query:**
+        ```sql
+        WHERE name ILIKE '%keyword%'
+        OR description ILIKE '%keyword%'
+        ```
+      end note
+      
+      :Tampilkan Hasil Pencarian;
+      
+      if (Produk Ditemukan?) then (Ya)
+        :List Produk Hasil Search;
+      else (Tidak)
+        :Tampilkan "Produk tidak ditemukan";
+        note right
+          - Empty state illustration
+          - Suggestion text
+          - Link: Lihat semua produk
+        end note
+      endif
+    endif
+  }
+  
+  :Tampilkan Grid Produk;
+  note right
+    **Product Card:**
+    - Gambar produk (optimized)
+    - Nama produk
+    - Harga (formatted Rp)
+    - Stock badge
+    - Quick "+" button
+    - Click → Detail
+    
+    **Stock Status:**
+    - 🟢 In Stock (stok > 10)
+    - 🟡 Low Stock (stok 1-10)
+    - 🔴 Out of Stock (stok 0)
+  end note
+}
+
+partition "Lihat Detail Produk" #LightGreen {
+  :Klik Produk;
+  :Buka Halaman Detail;
+  note right
+    **Page:** /client/produk/[id]
+    **Dynamic Route:** Product ID
+    
+    **Load:**
+    ```sql
+    SELECT * FROM products
+    WHERE id = :product_id
+    ```
+  end note
+  
+  :Tampilkan Data Profil;
+  note right
+    **Detail Display:**
+    - Gambar carousel (swipeable)
+    - Nama produk (h1)
+    - Harga (large, formatted)
+    - Stock status badge
+    - Kategori badge
+    - Deskripsi lengkap
+    - Quantity selector (+/-)
+    - Button: Tambah ke Keranjang
+    - Reviews (if any)
+    - Related products
+  end note
+  
+  if (Stok Produk Tersedia?) then (Ya)
+    :Pilih Quantity;
+    note right
+      **Quantity Selector:**
+      - Default: 1
+      - Min: 1
+      - Max: stock atau 10
+      - Button +/-
+      - Input number
+      
+      **Validation:**
+      - Cannot exceed stock
+      - Must be positive
+      - Show stock limit warning
+    end note
+    
+    :Tambah ke Keranjang;
+    note right
+      **Add to Cart Logic:**
+      - Save to localStorage
+      - Key: "cart"
+      - Structure:
+        ```json
+        [{
+          product_id, name, price,
+          image_url, quantity, stock
+        }]
+        ```
+      
+      **If exists:**
+      - Increment quantity
+      - Check total vs stock
+      
+      **Dispatch Event:**
+      - "cartUpdated" event
+      - Update cart badge count
+      - Toast notification
+    end note
+    
+    :Toast: "Produk ditambahkan";
+    
+    if (Lanjut Belanja?) then (Ya)
+      backward :Tampilkan Grid Produk;
+    else (Tidak)
+      :Lihat Keranjang;
+    endif
+  else (Stok Habis)
+    :Tampilkan "Produk Tidak Tersedia";
+    note right
+      - Disabled button
+      - Out of stock badge
+      - Notify me (coming soon)
+    end note
+    
+    backward :Tampilkan Grid Produk;
+  endif
+}
+
+partition "Keranjang Belanja" #LightYellow {
+  :Buka Halaman Keranjang;
+  note right
+    **Page:** /client/keranjang
+    **Storage:** localStorage
+    
+    **Load Cart:**
+    - Read from localStorage
+    - Parse JSON
+    - Validate items
+    - Check stock availability
+  end note
+  
+  if (Keranjang Kosong?) then (Ya)
+    :Tampilkan "Keranjang Kosong";
+    note right
+      - Empty cart illustration
+      - Message: "Yuk mulai belanja!"
+      - Button: Lihat Produk
+    end note
+    
+    backward :Tampilkan Grid Produk;
+  else (Ada Item)
+    :Tampilkan List Item Keranjang;
+    note right
+      **Cart Item Display:**
+      - Product image (thumbnail)
+      - Product name
+      - Price per unit
+      - Quantity selector (+/-)
+      - Subtotal (price × qty)
+      - Remove button (X)
+      
+      **Actions Available:**
+      - Update quantity
+      - Remove item
+      - Clear all (optional)
+    end note
+    
+    fork
+      :Update Quantity (+/-);
+      note right
+        **Update Logic:**
+        - Validate stock
+        - Update localStorage
+        - Recalculate subtotal
+        - Dispatch cartUpdated
+        - Real-time update UI
+      end note
+    fork again
+      :Hapus Item (X);
+      note right
+        **Remove Logic:**
+        - Filter out item
+        - Update localStorage
+        - Recalculate total
+        - Update cart count
+        - Toast confirmation
+      end note
+    end fork
+    
+    :Calculate Subtotal;
+    note right
+      **Calculation:**
+      ```js
+      subtotal = cart.reduce(
+        (sum, item) => 
+          sum + (item.price * item.quantity),
+        0
+      )
+      ```
+      
+      **Display:**
+      - Subtotal: Rp XXX.XXX
+      - Format with thousand separator
+      - Real-time update
+    end note
+    
+    if (Lanjut Checkout?) then (Ya)
+      :Proses Checkout;
+    else (Tidak)
+      :Tetap di Keranjang;
+    endif
+  endif
+}
+
+partition "Proses Checkout & Pembayaran" #LightCoral {
+  :Buka Halaman Checkout;
+  note right
+    **Page:** /client/checkout
+    **Requires:** Login (redirect if not)
+    
+    **Validate:**
+    - Check authentication
+    - Check cart not empty
+    - Check stock availability
+    - Redirect if invalid
+  end note
+  
+  :Tampilkan Daftar Pesanan dan Database;
+  note right
+    **Form Sections:**
+    
+    1. **Customer Info:**
+       - Nama pelanggan *
+       - Email *
+       - Phone *
+       - Address *
+       
+    2. **Order Items:**
+       - List from cart
+       - Show qty × price
+       - Cannot edit (back to cart)
+    
+    3. **Voucher Section:**
+       - Manual input code
+       - OR dropdown available vouchers
+       - Button: Apply
+    
+    4. **Payment Method:**
+       - Radio: COD
+       - Radio: Midtrans (expand options)
+  end note
+  
+  :Input Data Pelanggan;
+  note right
+    **Required Fields:**
+    - customer_name (min 3)
+    - customer_email (valid email)
+    - customer_phone (min 10)
+    - customer_address (min 10)
+    
+    **Auto-fill:**
+    - Load from user profile
+    - Pre-populate if logged in
+    - Can edit before submit
+  end note
+  
+  if (Pakai Voucher?) then (Ya)
+    :Ambil Data Pelanggan;
+    
+    :Input/Pilih Voucher;
+    note right
+      **Input Manual:**
+      - Text input voucher code
+      - Button: Apply
+      
+      **Dropdown:**
+      - List available vouchers
+      - Show: code, discount, expired
+      - Filter: is_active & valid_until
+      - Only show user's vouchers
+    end note
+    
+    :Validasi Voucher;
+    note right
+      **Validation:**
+      ```sql
+      SELECT * FROM vouchers
+      WHERE code = :input_code
+      AND is_active = true
+      AND valid_until >= NOW()
+      AND (user_id = :user_id OR user_id IS NULL)
+      AND usage_count < usage_limit
+      ```
+      
+      **Checks:**
+      - Code exists
+      - Still active
+      - Not expired
+      - User eligible
+      - Usage not exceeded
+    end note
+    
+    if (Voucher Valid?) then (Ya)
+      :Apply Diskon;
+      note right
+        **Calculate Discount:**
+        
+        **If percentage:**
+        ```js
+        discount = subtotal * 
+          (voucher.discount_percentage / 100)
+        ```
+        
+        **If fixed:**
+        ```js
+        discount = voucher.discount_amount
+        ```
+        
+        **Final:**
+        ```js
+        total = subtotal - discount
+        ```
+        
+        **Display:**
+        - Subtotal: Rp XXX
+        - Diskon (-): Rp XXX
+        - Total: Rp XXX
+      end note
+      
+      :Hitung Total Belanja & Poin Reward;
+      :Toast: "Voucher berhasil digunakan";
+    else (Tidak Valid)
+      :Error: "Voucher tidak valid";
+      note right
+        **Error Messages:**
+        - "Kode voucher tidak ditemukan"
+        - "Voucher sudah expired"
+        - "Voucher sudah tidak aktif"
+        - "Anda tidak eligible"
+        - "Voucher sudah mencapai limit"
+      end note
+    endif
+  else (Tidak)
+    :Total = Subtotal;
+  endif
+  
+  :Pilih Metode Pembayaran;
+  note right
+    **Payment Options:**
+    
+    1. **COD (Cash on Delivery)**
+       - Simple radio button
+       - No additional input
+       - Order status: pending
+       - Payment status: pending
+    
+    2. **Midtrans**
+       - Radio button
+       - Show payment icons
+       - Options:
+         * Virtual Account
+         * E-Wallet (GoPay, OVO, etc)
+         * Credit Card
+         * QRIS
+  end note
+  
+  if (Pilih Metode?) then (COD)
+    partition "Pembayaran COD" #PaleGreen {
+      :Create Order (COD);
+      note right
+        **Insert Order:**
+        ```sql
+        INSERT INTO orders
+        (user_id, customer_name, email,
+         phone, address, subtotal_amount,
+         discount_amount, total_amount,
+         payment_method, payment_status,
+         status, payment_expired_at)
+        VALUES (...)
+        ```
+        
+        **Set:**
+        - payment_method: 'cod'
+        - payment_status: 'pending'
+        - status: 'pending'
+        - payment_expired_at: NULL
+      end note
+      
+      :Insert Order Items;
+      note right
+        **Loop cart items:**
+        ```sql
+        INSERT INTO order_items
+        (order_id, product_id,
+         quantity, price, subtotal)
+        VALUES (...)
+        ```
+        
+        **For each item:**
+        - Save product details
+        - Calculate subtotal
+        - Link to order
+      end note
+      
+      :Update Stok Produk (-);
+      note right
+        **Reduce Stock:**
+        ```sql
+        UPDATE products
+        SET stock = stock - :quantity
+        WHERE id = :product_id
+        ```
+        
+        **Loop untuk semua items**
+        - Prevent negative stock
+        - Transaction (rollback on error)
+      end note
+      
+      :Create Notification;
+      note right
+        **Notification:**
+        - Type: 'order_created'
+        - Message: "Order berhasil dibuat"
+        - Link to order detail
+        - For user & admin
+      end note
+      
+      :Clear Cart;
+      :Redirect: Halaman Success;
+      note right
+        **Success Page:**
+        - Order ID
+        - Success message
+        - Order summary
+        - Next steps info
+        - Button: Lihat Pesanan
+        - Button: Belanja Lagi
+      end note
+    }
+  else (Midtrans)
+    partition "Pembayaran Midtrans" #LightSalmon {
+      :Create Order (Midtrans);
+      note right
+        **Insert Order:**
+        - payment_method: 'midtrans'
+        - payment_status: 'pending'
+        - status: 'pending'
+        - payment_expired_at:
+          NOW() + 24 hours
+        
+        **Generate:**
+        - Unique order_id
+        - Transaction ID
+      end note
+      
+      :Request Snap Token;
+      note right
+        **API Call:**
+        ```
+        POST /api/midtrans/create-transaction
+        ```
+        
+        **Body:**
+        ```json
+        {
+          order_id, total_amount,
+          customer_details,
+          item_details,
+          expiry_duration: 24h
+        }
+        ```
+        
+        **Response:**
+        - snap_token
+        - redirect_url
+      end note
+      
+      :Simpan Snap Token;
+      note right
+        **Update order:**
+        - midtrans_snap_token
+        - midtrans_order_id
+        - Save to database
+      end note
+      
+      :Open Midtrans Snap;
+      note right
+        **Snap Payment:**
+        - Load Snap UI (popup/redirect)
+        - User pilih payment method:
+          * Bank Transfer (VA)
+          * E-Wallet
+          * Credit Card
+          * QRIS
+        - Input payment details
+        - Confirm payment
+      end note
+      
+      if (Payment Success?) then (Ya)
+        :Midtrans Callback: Success;
+        note right
+          **Webhook Receive:**
+          ```
+          POST /api/midtrans/notification
+          ```
+          
+          **transaction_status:**
+          - "capture" (credit card)
+          - "settlement" (berhasil)
+        end note
+        
+        :Update Payment Status: Paid;
+        note right
+          **Update order:**
+          ```sql
+          UPDATE orders
+          SET payment_status = 'paid',
+              status = 'pending'
+          WHERE midtrans_order_id = :order_id
+          ```
+        end note
+        
+        :Update Stok Produk (-);
+        :Update Target Progress;
+        note right
+          **Calculate Progress:**
+          ```sql
+          UPDATE target
+          SET current_amount = 
+              current_amount + :total_amount
+          WHERE user_id = :user_id
+          ```
+          
+          **Check Achievement:**
+          ```sql
+          IF current_amount >= target_amount
+          THEN status = 'achieved'
+          ```
+        end note
+        
+        :Create Notification (Payment Success);
+        :Clear Cart;
+        :Redirect: Success Page;
+        note right
+          **Success:**
+          - ✅ Pembayaran berhasil
+          - Order ID
+          - Payment method
+          - Total dibayar
+          - Estimasi pengiriman
+          - Button: Track Order
+        end note
+      else (Pending/Failed)
+        :Midtrans Callback: Pending/Failed;
+        note right
+          **Status:**
+          - "pending" → Menunggu
+          - "deny" → Ditolak
+          - "cancel" → Dibatalkan
+          - "expire" → Kadaluarsa
+        end note
+        
+        if (Status?) then (Pending)
+          :Redirect: Pending Payment Page;
+          note right
+            **Pending Page:**
+            - ⏳ Menunggu pembayaran
+            - Order ID
+            - Payment method instructions
+            - Countdown timer (24 jam)
+            - Button: Lanjutkan Bayar
+            - Button: Lihat Instruksi
+            
+            **Countdown:**
+            - Calculate from payment_expired_at
+            - Real-time update
+            - Warning <1 hour
+            - Auto redirect jika expired
+          end note
+        else (Failed/Cancel)
+          :Redirect: Error Page;
+          note right
+            **Error Page:**
+            - ❌ Pembayaran gagal
+            - Error reason
+            - Order ID (for reference)
+            - Button: Coba Lagi
+            - Button: Ganti Metode
+            - Button: Hubungi CS
+          end note
+        endif
+      endif
+    }
+  endif
+}
+
+:Tampilkan Total Transaksi\nTarget Selesai\nReward & Poin Didapat;
+note right
+  **Success Summary:**
+  - Total transaksi: Rp XXX
+  - Target progress update
+  - Reward points earned
+  - Next steps
+  
+  **Auto Process:**
+  - Email confirmation
+  - SMS notification (optional)
+  - Update analytics
+end note
+
+:Profil Berhasil Diperiksa;
+
+stop
+note right: **Selesai - Order Berhasil**
+
+note bottom
+  **Flowchart Breakpoint B - Katalog Produk & Checkout Detail**
+  
+  **=== OVERVIEW ===**
+  Flowchart ini merupakan detail dari breakpoint B pada flowchart utama.
+  B = "Buka halaman produk" - menjelaskan alur lengkap:
+  - Browse & search produk
+  - Lihat detail produk
+  - Kelola keranjang belanja
+  - Proses checkout dengan voucher
+  - Pembayaran (COD & Midtrans)
+  - Order berhasil/pending/failed
+  
+  **=== FITUR UTAMA ===**
+  
+  **1. KATALOG PRODUK** (/client/produk)
+     ✅ Grid display responsive
+     ✅ Filter by kategori (dropdown)
+     ✅ Search produk (real-time)
+     ✅ Stock status indicator
+     ✅ Quick add to cart
+     ✅ Empty state handling
+  
+  **2. DETAIL PRODUK** (/client/produk/[id])
+     ✅ Image carousel
+     ✅ Product info lengkap
+     ✅ Stock availability check
+     ✅ Quantity selector (+/-)
+     ✅ Add to cart with validation
+     ✅ Related products
+     ✅ Product reviews display
+  
+  **3. KERANJANG BELANJA** (/client/keranjang)
+     ✅ List items from localStorage
+     ✅ Update quantity real-time
+     ✅ Remove item
+     ✅ Calculate subtotal auto
+     ✅ Stock validation
+     ✅ Empty cart handling
+     ✅ Dispatch cart events
+  
+  **4. CHECKOUT & VOUCHER** (/client/checkout)
+     ✅ Customer info form
+     ✅ Auto-fill from profile
+     ✅ Voucher input manual
+     ✅ Voucher dropdown selection
+     ✅ Voucher validation
+     ✅ Calculate discount (% atau fixed)
+     ✅ Display subtotal/discount/total
+  
+  **5. PAYMENT COD** 
+     ✅ Simple order creation
+     ✅ No additional steps
+     ✅ Insert order & items
+     ✅ Update stock (decrement)
+     ✅ Create notification
+     ✅ Clear cart
+     ✅ Redirect success page
+  
+  **6. PAYMENT MIDTRANS**
+     ✅ Create order with expiry (24h)
+     ✅ Request Snap token via API
+     ✅ Open Snap UI (popup/redirect)
+     ✅ Multiple payment methods:
+        - Virtual Account (BCA, BNI, Mandiri, etc)
+        - E-Wallet (GoPay, OVO, DANA, etc)
+        - Credit Card (Visa, Mastercard)
+        - QRIS
+     ✅ Handle callback webhook
+     ✅ Update payment status
+     ✅ Update stock on success
+     ✅ Update target progress
+     ✅ Handle pending/failed
+     ✅ Payment countdown timer
+  
+  **=== ALUR CHECKOUT ===**
+  ```
+  Browse Produk
+    ↓ (klik produk)
+  Detail Produk
+    ↓ (pilih qty, add to cart)
+  Keranjang (localStorage)
+    ↓ (klik checkout)
+  Form Checkout
+    ├─> Input customer info
+    ├─> Apply voucher (optional)
+    └─> Pilih payment method
+        ├─> COD
+        │   ├─> Create order
+        │   ├─> Update stock
+        │   └─> Success page
+        │
+        └─> Midtrans
+            ├─> Request snap token
+            ├─> Open payment UI
+            ├─> User bayar
+            └─> Webhook callback
+                ├─> Success → Update → Success page
+                ├─> Pending → Pending page (countdown)
+                └─> Failed → Error page (retry)
+  ```
+  
+  **=== VALIDASI DATA ===**
+  **Customer Info:**
+  - customer_name: min 3 characters
+  - customer_email: valid email format
+  - customer_phone: min 10 digits
+  - customer_address: min 10 characters
+  
+  **Cart Validation:**
+  - Stock availability check
+  - Quantity > 0
+  - Quantity ≤ stock
+  - Product still active
+  
+  **Voucher Validation:**
+  - Code exists in database
+  - is_active = true
+  - valid_until >= NOW()
+  - User eligible (user_id match or NULL)
+  - usage_count < usage_limit
+  
+  **=== PAYMENT STATUS FLOW ===**
+  
+  **COD:**
+  - Create order → status: pending, payment_status: pending
+  - Wait for delivery confirmation
+  - Manual update by admin
+  
+  **Midtrans:**
+  1. **Settlement/Capture** (Success):
+     - payment_status: paid
+     - Update stock (-)
+     - Update target progress
+     - Clear cart
+     - Notification
+  
+  2. **Pending**:
+     - Show countdown (24 hours)
+     - Button lanjutkan bayar
+     - Can resume with same snap token
+     - Auto-cancel jika expired
+  
+  3. **Deny/Cancel/Expire** (Failed):
+     - payment_status: failed/expired
+     - status: dibatalkan
+     - Restore stock (+)
+     - Button: Coba lagi
+  
+  **=== DATABASE OPERATIONS ===**
+  
+  **Tables Used:**
+  - `products` - Produk catalog
+  - `orders` - Order header
+  - `order_items` - Order detail items
+  - `vouchers` - Voucher/coupon
+  - `target` - User shopping target
+  - `notifications` - System notifications
+  
+  **Stock Management:**
+  ```sql
+  -- On order created (COD)
+  UPDATE products SET stock = stock - :qty
+  
+  -- On payment success (Midtrans)
+  UPDATE products SET stock = stock - :qty
+  
+  -- On order cancelled/expired
+  UPDATE products SET stock = stock + :qty
+  ```
+  
+  **Target Progress:**
+  ```sql
+  -- On payment success
+  UPDATE target 
+  SET current_amount = current_amount + :total_amount,
+      status = CASE 
+        WHEN current_amount >= target_amount 
+        THEN 'achieved' 
+        ELSE 'active' 
+      END
+  WHERE user_id = :user_id
+  ```
+  
+  **=== MIDTRANS INTEGRATION ===**
+  
+  **API Endpoints:**
+  - `POST /api/midtrans/create-transaction`
+    → Create order & get snap token
+  - `POST /api/midtrans/notification`
+    → Webhook callback dari Midtrans
+  
+  **Snap Token Request:**
+  ```json
+  {
+    "transaction_details": {
+      "order_id": "ORD-xxx",
+      "gross_amount": 100000
+    },
+    "customer_details": {
+      "first_name": "...",
+      "email": "...",
+      "phone": "..."
+    },
+    "item_details": [...],
+    "expiry": {
+      "duration": 1440,
+      "unit": "minutes"
+    }
+  }
+  ```
+  
+  **Webhook Notification:**
+  ```json
+  {
+    "transaction_status": "settlement|pending|deny|cancel|expire",
+    "order_id": "ORD-xxx",
+    "gross_amount": "100000",
+    "payment_type": "bank_transfer",
+    ...
+  }
+  ```
+  
+  **=== REAL-TIME FEATURES ===**
+  - Cart update events (cartUpdated)
+  - Stock check on checkout
+  - Payment countdown timer
+  - Auto-redirect on expired
+  - Toast notifications
+  - Real-time stock updates
+  
+  **=== STATUS & BADGES ===**
+  
+  **Stock Status:**
+  - 🟢 In Stock: stok > 10
+  - 🟡 Low Stock: stok 1-10
+  - 🔴 Out of Stock: stok = 0
+  
+  **Payment Status:**
+  - 🟢 paid: Pembayaran berhasil
+  - 🟡 pending: Menunggu pembayaran
+  - 🔴 expired: Pembayaran expired
+  - 🔴 failed: Pembayaran gagal
+  
+  **Order Status:**
+  - 🟡 pending: Pesanan diproses
+  - 🔵 selesai: Pesanan selesai
+  - 🔴 dibatalkan: Pesanan dibatalkan
+  
+  **=== UI/UX ELEMENTS ===**
+  - Toast notifications (success/error/info)
+  - Loading states (skeleton/spinner)
+  - Empty states (friendly messages)
+  - Error handling (form validation)
+  - Countdown timer (visual)
+  - Progress indicators
+  - Confirmation modals
+  - Responsive design (mobile/desktop)
+  
+  **=== TEKNOLOGI ===**
+  - **Frontend:** Next.js 14 App Router
+  - **Database:** Supabase (PostgreSQL)
+  - **Storage:** localStorage (cart)
+  - **Payment:** Midtrans Snap
+  - **UI:** Radix UI + Tailwind CSS
+  - **Toast:** Sonner
+  - **Forms:** React Hook Form
+  - **Validation:** Zod
+  - **State:** React Hooks + Context
+  
+  **=== SECURITY ===**
+  - Server-side voucher validation
+  - Stock verification on checkout
+  - Payment webhook verification
+  - CSRF protection
+  - SQL injection prevention
+  - XSS protection
+  
+  **=== PERFORMANCE ===**
+  - Image optimization (Next.js Image)
+  - Lazy loading products
+  - localStorage caching (cart)
+  - Debounced search
+  - Optimistic UI updates
+  
+  Created: March 2026
+  Version: 1.0
+  Breakpoint: B (Buka halaman produk)
+  Author: Chicha Mobile Development Team
+end note
+
+@enduml

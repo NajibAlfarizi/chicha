@@ -78,6 +78,44 @@ Dokumentasi lengkap flowchart untuk semua role dan integrasi sistem.
 
 ---
 
+### 5. **Repair Status Workflow** ⭐ NEW
+**File:** `repair-status-workflow.puml`
+
+**Mencakup Alur Lengkap Status Perbaikan:**
+- 📱 Customer mengantarkan HP ke toko
+- 🔍 Teknisi melakukan pemeriksaan/diagnosa
+- ✅ Konfirmasi customer (lanjut atau batal)
+- 🔧 Proses perbaikan dengan status detail:
+  - 🟡 **Pending** - Menunggu pemeriksaan
+  - 🔵 **Diagnosed** - Sudah diperiksa, menunggu konfirmasi
+  - 🟣 **In Progress** - Sedang diperbaiki
+  - 🟠 **Waiting Parts** - Menunggu spare part
+  - 🟢 **Completed** - Selesai diperbaiki
+  - 🔴 **Cancelled** - Customer batal perbaikan
+- 📞 Komunikasi dengan customer di setiap tahap
+- 📊 Timeline progress perbaikan
+
+**Dokumentasi Lengkap:** [REPAIR-STATUS-WORKFLOW-GUIDE.md](../../REPAIR-STATUS-WORKFLOW-GUIDE.md)
+
+---
+
+### 6. **Status Transition Diagram** ⭐ NEW
+**File:** `status-transition-diagram.puml`
+
+**State Diagram untuk Transisi Status:**
+- 🔄 Visual diagram transisi antar status
+- 🎯 Kondisi untuk setiap transisi
+- 👥 Actor yang bertanggung jawab
+- 📝 Notes untuk setiap status
+- 🔀 Alur bolak-balik (In Progress ↔ Waiting Parts)
+
+**Diagram ini lebih simple dan fokus pada transisi status saja, cocok untuk:**
+- Quick reference transisi status
+- Training teknisi baru
+- Dokumentasi sistem
+
+---
+
 ## 🎨 Cara Melihat Flowchart
 
 ### Option 1: VS Code Extension (Recommended)

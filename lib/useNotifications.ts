@@ -8,7 +8,7 @@ export interface Notification {
   user_id: string;
   title: string;
   message: string;
-  type: 'order' | 'booking' | 'target' | 'general' | 'complaint_reply';
+  type: 'order' | 'booking' | 'target' | 'general' | 'complaint_reply' | 'booking_assignment' | 'order_status';
   related_id?: string;
   is_read: boolean;
   created_at: string;

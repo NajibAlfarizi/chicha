@@ -15,13 +15,25 @@ import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  userId?: string; // Optional userId prop for teknisi or other use cases
+  userType?: 'client' | 'teknisi'; // To determine navigation behavior
+}
+
+export function NotificationBell({ userId: externalUserId, userType = 'client' }: NotificationBellProps = {}) {
   const { user } = useAuth();
   const router = useRouter();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(user?.id);
+  
+  // Use external userId if provided, otherwise fallback to auth context
+  const effectiveUserId = externalUserId || user?.id;
+  
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(effectiveUserId);
 
   console.log('🔔 NotificationBell render:', { 
-    user: user?.id, 
+    externalUserId,
+    authUserId: user?.id,
+    effectiveUserId,
+    userType,
     notificationsCount: notifications.length, 
     unreadCount 
   });
@@ -29,13 +41,20 @@ export function NotificationBell() {
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
     
-    // Navigate based on notification type
-    if (notification.type === 'order' && notification.related_id) {
-      router.push(`/client/akun?tab=orders`);
-    } else if (notification.type === 'booking' && notification.related_id) {
-      router.push(`/client/akun?tab=bookings`);
-    } else if (notification.type === 'target' && notification.related_id) {
-      router.push(`/client/akun?tab=targets`);
+    // Navigate based on notification type and user type
+    if (userType === 'teknisi') {
+      if (notification.type === 'booking_assignment') {
+        router.push('/teknisi/service');
+      }
+    } else {
+      // Client navigation
+      if (notification.type === 'order' && notification.related_id) {
+        router.push(`/client/akun?tab=orders`);
+      } else if (notification.type === 'booking' && notification.related_id) {
+        router.push(`/client/akun?tab=bookings`);
+      } else if (notification.type === 'target' && notification.related_id) {
+        router.push(`/client/akun?tab=targets`);
+      }
     }
   };
 

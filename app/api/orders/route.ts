@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import { notifyCustomerNewOrder, notifyAdminsNewOrder } from '@/lib/notification-helper';
 
 // Helper function to check if payment is expired
 function isPaymentExpired(order: any): boolean {
@@ -262,6 +263,35 @@ export async function POST(request: NextRequest) {
         console.log('✅ Voucher usage tracked');
       }
     }
+
+    // =========================================
+    // SEND NOTIFICATIONS
+    // =========================================
+
+    // Get customer name for notifications
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('name')
+      .eq('id', user_id)
+      .single();
+
+    const customerName = userData?.name || customer_info?.recipient_name || 'Pelanggan';
+
+    // 1. Notify customer about new order
+    await notifyCustomerNewOrder(user_id, order.id, {
+      totalAmount: total_amount,
+      itemCount: items.length,
+      paymentMethod: payment_method,
+    });
+    console.log('✅ Customer notified about new order');
+
+    // 2. Notify all admins about new order
+    await notifyAdminsNewOrder(order.id, {
+      customerName,
+      totalAmount: total_amount,
+      itemCount: items.length,
+    });
+    console.log('✅ Admins notified about new order');
 
     return NextResponse.json({ 
       message: 'Order created successfully',

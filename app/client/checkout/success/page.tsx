@@ -14,64 +14,29 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  const updateOrderPaymentStatus = async (orderId: string) => {
-    try {
-      console.log('✅ Payment success! Updating order payment status...');
-      console.log('📦 Order ID from URL:', orderId);
-      
-      // Update order payment status to 'paid'
-      const response = await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          payment_status: 'paid',
-        }),
-      });
-
-      console.log('📨 API Response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Order payment updated:', data.order);
-        setOrderDetails(data.order);
-        
-        // Clean up cart
-        localStorage.removeItem('cart');
-        window.dispatchEvent(new Event('cartUpdated'));
-        
-        console.log('🧹 Cart cleaned up');
-      } else {
-        const error = await response.json();
-        console.error('❌ Failed to update order:', error);
-        
-        // Still try to fetch order details
-        const fetchResponse = await fetch(`/api/orders/${orderId}`);
-        if (fetchResponse.ok) {
-          const fetchData = await fetchResponse.json();
-          setOrderDetails(fetchData.order);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error updating order:', error);
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     console.log('🔄 Success page loaded');
     
+    // Check if user is logged in
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user?.id) {
+          setIsLoggedIn(true);
+        }
+      } catch (e) {
+        console.error('Error parsing user:', e);
+      }
+    }
+    
     // Get order_id from URL parameters
     const orderId = searchParams?.get('order_id');
-    const transactionStatus = searchParams?.get('transaction_status');
     
     console.log('📋 URL Parameters:', {
       order_id: orderId,
-      transaction_status: transactionStatus,
     });
 
     if (!orderId) {
@@ -80,10 +45,14 @@ function SuccessContent() {
       return;
     }
 
-    // Always update payment status when reaching success page
-    // If user reached this page, payment was successful
-    console.log('✅ User reached success page - updating payment status to paid');
-    updateOrderPaymentStatus(orderId);
+    // Just fetch order details - payment status is updated by Midtrans webhook
+    console.log('📦 Fetching order details...');
+    fetchOrderDetails(orderId);
+
+    // Clean up cart
+    localStorage.removeItem('cart');
+    window.dispatchEvent(new Event('cartUpdated'));
+    console.log('🧹 Cart cleaned up');
   }, [searchParams]);
 
   const fetchOrderDetails = async (orderId: string) => {
@@ -92,6 +61,9 @@ function SuccessContent() {
       if (response.ok) {
         const data = await response.json();
         setOrderDetails(data.order);
+        console.log('✅ Order details fetched:', data.order);
+      } else {
+        console.error('❌ Failed to fetch order');
       }
     } catch (error) {
       console.error('❌ Error fetching order:', error);
@@ -177,19 +149,46 @@ function SuccessContent() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link href="/client/akun?tab=orders" className="flex-1">
-              <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                <Package className="w-4 h-4 mr-2" />
-                Lihat Riwayat Pesanan
-              </Button>
-            </Link>
-            <Link href="/client/produk" className="flex-1">
-              <Button variant="outline" className="w-full border-green-600 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20">
-                Lanjut Belanja
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link href="/client/akun?tab=orders" className="flex-1">
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                    <Package className="w-4 h-4 mr-2" />
+                    Lihat Riwayat Pesanan
+                  </Button>
+                </Link>
+                <Link href="/client/produk" className="flex-1">
+                  <Button variant="outline" className="w-full border-green-600 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20">
+                    Lanjut Belanja
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login?redirect=/client/akun?tab=orders" className="flex-1">
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                    Login untuk Lihat Pesanan
+                  </Button>
+                </Link>
+                <Link href="/client/produk" className="flex-1">
+                  <Button variant="outline" className="w-full border-green-600 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/20">
+                    Lanjut Belanja
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
+
+          {/* Login Notice for non-authenticated users */}
+          {!isLoggedIn && (
+            <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
+                ℹ️ Pembayaran Anda sedang diproses oleh sistem. Silakan login untuk melihat detail pesanan dan status pembayaran terkini.
+              </p>
+            </div>
+          )}
 
           {/* Additional Info */}
           <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">

@@ -1,0 +1,120 @@
+@startuml Alur Status Perbaikan - Chicha Mobile (Simplified)
+
+title Alur Status Perbaikan HP (Repair Status Workflow - Simplified)
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+  StartColor LimeGreen
+  EndColor Crimson
+  BarColor Navy
+  DiamondBackgroundColor LightYellow
+  DiamondBorderColor Orange
+}
+
+|Customer|
+start
+:Customer mengantarkan HP ke toko;
+note right
+  Customer datang ke toko
+  membawa HP yang rusak
+end note
+
+|Toko/Admin|
+:Buat booking baru;
+note right
+  **Data yang dicatat:**
+  - Nama customer
+  - Nomor HP customer
+  - Device name
+  - Keluhan/masalah
+  - Generate service code
+end note
+
+:Set status: **MENUNGGU**;
+note right
+  **Status: Menunggu** 🟡
+  - Booking baru dibuat
+  - HP menunggu pemeriksaan
+  - Badge: Kuning
+end note
+
+:Berikan service code\nkepada customer;
+
+|Teknisi|
+:Periksa dan cek HP;
+note right
+  **Proses Pemeriksaan:**
+  - Cek kondisi fisik
+  - Cek kerusakan
+  - Identifikasi masalah
+  - Estimasi waktu perbaikan
+end note
+
+|Toko/Admin|
+:Hubungi customer\nuntuk konfirmasi;
+
+|Customer|
+if (Customer setuju\nuntuk perbaikan?) then (TIDAK)
+  |Toko/Admin|
+  :Update status: **DIBATALKAN**;
+  note right
+    **Status: Dibatalkan** 🔴
+    - Customer batal perbaikan
+    - HP tidak jadi diperbaiki
+    - Badge: Merah
+    - Alasan: biaya terlalu mahal,
+      tidak worth it, dll
+  end note
+  
+  :Kembalikan HP\nkepada customer;
+  
+  stop
+  
+else (YA, SETUJU)
+  |Teknisi|
+  :Update status: **DIPROSES**;
+  note right
+    **Status: Diproses** 🔵
+    - HP diterima untuk perbaikan
+    - Teknisi mulai mengerjakan
+    - Badge: Biru
+    - Termasuk jika menunggu spare part
+  end note
+  
+  :Mulai perbaikan HP;
+  
+  while (Perlu spare part?) is (YA)
+    :Pesan spare part;
+    note right
+      Status tetap **DIPROSES**
+      Spare part sedang dipesan
+    end note
+    
+    :Tunggu spare part datang;
+    :Lanjutkan perbaikan;
+  endwhile (TIDAK)
+  
+  :Selesai perbaikan;
+  
+  :Test HP sudah normal;
+  
+  :Update status: **SELESAI**;
+  note right
+    **Status: Selesai** 🟢
+    - Perbaikan 100% selesai
+    - HP sudah siap diambil
+    - Badge: Hijau
+  end note
+  
+  |Toko/Admin|
+  :Hubungi customer\nHP sudah selesai;
+  
+  |Customer|
+  :Ambil HP;
+  
+  stop
+endif
+
+@enduml
