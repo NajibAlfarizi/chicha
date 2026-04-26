@@ -42,8 +42,17 @@ export function TeknisiAuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        setTeknisi(data.teknisi);
-        localStorage.setItem('teknisi', JSON.stringify(data.teknisi));
+        console.log('Login API response:', data);
+        
+        // API returns 'user' key which contains both teknisi and admin data
+        const userData = data.user;
+        console.log('User data from API:', userData);
+        console.log('User role:', userData.role);
+        
+        setTeknisi(userData);
+        localStorage.setItem('teknisi', JSON.stringify(userData));
+        console.log('Stored to localStorage:', userData);
+        
         return true;
       }
       return false;
@@ -66,6 +75,11 @@ export function TeknisiAuthProvider({ children }: { children: ReactNode }) {
     // Clear local state and storage
     setTeknisi(null);
     localStorage.removeItem('teknisi');
+    
+    // Small delay to ensure storage is cleared
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Redirect to login
     router.push('/teknisi/login');
   };
 

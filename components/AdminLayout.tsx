@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationBell } from './NotificationBell';
+import { toast } from 'sonner';
 import {
   LayoutDashboard,
   Package,
@@ -27,7 +28,6 @@ import {
   ChevronLeft,
   Zap,
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -39,7 +39,7 @@ const menuItems = [
   { icon: FolderTree, label: 'Kategori', href: '/admin/kategori', badge: null },
   { icon: ShoppingBag, label: 'Pesanan', href: '/admin/pesanan', badge: 'new' },
   { icon: Ticket, label: 'Voucher', href: '/admin/voucher', badge: null },
-  { icon: Wrench, label: 'Booking', href: '/admin/booking', badge: null },
+  { icon: Wrench, label: 'Servis', href: '/admin/booking', badge: null },
   { icon: UserCog, label: 'Teknisi', href: '/admin/teknisi', badge: null },
   { icon: Target, label: 'Target CRM', href: '/admin/target', badge: null },
   // DISABLED: Chat feature temporarily disabled
@@ -58,44 +58,63 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [showSearchResults, setShowSearchResults] = useState(false);
 
   useEffect(() => {
-    // Check if user is authenticated and is admin
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      toast.error('Akses ditolak', {
-        description: 'Silakan login terlebih dahulu.',
-      });
-      router.push('/auth/login');
-      return;
-    }
-
-    try {
-      const user = JSON.parse(userStr);
-      console.log('Admin layout - checking user:', user);
-      if (user.role !== 'admin') {
-        toast.error('Akses ditolak', {
-          description: 'Anda tidak memiliki akses ke halaman admin.',
-        });
-        router.push('/client/produk');
+    // Check if admin is authenticated on mount
+    const checkAuth = () => {
+      const sessionStr = localStorage.getItem('teknisi');
+      if (!sessionStr) {
+        router.push('/teknisi/login');
+        return;
       }
-    } catch (err) {
-      console.error('Error parsing user:', err);
-      router.push('/auth/login');
-    }
+
+      try {
+        const session = JSON.parse(sessionStr);
+        if (session.role !== 'admin') {
+          router.push('/client/produk');
+        }
+      } catch (err) {
+        console.error('Error parsing session:', err);
+        router.push('/teknisi/login');
+      }
+    };
+
+    checkAuth();
+
+    // Listen for storage changes (logout from other tabs or this tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'teknisi' && !e.newValue) {
+        // Storage was cleared (logout), redirect
+        router.push('/teknisi/login');
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [router]);
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      localStorage.removeItem('user');
-      toast.success('Logout berhasil', {
-        description: 'Anda telah keluar dari sistem.',
+      // Call admin logout API to clear server-side Supabase cookies
+      await fetch('/api/admin/logout', {
+        method: 'POST',
       });
-      router.push('/auth/login');
-    } catch (err) {
-      console.error('Logout error:', err);
-      toast.error('Logout gagal', {
-        description: 'Terjadi kesalahan saat logout.',
+
+      // Clear admin auth from localStorage
+      localStorage.removeItem('teknisi');
+      
+      toast.success('Berhasil logout', {
+        description: 'Anda telah keluar dari panel admin.',
       });
+      
+      // Small delay to ensure localStorage is cleared and toast is shown
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Redirect to login
+      await router.push('/teknisi/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force redirect even if error occurs
+      localStorage.removeItem('teknisi');
+      router.push('/teknisi/login');
     }
   };
 
@@ -201,7 +220,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                             onClick={() => handleSelectMenu(item.href)}
                             className="w-full flex items-center gap-3 px-3 py-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors text-left"
                           >
-                            <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                            <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
                               <Icon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                             </div>
                             <div className="flex-1">
@@ -245,7 +264,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       <div className="flex relative">
         {/* Sidebar - Desktop */}
-        <aside className={`hidden lg:block ${sidebarCollapsed ? 'w-20' : 'w-72'} h-[calc(100vh-4rem)] sticky top-[4rem] border-r border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl transition-all duration-300 overflow-y-auto`}>
+        <aside className={`hidden lg:block ${sidebarCollapsed ? 'w-20' : 'w-72'} h-[calc(100vh-4rem)] sticky top-16 border-r border-amber-200/50 dark:border-amber-900/30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl transition-all duration-300 overflow-y-auto`}>
           <div className="p-4 space-y-1">
             {/* Collapse Toggle */}
             <Button

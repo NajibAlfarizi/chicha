@@ -84,7 +84,7 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-orange-50/30 to-amber-50/40 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-white via-orange-50/30 to-amber-50/40 relative overflow-hidden">
       {/* Liquid Glass Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 -right-20 w-96 h-96 bg-orange-400/20 rounded-full blur-3xl animate-pulse" />
@@ -111,7 +111,7 @@ function RegisterForm() {
 
               {/* Header */}
               <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-1">
+                <h2 className="text-2xl font-bold bg-linear-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-1">
                   Daftar Akun Baru
                 </h2>
                 <p className="text-sm text-gray-600">
@@ -123,7 +123,7 @@ function RegisterForm() {
               <form onSubmit={handleSubmit} className="space-y-3">
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
-                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                 <p className="text-red-500 text-sm">{error}</p>
               </div>
             )}
@@ -203,7 +203,7 @@ function RegisterForm() {
 
               <Button
                 type="submit"
-                className="w-full h-10 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                className="w-full h-10 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
                 disabled={loading}
               >
                 {loading ? 'Memproses...' : 'Daftar Sekarang'}
@@ -227,10 +227,10 @@ function RegisterForm() {
         </div>
 
         {/* Right Side - Illustration */}
-        <div className="hidden lg:flex flex-col justify-center items-center p-8 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-transparent backdrop-blur-sm order-1 lg:order-2">
+        <div className="hidden lg:flex flex-col justify-center items-center p-8 bg-linear-to-br from-orange-500/10 via-amber-500/5 to-transparent backdrop-blur-sm order-1 lg:order-2">
           <div className="max-w-md space-y-6">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full blur-3xl opacity-20 animate-pulse" />
+              <div className="absolute inset-0 bg-linear-to-r from-orange-500 to-amber-500 rounded-full blur-3xl opacity-20 animate-pulse" />
               <div className="relative mx-auto">
                 <Image 
                   src="/logo-chicha.jpg" 
@@ -245,7 +245,7 @@ function RegisterForm() {
               <h1 className="text-3xl font-bold text-orange-600">
                 Chicha Mobile
               </h1>
-              <h2 className="text-2xl font-semibold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-semibold bg-linear-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                 Bergabung Sekarang!
               </h2>
               <p className="text-base text-gray-600">
@@ -254,7 +254,7 @@ function RegisterForm() {
             </div>
             <div className="space-y-3 mt-6">
               <div className="backdrop-blur-md bg-white/60 p-4 rounded-2xl border border-white/60 shadow-lg flex items-start gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center shrink-0">
                   <ShoppingBag className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -263,7 +263,7 @@ function RegisterForm() {
                 </div>
               </div>
               <div className="backdrop-blur-md bg-white/60 p-4 rounded-2xl border border-white/60 shadow-lg flex items-start gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-amber-500 to-orange-500 flex items-center justify-center shrink-0">
                   <WrenchIcon className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -282,7 +282,7 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-900 via-slate-800 to-amber-900">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent"></div>
         </div>

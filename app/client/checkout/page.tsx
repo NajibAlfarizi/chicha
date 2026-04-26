@@ -586,7 +586,7 @@ export default function CheckoutPage() {
                           </div>
                           <p className="text-sm text-gray-700 dark:text-slate-300">{appliedVoucher.name}</p>
                           <p className="text-lg font-bold text-green-700 dark:text-green-400 mt-2">
-                            - Rp {appliedVoucher.discount.toLocaleString('id-ID')}
+                            - Rp {(appliedVoucher.discount ?? 0).toLocaleString('id-ID')}
                           </p>
                         </div>
                         <Button
@@ -652,11 +652,11 @@ export default function CheckoutPage() {
                                       <span className="text-sm text-gray-700 dark:text-slate-300">{voucher.name}</span>
                                       <span className="text-xs text-gray-600 dark:text-slate-400">
                                         {voucher.type === 'percentage' ? (
-                                          <>Diskon {voucher.value}%</>
+                                          <>Diskon {voucher.value ?? 0}%</>
                                         ) : (
-                                          <>Potongan Rp {voucher.value.toLocaleString('id-ID')}</>
+                                          <>Potongan Rp {(voucher.value ?? 0).toLocaleString('id-ID')}</>
                                         )}
-                                        {' • Min. Rp '}{voucher.min_purchase.toLocaleString('id-ID')}
+                                        {' • Min. Rp '}{(voucher.min_purchase ?? 0).toLocaleString('id-ID')}
                                       </span>
                                       {!isEligible && (
                                         <span className="text-xs text-red-600 dark:text-red-400 mt-0.5">

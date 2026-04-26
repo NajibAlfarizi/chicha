@@ -52,7 +52,8 @@ CREATE TABLE orders (
   payment_method TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'dikirim', 'selesai', 'dibatalkan')),
   customer_info JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- ================================================
@@ -96,16 +97,27 @@ CREATE TABLE technicians (
 -- ================================================
 -- 8. BOOKINGS TABLE
 -- ================================================
+-- Note: teknisi_id will be referenced to teknisi table after teknisi table is created
+-- Original reference: users(id), later altered to teknisi(id) in add-teknisi-system.sql
 CREATE TABLE bookings (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  teknisi_id UUID REFERENCES users(id) ON DELETE SET NULL,
   device_name TEXT NOT NULL,
   issue TEXT NOT NULL,
   booking_date TIMESTAMP WITH TIME ZONE NOT NULL,
   status TEXT NOT NULL DEFAULT 'baru' CHECK (status IN ('baru', 'proses', 'selesai')),
+  biaya_perbaikan NUMERIC DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- After teknisi system is added via add-teknisi-system.sql, the following columns are added:
+-- - teknisi_id (UUID REFERENCES teknisi(id))
+-- - service_code (VARCHAR(50) UNIQUE)
+-- - progress_status (VARCHAR(50) with CHECK constraint)
+-- - progress_notes (TEXT)
+-- - estimated_completion (TIMESTAMP)
+-- - completed_at (TIMESTAMP)
+-- - customer_name, customer_phone, customer_email (TEXT)
 
 -- ================================================
 -- 9. SERVICE_PROGRESS TABLE

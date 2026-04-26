@@ -49,18 +49,13 @@ function LoginForm() {
           description: `Selamat datang, ${data.user.name}`,
         });
         
-        // Redirect based on redirect param or role after a short delay
+        // Redirect based on redirect param or always to client after a short delay
         setTimeout(() => {
-          console.log('Redirecting with role:', data.user.role);
-          
           if (redirectTo) {
             // Redirect to requested page
             router.push(redirectTo);
-          } else if (data.user.role === 'admin') {
-            console.log('Redirecting to admin dashboard...');
-            router.push('/admin/dashboard');
           } else {
-            console.log('Redirecting to client produk...');
+            // Always redirect to client produk for customer
             router.push('/client/produk');
           }
         }, 500);
@@ -82,7 +77,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-white via-amber-50/30 to-orange-50/40 relative overflow-hidden">
       {/* Liquid Glass Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 -left-20 w-96 h-96 bg-amber-400/20 rounded-full blur-3xl animate-pulse" />
@@ -92,10 +87,10 @@ function LoginForm() {
 
       <div className="relative z-10 min-h-screen grid lg:grid-cols-2 gap-0">
         {/* Left Side - Illustration */}
-        <div className="hidden lg:flex flex-col justify-center items-center p-12 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent backdrop-blur-sm">
+        <div className="hidden lg:flex flex-col justify-center items-center p-12 bg-linear-to-br from-amber-500/10 via-orange-500/5 to-transparent backdrop-blur-sm">
           <div className="max-w-md space-y-8">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full blur-3xl opacity-20 animate-pulse" />
+              <div className="absolute inset-0 bg-linear-to-r from-amber-500 to-orange-500 rounded-full blur-3xl opacity-20 animate-pulse" />
               <div className="relative mx-auto">
                 <Image 
                   src="/logo-chicha.jpg" 
@@ -107,7 +102,7 @@ function LoginForm() {
               </div>
             </div>
             <div className="text-center space-y-4">
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              <h1 className="text-5xl font-bold bg-linear-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                 Chicha Mobile
               </h1>
               <p className="text-lg text-gray-600">
@@ -145,8 +140,8 @@ function LoginForm() {
 
               {/* Header */}
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-2">
-                  Selamat Datang!
+                <h2 className="text-3xl font-bold bg-linear-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-2">
+                  Login Pelanggan
                 </h2>
                 <p className="text-gray-600">
                   Masuk ke akun Anda untuk melanjutkan
@@ -157,7 +152,7 @@ function LoginForm() {
               <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
-                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                 <p className="text-red-500 text-sm">{error}</p>
               </div>
             )}
@@ -203,7 +198,7 @@ function LoginForm() {
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                className="w-full h-12 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
                 disabled={loading}
               >
                 {loading ? 'Memproses...' : 'Masuk'}
@@ -222,12 +217,17 @@ function LoginForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full h-12 border-2 border-amber-300 bg-white/60 backdrop-blur-sm text-amber-600 hover:bg-amber-50 rounded-xl font-medium transition-all"
+                  className="w-full h-12 border-2 border-amber-300 bg-white/60 backdrop-blur-sm text-amber-600 hover:bg-amber-50 rounded-xl font-medium transition-all mb-2"
                 >
-                  <Wrench className="mr-2 h-5 w-5" />
-                  Login Teknisi
+                  Login Admin / Teknisi
                 </Button>
               </Link>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-300" />
+                </div>
+              </div>
 
               <div className="text-center text-sm mt-6">
                 <span className="text-gray-600">Belum punya akun? </span>
@@ -253,7 +253,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-amber-900">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-900 via-slate-800 to-amber-900">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-amber-500 border-r-transparent"></div>
         </div>

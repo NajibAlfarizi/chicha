@@ -15,21 +15,25 @@ function isPaymentExpired(order: any): boolean {
   return new Date() > expiredAt;
 }
 
+function getOrderSortTimestamp(order: any): number {
+  const sourceTimestamp = order.updated_at || order.created_at;
+  const parsedTimestamp = new Date(sourceTimestamp).getTime();
+  return Number.isNaN(parsedTimestamp) ? 0 : parsedTimestamp;
+}
+
 // GET user's orders
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('user_id');
+    const email = searchParams.get('email');
     const status = searchParams.get('status');
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // Use supabaseAdmin to bypass RLS
-    let query = supabaseAdmin
-      .from('orders')
-      .select(`
+    const selectClause = `
         *,
         user:users(id, name, email),
         order_items:order_items(
@@ -38,22 +42,45 @@ export async function GET(request: NextRequest) {
           price,
           product:products(id, name, image_url)
         )
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      `;
 
-    if (status) {
-      query = query.eq('status', status);
+    const fetchOrders = async (filter: { userId?: string; email?: string }) => {
+      let query = supabaseAdmin
+        .from('orders')
+        .select(selectClause)
+        .order('created_at', { ascending: false });
+
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      if (filter.userId) {
+        query = query.eq('user_id', filter.userId);
+      }
+
+      if (filter.email) {
+        query = query.contains('customer_info', { email: filter.email });
+      }
+
+      return query;
+    };
+
+    const [userOrdersResult, emailOrdersResult] = await Promise.all([
+      fetchOrders({ userId }),
+      email ? fetchOrders({ email }) : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const combinedError = userOrdersResult.error || emailOrdersResult.error;
+    if (combinedError) {
+      console.error('❌ Error fetching orders:', combinedError);
+      return NextResponse.json({ error: combinedError.message }, { status: 400 });
     }
 
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('❌ Error fetching orders:', error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    const orders = data || [];
+    const orders = Array.from(
+      new Map(
+        [...(userOrdersResult.data || []), ...(emailOrdersResult.data || [])].map(order => [order.id, order])
+      ).values()
+    ).sort((a, b) => getOrderSortTimestamp(b) - getOrderSortTimestamp(a));
     
     // Auto-cancel expired orders for this user
     const expiredOrders = orders.filter(order => 
@@ -101,26 +128,16 @@ export async function GET(request: NextRequest) {
       }
 
       // Refetch orders after auto-cancelling expired ones
-      let refetchQuery = supabaseAdmin
-        .from('orders')
-        .select(`
-          *,
-          user:users(id, name, email),
-          order_items:order_items(
-            id,
-            quantity,
-            price,
-            product:products(id, name, image_url)
-          )
-        `)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+      const [refetchedUserOrders, refetchedEmailOrders] = await Promise.all([
+        fetchOrders({ userId }),
+        email ? fetchOrders({ email }) : Promise.resolve({ data: [], error: null }),
+      ]);
 
-      if (status) {
-        refetchQuery = refetchQuery.eq('status', status);
-      }
-
-      const { data: updatedData } = await refetchQuery;
+      const updatedData = Array.from(
+        new Map(
+          [...(refetchedUserOrders.data || []), ...(refetchedEmailOrders.data || [])].map(order => [order.id, order])
+        ).values()
+      ).sort((a, b) => getOrderSortTimestamp(b) - getOrderSortTimestamp(a));
       console.log('✅ Orders fetched (after auto-cancel):', updatedData?.length || 0);
       return NextResponse.json({ orders: updatedData }, { status: 200 });
     }

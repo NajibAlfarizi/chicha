@@ -93,6 +93,7 @@ export interface Order {
   payment_expired_at?: string;
   status: OrderStatus;
   created_at: string;
+  updated_at?: string;
   customer_info?: CustomerInfo;
   customer_name?: string;
   customer_email?: string;
@@ -157,6 +158,7 @@ export interface Booking {
   issue: string;
   booking_date: string;
   status: BookingStatus;
+  biaya_perbaikan?: number;
   customer_name?: string;
   customer_phone?: string;
   customer_email?: string;

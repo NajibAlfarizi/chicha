@@ -5,9 +5,15 @@ export async function POST() {
     // Create response
     const response = NextResponse.json({ message: 'Logout successful' }, { status: 200 });
 
-    // Delete all teknisi auth cookies
-    response.cookies.delete('teknisi_id');
+    // Delete role-identifying cookies
+    response.cookies.delete('user');
     response.cookies.delete('teknisi');
+    
+    // Delete all teknisi/admin auth cookies
+    response.cookies.delete('teknisi_id');
+    response.cookies.delete('teknisi_session');
+    response.cookies.delete('sb-access-token');
+    response.cookies.delete('sb-refresh-token');
 
     return response;
 

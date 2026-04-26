@@ -1,0 +1,9 @@
+-- DEPRECATED: This migration is no longer needed!
+-- 
+-- Reason: Admin users now login via email (Supabase auth) instead of username/password.
+-- The system auto-detects login type:
+-- - Email input → Admin login via Supabase
+-- - Username input → Teknisi login via bcrypt
+--
+-- No database changes required for the unified admin+teknisi login.
+-- Both roles use the same login page at /teknisi/login

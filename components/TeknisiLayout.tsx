@@ -28,9 +28,14 @@ export default function TeknisiLayout({ children }: TeknisiLayoutProps) {
 
   const isActive = (path: string) => pathname === path;
 
-  const handleLogout = () => {
-    logout();
-    router.push('/teknisi/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // logout() function already handles API call and redirect
+    } catch (error) {
+      console.error('Logout error:', error);
+      router.push('/teknisi/login');
+    }
   };
 
   const navigation = [

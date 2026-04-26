@@ -79,7 +79,7 @@ export default function HomePage() {
             {/* Dynamic Voucher Slides - TAMPILKAN TERLEBIH DAHULU */}
             {vouchers.map((voucher) => (
               <div key={voucher.id} className="min-w-full">
-                <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-8 md:p-12">
+                <div className="bg-linear-to-r from-blue-600 via-blue-500 to-cyan-500 p-8 md:p-12">
                   <div className="flex flex-col md:flex-row items-center gap-6">
                     <div className="flex-1 text-white">
                       <div className="flex items-center gap-2 mb-3">
@@ -100,10 +100,10 @@ export default function HomePage() {
                         )}
                       </p>
                       <p className="text-sm text-blue-200">
-                        Min. belanja Rp {voucher.min_purchase.toLocaleString('id-ID')} • Kuota: {voucher.quota - voucher.used} tersisa
+                        {voucher.min_purchase ? `Min. belanja Rp ${voucher.min_purchase.toLocaleString('id-ID')} • ` : ''}Kuota: {voucher.quota - voucher.used} tersisa
                       </p>
                     </div>
-                    <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                    <div className="hidden md:flex items-center justify-center shrink-0">
                       <Ticket className="h-48 w-48 text-white/20" />
                     </div>
                   </div>
@@ -113,7 +113,7 @@ export default function HomePage() {
 
             {/* Slide 1: Target Reward */}
             <div className="min-w-full">
-              <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 p-8 md:p-12">
+              <div className="bg-linear-to-r from-purple-600 via-purple-500 to-pink-500 p-8 md:p-12">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <div className="flex-1 text-white">
                     <div className="flex items-center gap-2 mb-3">
@@ -133,7 +133,7 @@ export default function HomePage() {
                       </Button>
                     </Link>
                   </div>
-                  <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                  <div className="hidden md:flex items-center justify-center shrink-0">
                     <Gift className="h-48 w-48 text-white/20" />
                   </div>
                 </div>
@@ -142,7 +142,7 @@ export default function HomePage() {
 
             {/* Slide 2: Service Booking CTA */}
             <div className="min-w-full">
-              <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 p-8 md:p-12">
+              <div className="bg-linear-to-r from-blue-600 via-blue-500 to-indigo-500 p-8 md:p-12">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <div className="flex-1 text-white">
                     <div className="flex items-center gap-2 mb-3">
@@ -162,7 +162,7 @@ export default function HomePage() {
                       </Button>
                     </Link>
                   </div>
-                  <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                  <div className="hidden md:flex items-center justify-center shrink-0">
                     <Wrench className="h-48 w-48 text-white/20" />
                   </div>
                 </div>
@@ -171,7 +171,7 @@ export default function HomePage() {
 
             {/* Slide 3: Shopping CTA */}
             <div className="min-w-full">
-              <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 p-8 md:p-12">
+              <div className="bg-linear-to-r from-emerald-600 via-emerald-500 to-teal-500 p-8 md:p-12">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <div className="flex-1 text-white">
                     <div className="flex items-center gap-2 mb-3">
@@ -191,7 +191,7 @@ export default function HomePage() {
                       </Button>
                     </Link>
                   </div>
-                  <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                  <div className="hidden md:flex items-center justify-center shrink-0">
                     <ShoppingCart className="h-48 w-48 text-white/20" />
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export default function HomePage() {
           
           <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
             Solusi Lengkap untuk<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-amber-700">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-500 to-amber-700">
               Kebutuhan HP Anda
             </span>
           </h2>

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingBag, Eye, Trash2 } from 'lucide-react';
+import { ShoppingBag, Eye } from 'lucide-react';
 import { Order, OrderItem } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -34,7 +34,6 @@ export default function AdminOrdersPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-  const [isCleaningUp, setIsCleaningUp] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -74,56 +73,47 @@ export default function AdminOrdersPage() {
         }),
       });
 
-      if (response.ok) {
-        fetchOrders();
-        if (selectedOrder?.id === orderId) {
-          fetchOrderDetail(orderId);
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle workflow violation error with detailed message
+        if (response.status === 400 && data.details) {
+          toast.error('Transisi Status Tidak Valid', {
+            description: data.details,
+            duration: 5000,
+          });
+        } else {
+          toast.error('Gagal mengubah status', {
+            description: data.error || 'Terjadi kesalahan saat mengubah status pesanan',
+          });
         }
-        // Close cancel dialog if open
-        setIsCancelDialogOpen(false);
-        setCancelReason('');
+        return;
       }
+
+      // Success
+      fetchOrders();
+      if (selectedOrder?.id === orderId) {
+        fetchOrderDetail(orderId);
+      }
+      
+      toast.success('Status pesanan berhasil diubah', {
+        description: `Status diubah menjadi: ${getStatusLabel(newStatus)}`,
+      });
+
+      // Close cancel dialog if open
+      setIsCancelDialogOpen(false);
+      setCancelReason('');
     } catch (error) {
       console.error('Error updating order status:', error);
+      toast.error('Terjadi kesalahan', {
+        description: 'Tidak dapat terhubung ke server',
+      });
     }
   };
 
   const handleCancelOrder = () => {
     if (selectedOrder && cancelReason.trim()) {
       updateOrderStatus(selectedOrder.id, 'dibatalkan', cancelReason);
-    }
-  };
-
-  const handleCleanupExpired = async () => {
-    if (!confirm('Apakah Anda yakin ingin membatalkan semua pesanan yang sudah melewati batas waktu pembayaran? Stok produk akan dikembalikan otomatis.')) {
-      return;
-    }
-
-    setIsCleaningUp(true);
-    try {
-      const response = await fetch('/api/orders/cleanup-expired', {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success('Cleanup berhasil!', {
-          description: `${data.cancelled} pesanan expired telah dibatalkan dan stok dikembalikan.`,
-        });
-        fetchOrders(); // Refresh list
-      } else {
-        toast.error('Cleanup gagal', {
-          description: data.error || 'Terjadi kesalahan saat cleanup.',
-        });
-      }
-    } catch (error) {
-      console.error('Error cleaning up expired orders:', error);
-      toast.error('Terjadi kesalahan', {
-        description: 'Tidak dapat terhubung ke server.',
-      });
-    } finally {
-      setIsCleaningUp(false);
     }
   };
 
@@ -171,6 +161,27 @@ export default function AdminOrdersPage() {
     );
   };
 
+  // Define status progression workflow - status can only move forward
+  const getValidNextStatuses = (currentStatus: string): string[] => {
+    const statusFlow: Record<string, string[]> = {
+      'pending': ['dikirim', 'dibatalkan'],      // From pending, can go to shipped or cancelled
+      'dikirim': ['selesai', 'dibatalkan'],     // From shipped, can go to completed or cancelled
+      'selesai': [],                             // Completed, no progression
+      'dibatalkan': [],                          // Cancelled, no progression
+    };
+    return statusFlow[currentStatus] || [];
+  };
+
+  const getStatusLabel = (status: string): string => {
+    const labels: Record<string, string> = {
+      'pending': 'Pending',
+      'dikirim': 'Dikirim',
+      'selesai': 'Selesai',
+      'dibatalkan': 'Dibatalkan',
+    };
+    return labels[status] || status;
+  };
+
   const filteredOrders = filterStatus === 'all' 
     ? orders 
     : orders.filter(order => order.status === filterStatus);
@@ -179,23 +190,12 @@ export default function AdminOrdersPage() {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold flex items-center gap-3">
-              <ShoppingBag className="h-8 w-8 text-amber-500" />
-              Manajemen Pesanan
-            </h2>
-            <p className="text-muted-foreground mt-2">Kelola dan pantau semua pesanan pelanggan</p>
-          </div>
-          <Button 
-            onClick={handleCleanupExpired} 
-            disabled={isCleaningUp}
-            variant="outline"
-            className="border-red-500 text-red-500 hover:bg-red-500/10"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {isCleaningUp ? 'Membersihkan...' : 'Bersihkan Expired'}
-          </Button>
+        <div>
+          <h2 className="text-3xl font-bold flex items-center gap-3">
+            <ShoppingBag className="h-8 w-8 text-amber-500" />
+            Manajemen Pesanan
+          </h2>
+          <p className="text-muted-foreground mt-2">Kelola dan pantau semua pesanan pelanggan</p>
         </div>
 
         {/* Filter */}
@@ -396,37 +396,72 @@ export default function AdminOrdersPage() {
 
                 {/* Update Status */}
                 <div className="bg-muted/50 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-3">Update Status</h4>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => updateOrderStatus(selectedOrder.id, 'pending')}
-                      className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white"
-                      disabled={selectedOrder.status === 'pending'}
-                    >
-                      Pending
-                    </Button>
-                    <Button
-                      onClick={() => updateOrderStatus(selectedOrder.id, 'dikirim')}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                      disabled={selectedOrder.status === 'dikirim'}
-                    >
-                      Dikirim
-                    </Button>
-                    <Button
-                      onClick={() => updateOrderStatus(selectedOrder.id, 'selesai')}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                      disabled={selectedOrder.status === 'selesai'}
-                    >
-                      Selesai
-                    </Button>
-                    <Button
-                      onClick={() => setIsCancelDialogOpen(true)}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                      disabled={selectedOrder.status === 'dibatalkan'}
-                    >
-                      Batalkan
-                    </Button>
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2">Status Saat Ini</h4>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Pesanan:</span>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(selectedOrder.status)}
+                        <span className="text-xs text-muted-foreground">({getStatusLabel(selectedOrder.status)})</span>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Status Workflow Diagram */}
+                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      ℹ️ <strong>Catatan:</strong> Status pesanan hanya dapat bergerak maju dalam alur berikut:
+                    </p>
+                    <p className="text-xs font-mono text-blue-600 dark:text-blue-400">
+                      Pending → Dikirim → Selesai
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ⚠️ Pesanan tidak dapat dikembalikan ke status sebelumnya setelah diperbarui.
+                    </p>
+                  </div>
+
+                  {getValidNextStatuses(selectedOrder.status).length > 0 ? (
+                    <div>
+                      <h4 className="font-semibold mb-3">Pilih Status Berikutnya</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {getValidNextStatuses(selectedOrder.status).map((nextStatus) => {
+                          const statusColors: Record<string, string> = {
+                            'dikirim': 'bg-blue-600 hover:bg-blue-700',
+                            'selesai': 'bg-green-600 hover:bg-green-700',
+                            'dibatalkan': 'bg-red-600 hover:bg-red-700',
+                          };
+                          
+                          const statusIcons: Record<string, string> = {
+                            'dikirim': '📦',
+                            'selesai': '✅',
+                            'dibatalkan': '❌',
+                          };
+
+                          return (
+                            <Button
+                              key={nextStatus}
+                              onClick={() => {
+                                if (nextStatus === 'dibatalkan') {
+                                  setIsCancelDialogOpen(true);
+                                } else {
+                                  updateOrderStatus(selectedOrder.id, nextStatus);
+                                }
+                              }}
+                              className={`${statusColors[nextStatus] || ''} text-white`}
+                            >
+                              <span className="mr-2">{statusIcons[nextStatus] || '→'}</span>
+                              {getStatusLabel(nextStatus)}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded text-sm text-muted-foreground">
+                      <p>✓ Pesanan sudah mencapai status final: <strong>{getStatusLabel(selectedOrder.status)}</strong></p>
+                      <p className="text-xs mt-1">Tidak ada lagi status berikutnya yang dapat diterapkan.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

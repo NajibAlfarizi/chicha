@@ -72,16 +72,32 @@ function AccountContent() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated || authLoading || !user) return;
+    console.log('🔍 AccountContent useEffect check:', {
+      isAuthenticated,
+      authLoading,
+      user: user?.id,
+    });
+
+    if (!isAuthenticated || authLoading || !user) {
+      console.log('⏭️ Early return:', {
+        isAuthenticated,
+        authLoading,
+        hasUser: !!user,
+      });
+      return;
+    }
 
     const fetchUserData = async () => {
       try {
         setLoading(true);
         
+        console.log('🔄 Starting fetchUserData');
         console.log('Fetching data for user:', user.id);
         
         // Fetch profile from API
+        console.log('📝 Fetching profile...');
         const profileRes = await fetch('/api/users/profile');
+        console.log('✅ Profile response:', profileRes.status);
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           setProfile(profileData.profile);
@@ -94,22 +110,29 @@ function AccountContent() {
         }
 
         // Fetch orders
-        const ordersRes = await fetch(`/api/orders?user_id=${user.id}`);
+        console.log('📦 BEFORE Fetching orders with user_id:', user.id);
+        const ordersRes = await fetch(`/api/orders?user_id=${user.id}&email=${encodeURIComponent(user.email)}`);
+        console.log('📦 Orders fetch:', {
+          user_id: user.id,
+          email: user.email,
+          status: ordersRes.status,
+        });
         if (ordersRes.ok) {
           const ordersData = await ordersRes.json();
-          // Sort orders: pending payment first, then by created_at desc
+          console.log('📦 Orders fetched:', ordersData.orders?.length || 0, {
+            orders: ordersData.orders?.map((o: any) => ({
+              id: o.id,
+              user_id: o.user_id,
+              payment_status: o.payment_status,
+              created_at: o.created_at,
+            })),
+          });
+          // Sort orders by newest first
           const sortedOrders = (ordersData.orders || []).sort((a: Order, b: Order) => {
-            const aPending = a.payment_status === 'pending' || 
-              (a.status === 'menunggu pembayaran' && a.payment_method === 'midtrans');
-            const bPending = b.payment_status === 'pending' || 
-              (b.status === 'menunggu pembayaran' && b.payment_method === 'midtrans');
-            
-            // Pending payments first
-            if (aPending && !bPending) return -1;
-            if (!aPending && bPending) return 1;
-            
-            // Then sort by date
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            const aTimestamp = new Date((a as any).updated_at || a.created_at).getTime();
+            const bTimestamp = new Date((b as any).updated_at || b.created_at).getTime();
+
+            return bTimestamp - aTimestamp;
           });
           setOrders(sortedOrders);
         }

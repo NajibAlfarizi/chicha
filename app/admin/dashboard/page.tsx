@@ -20,6 +20,8 @@ import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Toolti
 
 interface DashboardStats {
   totalSales: number;
+  serviceRevenue: number;
+  totalRevenue: number;
   totalCustomers: number;
   pendingOrders: number;
   completedOrders: number;
@@ -35,6 +37,8 @@ interface ChartData {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalSales: 0,
+    serviceRevenue: 0,
+    totalRevenue: 0,
     totalCustomers: 0,
     pendingOrders: 0,
     completedOrders: 0,
@@ -64,6 +68,8 @@ export default function AdminDashboard() {
       // Set stats with fallback to default values
       setStats(data.stats || {
         totalSales: 0,
+        serviceRevenue: 0,
+        totalRevenue: 0,
         totalCustomers: 0,
         pendingOrders: 0,
         completedOrders: 0,
@@ -85,6 +91,8 @@ export default function AdminDashboard() {
       // Set default empty data on error
       setStats({
         totalSales: 0,
+        serviceRevenue: 0,
+        totalRevenue: 0,
         totalCustomers: 0,
         pendingOrders: 0,
         completedOrders: 0,
@@ -135,11 +143,11 @@ export default function AdminDashboard() {
         ) : (
           <>
             {/* Stats Cards with Modern Design */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <Card className="border-none shadow-lg bg-linear-to-br from-amber-500 to-orange-500 text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                 <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
-                  <CardTitle className="text-sm font-medium text-white/90">Total Penjualan</CardTitle>
+                  <CardTitle className="text-sm font-medium text-white/90">Pendapatan Penjualan</CardTitle>
                   <DollarSign className="h-5 w-5 text-white/80" />
                 </CardHeader>
                 <CardContent className="relative z-10">
@@ -149,6 +157,23 @@ export default function AdminDashboard() {
                   <p className="text-xs text-white/80 mt-2 flex items-center gap-1">
                     <TrendingUp className="h-3 w-3" />
                     {stats.completedOrders} pesanan selesai
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-none shadow-lg bg-linear-to-br from-red-500 to-rose-500 text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
+                  <CardTitle className="text-sm font-medium text-white/90">Pendapatan Servis</CardTitle>
+                  <Wrench className="h-5 w-5 text-white/80" />
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <div className="text-3xl font-bold">
+                    Rp {stats.serviceRevenue.toLocaleString('id-ID')}
+                  </div>
+                  <p className="text-xs text-white/80 mt-2 flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3" />
+                    dari perbaikan
                   </p>
                 </CardContent>
               </Card>
@@ -180,7 +205,7 @@ export default function AdminDashboard() {
               <Card className="border-none shadow-lg bg-linear-to-br from-purple-500 to-purple-600 text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                 <CardHeader className="flex flex-row items-center justify-between pb-2 relative z-10">
-                  <CardTitle className="text-sm font-medium text-white/90">Booking Aktif</CardTitle>
+                  <CardTitle className="text-sm font-medium text-white/90">Servis Aktif</CardTitle>
                   <Wrench className="h-5 w-5 text-white/80" />
                 </CardHeader>
                 <CardContent className="relative z-10">
@@ -213,7 +238,7 @@ export default function AdminDashboard() {
                   <Link href="/admin/booking">
                     <Button className="w-full h-20 flex flex-col gap-2 bg-linear-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105">
                       <Wrench className="h-6 w-6" />
-                      <span className="text-sm font-semibold">Booking Service</span>
+                      <span className="text-sm font-semibold">Booking Servis</span>
                     </Button>
                   </Link>
                   <Link href="/admin/target">
@@ -259,7 +284,7 @@ export default function AdminDashboard() {
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
+                    <div className="h-75 flex flex-col items-center justify-center text-muted-foreground">
                       <Package className="h-12 w-12 mb-4 opacity-30" />
                       <p>Belum ada data pesanan</p>
                     </div>
@@ -272,9 +297,9 @@ export default function AdminDashboard() {
                 <CardHeader>
                   <CardTitle className="text-xl flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse"></div>
-                    Status Booking Service
+                    Status Booking Servis
                   </CardTitle>
-                  <CardDescription>Distribusi status booking service</CardDescription>
+                  <CardDescription>Distribusi status booking servis</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {bookingsChartData.length > 0 ? (
@@ -301,7 +326,7 @@ export default function AdminDashboard() {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
+                    <div className="h-75 flex flex-col items-center justify-center text-muted-foreground">
                       <Wrench className="h-12 w-12 mb-4 opacity-30" />
                       <p>Belum ada data booking</p>
                     </div>

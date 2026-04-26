@@ -4,25 +4,39 @@ import type { NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Allow login pages for everyone (bypass role checks)
+  if (pathname === '/teknisi/login' || pathname === '/auth/login') {
+    console.log('Middleware: allowing access to login page:', pathname);
+    return NextResponse.next();
+  }
+  
   // Get user role from cookies
   const userCookie = request.cookies.get('user');
   const teknisiCookie = request.cookies.get('teknisi');
   
   let userRole: string | null = null;
   
-  // Check if user is logged in as regular user (client/admin)
+  // Check if user is logged in as admin (has 'user' cookie)
   if (userCookie) {
     try {
       const userData = JSON.parse(userCookie.value);
-      userRole = userData.role;
+      userRole = userData.role; // Should be 'admin'
+      console.log('Middleware: Found admin user cookie, role:', userRole);
     } catch (error) {
       console.error('Error parsing user cookie:', error);
     }
   }
   
-  // Check if user is logged in as teknisi
+  // Check if user is logged in as teknisi (has 'teknisi' cookie)
   if (teknisiCookie && !userRole) {
-    userRole = 'teknisi';
+    try {
+      const teknisiData = JSON.parse(teknisiCookie.value);
+      userRole = teknisiData.role; // Should be 'teknisi'
+      console.log('Middleware: Found teknisi cookie, role:', userRole);
+    } catch (error) {
+      console.error('Error parsing teknisi cookie:', error);
+      userRole = 'teknisi'; // Fallback if cannot parse
+    }
   }
   
   // Strict role-based access control
@@ -57,7 +71,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/admin')) {
     // Admin routes - only admin can access
     if (userRole !== 'admin') {
-      return NextResponse.redirect(new URL('/auth/login?redirect=' + pathname, request.url));
+      return NextResponse.redirect(new URL('/teknisi/login?redirect=' + pathname, request.url));
     }
   } else if (pathname.startsWith('/client/checkout') || 
              pathname.startsWith('/client/booking') || 

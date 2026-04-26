@@ -53,7 +53,8 @@ export async function PUT(
       status, 
       progress_status, 
       progress_notes, 
-      estimated_completion 
+      estimated_completion,
+      biaya_perbaikan
     } = body;
 
     // Get booking before update to check user_id and status change
@@ -75,6 +76,7 @@ export async function PUT(
     }
     if (progress_notes !== undefined) updateData.progress_notes = progress_notes;
     if (estimated_completion !== undefined) updateData.estimated_completion = estimated_completion;
+    if (biaya_perbaikan !== undefined) updateData.biaya_perbaikan = biaya_perbaikan;
 
     console.log('Update data to be sent:', updateData);
 

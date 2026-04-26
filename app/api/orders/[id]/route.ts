@@ -188,6 +188,31 @@ export async function PUT(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
+    // Define valid status transitions - status can only move forward
+    const validTransitions: Record<string, string[]> = {
+      'pending': ['dikirim', 'dibatalkan'],      // From pending, can go to shipped or cancelled
+      'dikirim': ['selesai', 'dibatalkan'],     // From shipped, can go to completed or cancelled
+      'selesai': [],                             // Completed, no progression
+      'dibatalkan': [],                          // Cancelled, no progression
+    };
+
+    // Validate status transition
+    const currentStatus = orderBefore.status;
+    const allowedNextStatuses = validTransitions[currentStatus] || [];
+    
+    if (!allowedNextStatuses.includes(status)) {
+      console.warn(`❌ Invalid status transition: ${currentStatus} → ${status}`);
+      return NextResponse.json({
+        error: `Tidak dapat mengubah status dari '${currentStatus}' ke '${status}'`,
+        details: `Status pesanan hanya dapat bergerak maju dalam alur: pending → dikirim → selesai. Pesanan tidak dapat dikembalikan ke status sebelumnya.`,
+        currentStatus,
+        requestedStatus: status,
+        allowedNextStatuses
+      }, { status: 400 });
+    }
+
+    console.log(`✅ Valid status transition approved: ${currentStatus} → ${status}`);
+
     // Prepare update data
     const updateData: { status: string; cancel_reason?: string; cancelled_at?: string } = { status };
     

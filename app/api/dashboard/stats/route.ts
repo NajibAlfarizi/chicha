@@ -64,10 +64,10 @@ export async function GET() {
     const achievedTargets = targets?.length || 0;
     console.log('🎯 Achieved targets:', achievedTargets);
 
-    // Get active bookings
+    // Get all bookings
     const { data: bookings, error: bookingsError } = await supabaseAdmin
       .from('bookings')
-      .select('status');
+      .select('status, biaya_perbaikan');
 
     if (bookingsError) {
       console.error('❌ Error fetching bookings:', bookingsError);
@@ -75,6 +75,13 @@ export async function GET() {
 
     const activeBookings = bookings?.filter(b => b.status !== 'selesai' && b.status !== 'dibatalkan').length || 0;
     console.log('🔧 Active bookings:', activeBookings);
+
+    // Calculate service revenue from completed bookings with biaya_perbaikan
+    const serviceRevenue = bookings
+      ?.filter(b => b.status === 'selesai' && b.biaya_perbaikan)
+      .reduce((sum, b) => sum + Number(b.biaya_perbaikan || 0), 0) || 0;
+
+    console.log('🔧 Service revenue calculated:', serviceRevenue);
 
     // Order status breakdown
     const ordersByStatus = {
@@ -94,6 +101,8 @@ export async function GET() {
     const result = {
       stats: {
         totalSales,
+        serviceRevenue,
+        totalRevenue: totalSales + serviceRevenue,
         totalCustomers,
         pendingOrders,
         completedOrders,
@@ -116,6 +125,8 @@ export async function GET() {
       error: 'Internal server error',
       stats: {
         totalSales: 0,
+        serviceRevenue: 0,
+        totalRevenue: 0,
         totalCustomers: 0,
         pendingOrders: 0,
         completedOrders: 0,
@@ -129,4 +140,5 @@ export async function GET() {
     }, { status: 500 });
   }
 }
+
 

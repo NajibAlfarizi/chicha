@@ -15,53 +15,6 @@ function SuccessContent() {
   const [orderDetails, setOrderDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const updateOrderPaymentStatus = async (orderId: string) => {
-    try {
-      console.log('✅ Payment success! Updating order payment status...');
-      console.log('📦 Order ID from URL:', orderId);
-      
-      // Update order payment status to 'paid'
-      const response = await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          payment_status: 'paid',
-        }),
-      });
-
-      console.log('📨 API Response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ Order payment updated:', data.order);
-        setOrderDetails(data.order);
-        
-        // Clean up cart
-        localStorage.removeItem('cart');
-        window.dispatchEvent(new Event('cartUpdated'));
-        
-        console.log('🧹 Cart cleaned up');
-      } else {
-        const error = await response.json();
-        console.error('❌ Failed to update order:', error);
-        
-        // Still try to fetch order details
-        const fetchResponse = await fetch(`/api/orders/${orderId}`);
-        if (fetchResponse.ok) {
-          const fetchData = await fetchResponse.json();
-          setOrderDetails(fetchData.order);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error updating order:', error);
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     console.log('🔄 Success page loaded');
     
@@ -80,25 +33,37 @@ function SuccessContent() {
       return;
     }
 
-    // Always update payment status when reaching success page
-    // If user reached this page, payment was successful
-    console.log('✅ User reached success page - updating payment status to paid');
-    updateOrderPaymentStatus(orderId);
-  }, [searchParams]);
-
-  const fetchOrderDetails = async (orderId: string) => {
-    try {
-      const response = await fetch(`/api/orders/${orderId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setOrderDetails(data.order);
+    // Fetch order details
+    // Payment status will be updated by Midtrans webhook
+    console.log('📊 Fetching order details (webhook will handle payment status update)');
+    const fetchOrderDetails = async () => {
+      try {
+        const response = await fetch(`/api/orders/${orderId}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Order details fetched:', {
+            id: data.order.id,
+            payment_status: data.order.payment_status,
+            status: data.order.status,
+          });
+          setOrderDetails(data.order);
+          
+          // Clean up cart
+          localStorage.removeItem('cart');
+          window.dispatchEvent(new Event('cartUpdated'));
+          console.log('🧹 Cart cleaned up');
+        } else {
+          console.error('❌ Failed to fetch order details');
+        }
+      } catch (error) {
+        console.error('❌ Error fetching order:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('❌ Error fetching order:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchOrderDetails();
+  }, [searchParams]);
 
   return (
     <ClientLayout>

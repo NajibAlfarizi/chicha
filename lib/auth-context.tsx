@@ -101,6 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     toast.success('Logout berhasil', {
       description: 'Anda telah keluar dari akun',
     });
+    
+    // Small delay to ensure storage is cleared
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Redirect to home
     router.push('/');
   };
 

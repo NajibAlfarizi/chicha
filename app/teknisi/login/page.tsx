@@ -31,14 +31,33 @@ export default function TeknisiLoginPage() {
       const success = await login(formData.username, formData.password);
 
       if (success) {
-        toast.success('Login berhasil!', {
-          description: 'Selamat datang kembali',
-        });
-        router.push('/teknisi/dashboard');
+        // Get user data from localStorage to check role
+        const userStr = localStorage.getItem('teknisi');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          console.log('Login successful, user data:', user);
+          console.log('User role:', user.role);
+          
+          toast.success('Login berhasil!', {
+            description: 'Selamat datang kembali',
+          });
+
+          // Redirect based on role
+          if (user.role === 'admin') {
+            console.log('Redirecting to admin dashboard');
+            router.push('/admin/dashboard');
+          } else if (user.role === 'teknisi') {
+            console.log('Redirecting to teknisi dashboard');
+            router.push('/teknisi/dashboard');
+          } else {
+            console.warn('Unknown role:', user.role);
+            router.push('/teknisi/dashboard');
+          }
+        }
       } else {
-        setError('Username atau password salah');
+        setError('Email/Username atau password salah');
         toast.error('Login gagal', {
-          description: 'Periksa kembali username dan password Anda',
+          description: 'Periksa kembali email/username dan password Anda',
         });
       }
     } catch (error) {
@@ -53,7 +72,7 @@ export default function TeknisiLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-white via-blue-50/30 to-indigo-50/40 relative overflow-hidden">
       {/* Liquid Glass Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 -left-20 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse" />
@@ -63,10 +82,10 @@ export default function TeknisiLoginPage() {
 
       <div className="relative z-10 min-h-screen grid lg:grid-cols-2 gap-0">
         {/* Left Side - Illustration */}
-        <div className="hidden lg:flex flex-col justify-center items-center p-8 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent backdrop-blur-sm">
+        <div className="hidden lg:flex flex-col justify-center items-center p-8 bg-linear-to-br from-blue-500/10 via-indigo-500/5 to-transparent backdrop-blur-sm">
           <div className="max-w-md space-y-6">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse" />
+              <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-indigo-500 rounded-full blur-3xl opacity-20 animate-pulse" />
               <div className="relative mx-auto">
                 <Image 
                   src="/logo-chicha.jpg" 
@@ -81,16 +100,16 @@ export default function TeknisiLoginPage() {
               <h1 className="text-3xl font-bold text-blue-600">
                 Chicha Mobile
               </h1>
-              <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Panel Teknisi
+              <h2 className="text-2xl font-semibold bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Panel Admin & Teknisi
               </h2>
               <p className="text-base text-gray-600">
-                Kelola booking dan layanan service dengan mudah
+                Kelola sistem dan layanan dengan mudah
               </p>
             </div>
             <div className="space-y-3 mt-6">
               <div className="backdrop-blur-md bg-white/60 p-4 rounded-2xl border border-white/60 shadow-lg flex items-start gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-500 flex items-center justify-center shrink-0">
                   <Settings className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -99,7 +118,7 @@ export default function TeknisiLoginPage() {
                 </div>
               </div>
               <div className="backdrop-blur-md bg-white/60 p-4 rounded-2xl border border-white/60 shadow-lg flex items-start gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-indigo-500 to-blue-500 flex items-center justify-center shrink-0">
                   <Wrench className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -118,18 +137,18 @@ export default function TeknisiLoginPage() {
             <div className="backdrop-blur-xl bg-white/80 rounded-3xl shadow-2xl border border-white/60 p-6 lg:p-8">
               {/* Mobile Logo */}
               <div className="lg:hidden flex justify-center mb-3">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <div className="h-12 w-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
                   <Wrench className="h-6 w-6 text-white" />
                 </div>
               </div>
 
               {/* Header */}
               <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
-                  Login Teknisi
+                <h2 className="text-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
+                  Login Admin / Teknisi
                 </h2>
-                <p className="text-sm text-gray-600">
-                  Masuk ke panel teknisi Chicha Mobile
+                <p className="text-xs text-gray-500">
+                  Email untuk Admin • Username untuk Teknisi
                 </p>
               </div>
 
@@ -137,14 +156,14 @@ export default function TeknisiLoginPage() {
               <form onSubmit={handleSubmit} className="space-y-3">
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                     <p className="text-red-500 text-sm">{error}</p>
                   </div>
                 )}
 
                 <div className="space-y-1">
                   <Label htmlFor="username" className="text-sm text-gray-700 font-medium">
-                    Username
+                    Email atau Username
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" />
@@ -156,7 +175,7 @@ export default function TeknisiLoginPage() {
                         setFormData({ ...formData, username: e.target.value })
                       }
                       className="pl-10 h-10 bg-white/60 backdrop-blur-sm border-2 border-blue-200 focus:border-blue-500 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 transition-all"
-                      placeholder="username.teknisi"
+                      placeholder="admin@email.com atau username.teknisi"
                       required
                       disabled={loading}
                     />
@@ -193,7 +212,7 @@ export default function TeknisiLoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                  className="w-full h-10 bg-linear-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
                   disabled={loading}
                 >
                   {loading ? (
