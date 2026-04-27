@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('📥 Fetching notifications for user:', userId);
+    console.log('⏰ Unread only:', unreadOnly);
 
     // Use admin client to bypass RLS
     let query = supabaseAdmin
@@ -32,7 +33,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    console.log('✅ Notifications fetched:', data?.length || 0);
+    console.log('✅ Notifications fetched:', {
+      total: data?.length || 0,
+      unread: data?.filter(n => !n.is_read).length || 0,
+      types: data?.reduce((acc: Record<string, number>, n: any) => {
+        acc[n.type] = (acc[n.type] || 0) + 1;
+        return acc;
+      }, {}),
+    });
 
     return NextResponse.json({ notifications: data || [] }, { status: 200 });
 

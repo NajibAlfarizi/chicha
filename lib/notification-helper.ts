@@ -1,16 +1,19 @@
-import { supabase } from './supabaseClient';
+import { supabaseAdmin } from './supabaseClient';
 
 export interface CreateNotificationParams {
   user_id: string;
   title: string;
   message: string;
-  type: 'order' | 'booking' | 'target' | 'general';
+  type: 'order' | 'booking' | 'booking_new' | 'booking_assigned' | 'target' | 'general' | 'complaint_reply';
   related_id?: string;
+  booking_id?: string;
+  order_id?: string;
 }
 
 /**
  * Helper function to create a notification
  * Call this when you want to notify a user about something
+ * Uses supabaseAdmin to bypass RLS
  */
 export async function createNotification({
   user_id,
@@ -18,29 +21,39 @@ export async function createNotification({
   message,
   type,
   related_id,
+  booking_id,
+  order_id,
 }: CreateNotificationParams) {
   try {
-    const { data, error } = await supabase
+    const notificationData: any = {
+      user_id,
+      title,
+      message,
+      type,
+      is_read: false,
+    };
+
+    if (related_id) notificationData.related_id = related_id;
+    if (booking_id) notificationData.booking_id = booking_id;
+    if (order_id) notificationData.order_id = order_id;
+
+    console.log('📨 Creating notification:', notificationData);
+
+    const { data, error } = await supabaseAdmin
       .from('notifications')
-      .insert({
-        user_id,
-        title,
-        message,
-        type,
-        related_id,
-        is_read: false,
-      })
+      .insert(notificationData)
       .select()
       .single();
 
     if (error) {
-      console.error('Failed to create notification:', error);
+      console.error('❌ Failed to create notification:', error);
       return null;
     }
 
+    console.log('✅ Notification created:', data.id);
     return data;
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error('❌ Error creating notification:', error);
     return null;
   }
 }
@@ -73,14 +86,19 @@ export async function notifyOrderStatusChange(
   };
 
   const statusInfo = statusMessages[status.toLowerCase()];
-  if (!statusInfo) return null;
+  if (!statusInfo) {
+    console.warn('⚠️ Unknown order status:', status);
+    return null;
+  }
+
+  console.log('📨 Creating order status notification:', { userId, orderId, status });
 
   return createNotification({
     user_id: userId,
     title: statusInfo.title,
     message: statusInfo.message,
     type: 'order',
-    related_id: orderId,
+    order_id: orderId,
   });
 }
 

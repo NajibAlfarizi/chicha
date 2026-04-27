@@ -1,5 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import { createNotification } from '@/lib/notification-helper';
 
 // Helper function to check if payment is expired
 function isPaymentExpired(order: any): boolean {
@@ -278,6 +279,79 @@ export async function POST(request: NextRequest) {
         await supabaseAdmin.rpc('increment_voucher_used', { voucher_id_param: voucher_id });
         console.log('✅ Voucher usage tracked');
       }
+    }
+
+    // Create notification for customer about order creation
+    try {
+      console.log('📨 Creating order creation notification for customer:', user_id);
+      
+      await createNotification({
+        user_id,
+        title: 'Pesanan Dibuat',
+        message: `Pesanan Anda dengan total Rp ${total_amount.toLocaleString('id-ID')} telah dibuat. Metode pembayaran: ${payment_method}`,
+        type: 'order',
+        order_id: order.id,
+      });
+
+      console.log('✅ Customer order notification created');
+    } catch (notifError) {
+      console.error('⚠️ Error creating customer order notification:', notifError);
+      // Don't fail the order if notification fails
+    }
+
+    // Create notification for all admins about new order
+    try {
+      console.log('📨 Fetching admin users for order notifications...');
+      const { data: adminUsers, error: adminError } = await supabaseAdmin
+        .from('users')
+        .select('id, name, role')
+        .eq('role', 'admin');
+
+      console.log('🔍 Admin query result:', {
+        error: adminError?.message,
+        count: adminUsers?.length,
+        users: adminUsers?.map(u => ({ id: u.id.slice(0, 8), name: u.name, role: u.role }))
+      });
+
+      if (adminError) {
+        console.error('❌ Error fetching admin users:', adminError);
+      } else if (!adminUsers || adminUsers.length === 0) {
+        console.warn('⚠️ No admin users found in database');
+      } else {
+        console.log(`Found ${adminUsers.length} admin(s), creating order notifications...`);
+        
+        // Get customer name from customer_info
+        const customerName = (customer_info as any)?.name || 'Pelanggan';
+        
+        // Create notification for each admin
+        const adminNotifications = adminUsers.map(admin => ({
+          user_id: admin.id,
+          title: 'Pesanan Baru',
+          message: `${customerName} membuat pesanan baru dengan total Rp ${total_amount.toLocaleString('id-ID')}`,
+          type: 'order',
+          order_id: order.id,
+        }));
+
+        console.log('📋 Creating notifications:', {
+          count: adminNotifications.length,
+          sample: adminNotifications[0]
+        });
+
+        const { data: notifData, error: notifError } = await supabaseAdmin
+          .from('notifications')
+          .insert(adminNotifications)
+          .select();
+        
+        if (notifError) {
+          console.error('❌ Error creating admin notifications:', notifError);
+        } else {
+          console.log(`✅ Created ${notifData?.length || adminNotifications.length} admin notifications`);
+          console.log('✅ Admin notification IDs:', notifData?.map(n => n.id.slice(0, 8)));
+        }
+      }
+    } catch (adminNotifError) {
+      console.error('❌ Error in admin notification process:', adminNotifError);
+      // Don't fail the order if admin notifications fail
     }
 
     return NextResponse.json({ 

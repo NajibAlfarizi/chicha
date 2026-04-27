@@ -14,14 +14,64 @@ import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { useEffect, useState } from 'react';
 
 export function NotificationBell() {
   const { user } = useAuth();
   const router = useRouter();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(user?.id);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [userRole, setUserRole] = useState<string | undefined>(undefined);
+  
+  // Get userId from either auth context or localStorage - improved detection
+  useEffect(() => {
+    // First try: customer from useAuth context
+    if (user?.id) {
+      console.log('🔔 Detected customer from useAuth context:', user.id.slice(0, 8));
+      setUserId(user.id);
+      setUserRole(user.role);
+      return;
+    }
+    
+    // Second try: admin or teknisi from localStorage['teknisi']
+    if (typeof window !== 'undefined') {
+      const teknisiData = localStorage.getItem('teknisi');
+      console.log('🔔 Checking localStorage teknisi:', teknisiData ? 'exists' : 'not found');
+      
+      if (teknisiData) {
+        try {
+          const parsed = JSON.parse(teknisiData);
+          console.log('🔔 Parsed teknisi data:', {
+            id: parsed.id?.slice(0, 8),
+            role: parsed.role,
+            name: parsed.name
+          });
+          
+          if (parsed.id && parsed.role) {
+            setUserId(parsed.id);
+            setUserRole(parsed.role);
+            console.log('✅ NotificationBell initialized with:', {
+              userId: parsed.id.slice(0, 8),
+              userRole: parsed.role
+            });
+            return;
+          }
+        } catch (e) {
+          console.error('❌ Error parsing teknisi data:', e);
+        }
+      }
+    }
+    
+    // If we get here, no user found
+    console.warn('⚠️ NotificationBell: No user ID found in auth context or localStorage');
+    setUserId(undefined);
+    setUserRole(undefined);
+  }, [user]); // Keep user in deps to trigger on login/logout
+
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(userId);
 
   console.log('🔔 NotificationBell render:', { 
-    user: user?.id, 
+    userId: userId?.slice(0, 8), 
+    userRole,
     notificationsCount: notifications.length, 
     unreadCount 
   });
@@ -29,13 +79,22 @@ export function NotificationBell() {
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
     
-    // Navigate based on notification type
-    if (notification.type === 'order' && notification.related_id) {
+    // Navigate based on notification type and user role
+    if (notification.type === 'order' && (notification.related_id || notification.order_id)) {
       router.push(`/client/akun?tab=orders`);
-    } else if (notification.type === 'booking' && notification.related_id) {
-      router.push(`/client/akun?tab=bookings`);
+    } else if ((notification.type === 'booking' || notification.type === 'booking_new' || notification.type === 'booking_assigned') && (notification.related_id || notification.booking_id)) {
+      // Navigate based on user role
+      if (userRole === 'teknisi') {
+        router.push(`/teknisi/service`);
+      } else if (userRole === 'admin') {
+        router.push(`/admin/booking`);
+      } else {
+        router.push(`/client/akun?tab=bookings`);
+      }
     } else if (notification.type === 'target' && notification.related_id) {
       router.push(`/client/akun?tab=targets`);
+    } else if (notification.type === 'complaint_reply' && notification.related_id) {
+      router.push(`/client/akun?tab=reviews`);
     }
   };
 

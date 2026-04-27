@@ -259,7 +259,94 @@ export async function PUT(
 
     // Create notification if status changed
     if (orderBefore.status !== status) {
-      await notifyOrderStatusChange(orderBefore.user_id, id, status);
+      try {
+        console.log('📨 Creating order status update notification for customer:', orderBefore.user_id);
+        const notifResult = await notifyOrderStatusChange(orderBefore.user_id, id, status);
+        if (notifResult) {
+          console.log('✅ Customer status notification created');
+        } else {
+          console.warn('⚠️ Customer status notification failed to create');
+        }
+      } catch (notifError) {
+        console.error('❌ Error creating customer status notification:', notifError);
+        // Don't fail the order update if notification fails
+      }
+
+      // Create notification for all admins about status change
+      try {
+        console.log('📨 Fetching admin users for status update notifications...');
+        const { data: adminUsers, error: adminError } = await supabaseAdmin
+          .from('users')
+          .select('id, name, role')
+          .eq('role', 'admin');
+
+        console.log('🔍 Admin query result:', {
+          error: adminError?.message,
+          count: adminUsers?.length,
+          users: adminUsers?.map(u => ({ id: u.id.slice(0, 8), name: u.name, role: u.role }))
+        });
+
+        if (adminError) {
+          console.error('❌ Error fetching admin users:', adminError);
+        } else if (!adminUsers || adminUsers.length === 0) {
+          console.warn('⚠️ No admin users found in database');
+        } else {
+          console.log(`Found ${adminUsers.length} admin(s), creating status notifications...`);
+          
+          // Map status to status message
+          const statusMessages: Record<string, { title: string; message: string }> = {
+            pending: {
+              title: 'Pesanan Menunggu Pembayaran',
+              message: `Pesanan #${id} menunggu konfirmasi pembayaran dari pelanggan.`,
+            },
+            dikirim: {
+              title: 'Pesanan Dikirim',
+              message: `Pesanan #${id} sedang dalam perjalanan ke pelanggan.`,
+            },
+            selesai: {
+              title: 'Pesanan Selesai',
+              message: `Pesanan #${id} telah selesai dan diterima oleh pelanggan.`,
+            },
+            dibatalkan: {
+              title: 'Pesanan Dibatalkan',
+              message: `Pesanan #${id} telah dibatalkan.`,
+            },
+          };
+          
+          const statusInfo = statusMessages[status.toLowerCase()];
+          
+          if (statusInfo) {
+            // Create notification for each admin
+            const adminNotifications = adminUsers.map(admin => ({
+              user_id: admin.id,
+              title: statusInfo.title,
+              message: statusInfo.message,
+              type: 'order',
+              order_id: id,
+            }));
+
+            console.log('📋 Creating status notifications:', {
+              count: adminNotifications.length,
+              sample: adminNotifications[0]
+            });
+
+            const { data: notifData, error: notifError } = await supabaseAdmin
+              .from('notifications')
+              .insert(adminNotifications)
+              .select();
+            
+            if (notifError) {
+              console.error('❌ Error creating admin status notifications:', notifError);
+            } else {
+              console.log(`✅ Created ${notifData?.length || adminNotifications.length} admin status notifications`);
+              console.log('✅ Admin notification IDs:', notifData?.map(n => n.id.slice(0, 8)));
+            }
+          }
+        }
+      } catch (adminNotifError) {
+        console.error('❌ Error in admin status notification process:', adminNotifError);
+        // Don't fail the order update if admin notifications fail
+      }
     }
 
     // Update target spending if order completed or paid

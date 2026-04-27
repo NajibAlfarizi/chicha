@@ -8,8 +8,10 @@ export interface Notification {
   user_id: string;
   title: string;
   message: string;
-  type: 'order' | 'booking' | 'target' | 'general' | 'complaint_reply';
+  type: 'order' | 'booking' | 'booking_new' | 'booking_assigned' | 'target' | 'general' | 'complaint_reply';
   related_id?: string;
+  booking_id?: string;
+  order_id?: string;
   is_read: boolean;
   created_at: string;
 }
@@ -51,9 +53,13 @@ export function useNotifications(userId: string | undefined) {
 
   // Initial fetch and setup realtime subscription
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      console.warn('⚠️ useNotifications: No userId provided, skipping setup');
+      setLoading(false);
+      return;
+    }
 
-    console.log('📡 Setting up realtime subscription for user:', userId);
+    console.log('📡 Setting up notification system for user:', userId);
 
     // Initial fetch
     fetchNotifications();
@@ -69,19 +75,29 @@ export function useNotifications(userId: string | undefined) {
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
-          console.log('🔔 Notification change received:', payload);
+        (payload: any) => {
+          console.log('🔔 Real-time notification change received:', {
+            event: payload.eventType,
+            table: payload.table,
+            new: payload.new?.id,
+          });
           // Refresh notifications when there's a change
           fetchNotifications();
         }
       )
       .subscribe((status) => {
-        console.log('📡 Subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Real-time subscription SUBSCRIBED for user:', userId);
+        } else if (status === 'CLOSED') {
+          console.log('❌ Real-time subscription CLOSED');
+        } else {
+          console.log('📡 Subscription status:', status);
+        }
       });
 
     // Cleanup function
     return () => {
-      console.log('🔌 Cleaning up notification subscription');
+      console.log('🔌 Cleaning up notification subscription for user:', userId);
       supabase.removeChannel(channel);
     };
   }, [userId, fetchNotifications]);
