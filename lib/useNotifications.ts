@@ -95,9 +95,17 @@ export function useNotifications(userId: string | undefined) {
         }
       });
 
+    // Add fallback polling mechanism (every 2 seconds)
+    // This ensures notifications are fetched even if realtime doesn't trigger
+    const pollInterval = setInterval(() => {
+      console.log('⏱️ Polling for notifications (fallback)');
+      fetchNotifications();
+    }, 2000);
+
     // Cleanup function
     return () => {
       console.log('🔌 Cleaning up notification subscription for user:', userId);
+      clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
   }, [userId, fetchNotifications]);
