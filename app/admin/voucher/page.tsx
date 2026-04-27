@@ -373,20 +373,20 @@ export default function AdminVoucherPage() {
                         <div className="text-muted-foreground text-xs mb-1">Nilai</div>
                         <div className="font-semibold">
                           {voucher.type === 'percentage' 
-                            ? `${voucher.value}%` 
-                            : `Rp ${voucher.value.toLocaleString('id-ID')}`}
+                            ? `${voucher.value ?? 0}%` 
+                            : `Rp ${(voucher.value ?? 0).toLocaleString('id-ID')}`}
                         </div>
                       </div>
                       <div>
                         <div className="text-muted-foreground text-xs mb-1">Min. Belanja</div>
                         <div className="font-medium">
-                          Rp {voucher.min_purchase.toLocaleString('id-ID')}
+                          Rp {(voucher.min_purchase ?? 0).toLocaleString('id-ID')}
                         </div>
                       </div>
                       <div>
                         <div className="text-muted-foreground text-xs mb-1">Kuota</div>
-                        <div className={`font-medium ${voucher.used >= voucher.quota ? 'text-red-500' : ''}`}>
-                          {voucher.used}/{voucher.quota}
+                        <div className={`font-medium ${(voucher.used ?? 0) >= (voucher.quota ?? 0) ? 'text-red-500' : ''}`}>
+                          {voucher.used ?? 0}/{voucher.quota ?? 0}
                         </div>
                       </div>
                     </div>
