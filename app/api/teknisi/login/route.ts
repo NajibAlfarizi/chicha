@@ -108,6 +108,12 @@ export async function POST(request: NextRequest) {
           httpOnly: false,
         });
 
+        // Clear teknisi cookie if exists (user switching from teknisi to admin)
+        response.cookies.set('teknisi_session', '', {
+          maxAge: 0,
+          path: '/',
+        });
+
         return response;
       } catch (err) {
         console.error('Email login error:', err);
@@ -203,6 +209,20 @@ export async function POST(request: NextRequest) {
       }), {
         ...cookieOptions,
         httpOnly: false,
+      });
+
+      // Clear admin cookies if exists (user switching from admin to teknisi)
+      response.cookies.set('user', '', {
+        maxAge: 0,
+        path: '/',
+      });
+      response.cookies.set('sb-access-token', '', {
+        maxAge: 0,
+        path: '/',
+      });
+      response.cookies.set('sb-refresh-token', '', {
+        maxAge: 0,
+        path: '/',
       });
 
       return response;
