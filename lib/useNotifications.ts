@@ -95,12 +95,12 @@ export function useNotifications(userId: string | undefined) {
         }
       });
 
-    // Add fallback polling mechanism (every 2 seconds)
-    // This ensures notifications are fetched even if realtime doesn't trigger
+    // Add fallback polling mechanism (every 60 seconds)
+    // This is a true fallback in case realtime subscription fails
     const pollInterval = setInterval(() => {
-      console.log('⏱️ Polling for notifications (fallback)');
+      console.log('⏱️ Polling for notifications (60s fallback)');
       fetchNotifications();
-    }, 2000);
+    }, 60000);
 
     // Cleanup function
     return () => {
@@ -108,7 +108,7 @@ export function useNotifications(userId: string | undefined) {
       clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
-  }, [userId, fetchNotifications]);
+  }, [userId]);
 
   const markAsRead = async (notificationId: string) => {
     try {

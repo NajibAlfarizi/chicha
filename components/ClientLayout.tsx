@@ -92,10 +92,8 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
               {/* Theme Toggle */}
               <ThemeToggle />
 
-              {/* Notification Bell - Desktop */}
-              <div className="hidden md:block">
-                <NotificationBell />
-              </div>
+              {/* Notification Bell - Mobile & Desktop */}
+              <NotificationBell />
 
               {/* Auth Buttons - Desktop */}
               {!isAuthenticated ? (
