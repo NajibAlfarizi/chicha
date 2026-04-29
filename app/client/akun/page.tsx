@@ -63,6 +63,7 @@ function AccountContent() {
   const [showOrderDetail, setShowOrderDetail] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingTrack, setShowBookingTrack] = useState(false);
+  const [claimingReward, setClaimingReward] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -322,6 +323,57 @@ function AccountContent() {
       toast.dismiss('chat-loading');
       toast.error('Gagal membuka chat');
       console.error('Chat error:', error);
+    }
+  };
+
+  const handleClaimReward = async () => {
+    if (!target || !user) return;
+
+    try {
+      setClaimingReward(true);
+      console.log('🎁 Claiming reward for target:', target.id);
+
+      const response = await fetch('/api/targets/claim-reward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_id: target.id,
+          user_id: user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('✅ Reward claimed successfully');
+        toast.success('🎉 Reward Diklaim!', {
+          description: 'Reward Anda telah diklaim dan target akan direset untuk siklus berikutnya.',
+          duration: 5000,
+        });
+
+        // Update target in local state
+        setTarget({
+          ...target,
+          reward_claimed: true,
+        });
+
+        // After 2 seconds, refresh data to show reset target
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      } else {
+        console.error('❌ Error claiming reward:', data.error);
+        toast.error('Gagal mengklaim reward', {
+          description: data.error || 'Terjadi kesalahan saat mengklaim reward',
+        });
+      }
+    } catch (error) {
+      console.error('❌ Claim reward error:', error);
+      toast.error('Gagal mengklaim reward', {
+        description: 'Periksa koneksi internet Anda',
+      });
+    } finally {
+      setClaimingReward(false);
     }
   };
 
@@ -892,12 +944,23 @@ function AccountContent() {
                                 <span className="font-semibold text-sm md:text-base">✓ Reward Sudah Diklaim</span>
                               </div>
                             ) : target.status === 'achieved' && target.reward ? (
-                              <Link href="/client/chat" className="block">
-                                <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 md:py-4 text-sm md:text-base shadow-lg hover:shadow-xl transition-all">
-                                  <MessageSquare className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                                  💬 Hubungi CS untuk Klaim Reward
-                                </Button>
-                              </Link>
+                              <Button 
+                                onClick={handleClaimReward}
+                                disabled={claimingReward}
+                                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold py-3 md:py-4 text-sm md:text-base shadow-lg hover:shadow-xl transition-all"
+                              >
+                                {claimingReward ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    Mengklaim...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Gift className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                                    🎁 Klaim Reward Sekarang
+                                  </>
+                                )}
+                              </Button>
                             ) : (
                               <div className="bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 p-4 rounded-xl text-center border border-amber-300 dark:border-amber-700">
                                 <p className="text-sm md:text-base text-amber-800 dark:text-amber-200 font-medium">

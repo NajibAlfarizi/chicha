@@ -61,26 +61,28 @@ export async function PATCH(request: NextRequest) {
 
     // Create notification for teknisi
     try {
-      // Get teknisi user_id from users table (teknisi table has id, not user_id)
-      const { data: teknisiUser } = await supabaseAdmin
-        .from('users')
-        .select('id')
-        .eq('phone', teknisi.phone)
+      console.log('📨 Creating teknisi notification for:', { teknisi_id, teknisi_name: teknisi.name });
+      
+      // Use teknisi.id directly (teknisi are NOT in users table)
+      const { data: notifData, error: notifError } = await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: teknisi_id, // Use teknisi_id directly
+          title: 'Booking Service Ditugaskan',
+          message: `Anda ditugaskan untuk service ${booking.device_name} dari ${booking.customer_name || 'Pelanggan'}`,
+          type: 'booking_assigned',
+          booking_id: booking_id,
+        })
+        .select()
         .single();
 
-      if (teknisiUser) {
-        await supabaseAdmin
-          .from('notifications')
-          .insert({
-            user_id: teknisiUser.id,
-            title: 'Booking Service Ditugaskan',
-            message: `Anda ditugaskan untuk service ${booking.device_name} dari ${booking.customer_name || 'Pelanggan'}`,
-            type: 'booking_assigned',
-            booking_id: booking_id,
-          });
+      if (notifError) {
+        console.error('❌ Error creating teknisi notification:', notifError);
+      } else {
+        console.log('✅ Teknisi notification created:', notifData?.id.slice(0, 8));
       }
     } catch (tekNotifError) {
-      console.error('Error creating teknisi notification:', tekNotifError);
+      console.error('❌ Error in teknisi notification process:', tekNotifError);
     }
 
     // Create notification for customer
