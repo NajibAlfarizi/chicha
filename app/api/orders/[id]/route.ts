@@ -72,89 +72,9 @@ export async function PATCH(
 
     console.log('✅ Order updated:', order.id);
 
-    // Update target if payment_status changed to 'paid'
-    if (orderBefore && body.payment_status === 'paid' && orderBefore.payment_status !== 'paid') {
-      console.log('🎯 Payment status changed to paid, updating target for user:', orderBefore.user_id);
-      
-      try {
-        // Calculate total spending from paid orders
-        const { data: paidOrders } = await supabaseAdmin
-          .from('orders')
-          .select('total_amount')
-          .eq('user_id', orderBefore.user_id)
-          .eq('payment_status', 'paid');
-
-        const totalSpending = paidOrders?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0;
-
-        // Get or create target
-        const { data: existingTarget } = await supabaseAdmin
-          .from('targets')
-          .select('*')
-          .eq('user_id', orderBefore.user_id)
-          .single();
-
-        if (existingTarget) {
-          // Update existing target
-          const targetAmount = Number(existingTarget.target_amount);
-          const wasActive = existingTarget.status === 'active';
-          const newStatus = totalSpending >= targetAmount ? 'achieved' : 'active';
-
-          await supabaseAdmin
-            .from('targets')
-            .update({
-              current_amount: totalSpending,
-              status: newStatus,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', orderBefore.user_id);
-
-          console.log('✅ Target updated with current_amount:', totalSpending);
-
-          // Send notification if target just achieved
-          if (wasActive && newStatus === 'achieved') {
-            await createNotification({
-              user_id: orderBefore.user_id,
-              title: '🎉 Target Tercapai!',
-              message: `Selamat! Anda telah mencapai target belanja sebesar Rp ${targetAmount.toLocaleString('id-ID')}. Cek halaman akun untuk melihat reward Anda!`,
-              type: 'target',
-              related_id: existingTarget.id
-            });
-            console.log('✅ Target achievement notification sent');
-          }
-        } else {
-          // Create new target
-          const defaultTarget = 10000000; // 10 juta
-          const newStatus = totalSpending >= defaultTarget ? 'achieved' : 'active';
-
-          const { data: newTarget } = await supabaseAdmin
-            .from('targets')
-            .insert({
-              user_id: orderBefore.user_id,
-              target_amount: defaultTarget,
-              current_amount: totalSpending,
-              status: newStatus
-            })
-            .select()
-            .single();
-
-          console.log('✅ New target auto-created with current_amount:', totalSpending);
-
-          // Send notification if target achieved on creation
-          if (newStatus === 'achieved' && newTarget) {
-            await createNotification({
-              user_id: orderBefore.user_id,
-              title: '🎉 Target Tercapai!',
-              message: `Selamat! Anda telah mencapai target belanja sebesar Rp ${defaultTarget.toLocaleString('id-ID')}. Cek halaman akun untuk melihat reward Anda!`,
-              type: 'target',
-              related_id: newTarget.id
-            });
-          }
-        }
-      } catch (targetError) {
-        console.error('⚠️ Failed to update target:', targetError);
-        // Don't fail the order update if target update fails
-      }
-    }
+    // ⚠️ NOTE: Target should ONLY be updated when order status = 'selesai' (completed/delivered)
+    // NOT on payment_status change, to prevent double counting with PUT logic
+    // The PUT endpoint handles target updates with cycle-based calculation
 
     return NextResponse.json({ order }, { status: 200 });
 
@@ -356,21 +276,31 @@ export async function PUT(
       console.log('🎯 Updating target spending for user:', orderBefore.user_id);
       
       try {
-        // Calculate total spending from completed orders (paid orders)
-        const { data: paidOrders } = await supabaseAdmin
-          .from('orders')
-          .select('total_amount, payment_status')
-          .eq('user_id', orderBefore.user_id)
-          .eq('payment_status', 'paid');
-
-        const totalSpending = paidOrders?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0;
-
-        // Get or create target
+        // Get or create target FIRST
         const { data: existingTarget } = await supabaseAdmin
           .from('targets')
           .select('*')
           .eq('user_id', orderBefore.user_id)
           .single();
+
+        // Calculate total spending from COMPLETED orders in CURRENT cycle only
+        // Only count orders created AFTER the last reset (or target creation)
+        const lastCycleTime = existingTarget?.updated_at || new Date(0).toISOString();
+        
+        const { data: completedOrders } = await supabaseAdmin
+          .from('orders')
+          .select('total_amount')
+          .eq('user_id', orderBefore.user_id)
+          .eq('status', 'selesai')
+          .gte('created_at', lastCycleTime);
+
+        const totalSpending = completedOrders?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0;
+
+        console.log('📊 Target cycle calculation:', {
+          lastCycleTime,
+          ordersInCycle: completedOrders?.length || 0,
+          totalSpending
+        });
 
         if (existingTarget) {
           // Update existing target
